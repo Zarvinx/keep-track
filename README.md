@@ -1,9 +1,9 @@
-# Episodes
-![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/red-coracle/episodes/Android%20CI/master?style=flat-square)
-[![Translation status](https://img.shields.io/weblate/progress/episodes?style=flat-square)](https://hosted.weblate.org/engage/episodes/)
-[![F-Droid Version](https://img.shields.io/f-droid/v/com.redcoracle.episodes?style=flat-square&color=%235183C0)](https://f-droid.org/en/packages/com.redcoracle.episodes)
+# Episodes - Kotlin/Compose Fork
+
+> **Note**: This is a fork of [red-coracle/episodes](https://github.com/red-coracle/episodes) with the UI rewritten in Kotlin and Jetpack Compose.
 
 Keep track of which episodes you've watched of your favourite shows.
+
 
 This product uses the [TMDB](https://www.themoviedb.org) API but is not endorsed or certified by TMDB.
 
