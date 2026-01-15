@@ -1,0 +1,127 @@
+package com.redcoracle.episodes.ui
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.redcoracle.episodes.R
+
+@Composable
+fun SeasonsListScreen(
+    showId: Int,
+    onSeasonClick: (Int) -> Unit,
+    refreshKey: Int = 0
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val viewModel: SeasonsViewModel = viewModel(
+        factory = SeasonsViewModelFactory(
+            application = context.applicationContext as android.app.Application,
+            showId = showId
+        ),
+        key = "seasons_$showId"
+    )
+    
+    val seasons by viewModel.seasons.collectAsState()
+    
+    // Reload seasons when refreshKey changes
+    androidx.compose.runtime.LaunchedEffect(refreshKey) {
+        viewModel.loadSeasons()
+    }
+    
+    if (seasons.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No seasons found",
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            items(seasons, key = { it.seasonNumber }) { season ->
+                SeasonListItem(
+                    season = season,
+                    onClick = { onSeasonClick(season.seasonNumber) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SeasonListItem(
+    season: Season,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp, vertical = 2.dp)
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+        ) {
+            // Season name
+            Text(
+                text = season.name,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+            
+            // Progress bar
+            if (season.airedCount > 0) {
+                val progress = season.watchedCount.toFloat() / season.airedCount.toFloat()
+                
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    LinearProgressIndicator(
+                        progress = progress,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(20.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                    
+                    // Watched count text overlay
+                    val countText = if (season.upcomingCount > 0) {
+                        stringResource(R.string.watched_count, season.watchedCount, season.airedCount) +
+                                " " + stringResource(R.string.upcoming_count, season.upcomingCount)
+                    } else {
+                        stringResource(R.string.watched_count, season.watchedCount, season.airedCount)
+                    }
+                    
+                    Text(
+                        text = countText,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .padding(start = 4.dp)
+                    )
+                }
+            }
+        }
+    }
+}

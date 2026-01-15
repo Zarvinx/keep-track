@@ -1,0 +1,109 @@
+package com.redcoracle.episodes.ui
+
+import android.app.Application
+import android.content.ContentResolver
+import android.content.ContentValues
+import android.net.Uri
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.redcoracle.episodes.db.EpisodesTable
+import com.redcoracle.episodes.db.ShowsProvider
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+data class NextEpisode(
+    val id: Int,
+    val name: String,
+    val overview: String?,
+    val seasonNumber: Int,
+    val episodeNumber: Int,
+    val firstAired: Long?,
+    val watched: Boolean
+)
+
+class NextEpisodeViewModel(application: Application, private val showId: Int) : AndroidViewModel(application) {
+    private val contentResolver: ContentResolver = application.contentResolver
+    
+    private val _nextEpisode = MutableStateFlow<NextEpisode?>(null)
+    val nextEpisode: StateFlow<NextEpisode?> = _nextEpisode.asStateFlow()
+    
+    init {
+        loadNextEpisode()
+    }
+    
+    fun loadNextEpisode() {
+        viewModelScope.launch {
+            val episode = withContext(Dispatchers.IO) {
+                loadNextEpisodeFromDatabase()
+            }
+            _nextEpisode.value = episode
+        }
+    }
+    
+    private fun loadNextEpisodeFromDatabase(): NextEpisode? {
+        val projection = arrayOf(
+            EpisodesTable.COLUMN_ID,
+            EpisodesTable.COLUMN_NAME,
+            EpisodesTable.COLUMN_OVERVIEW,
+            EpisodesTable.COLUMN_SEASON_NUMBER,
+            EpisodesTable.COLUMN_EPISODE_NUMBER,
+            EpisodesTable.COLUMN_FIRST_AIRED,
+            EpisodesTable.COLUMN_WATCHED
+        )
+        
+        // Query for the first unwatched episode (excluding season 0)
+        val selection = "${EpisodesTable.COLUMN_SHOW_ID}=? AND ${EpisodesTable.COLUMN_SEASON_NUMBER}!=0 AND (${EpisodesTable.COLUMN_WATCHED}==0 OR ${EpisodesTable.COLUMN_WATCHED} IS NULL)"
+        val selectionArgs = arrayOf(showId.toString())
+        val sortOrder = "${EpisodesTable.COLUMN_SEASON_NUMBER} ASC, ${EpisodesTable.COLUMN_EPISODE_NUMBER} ASC LIMIT 1"
+        
+        contentResolver.query(
+            ShowsProvider.CONTENT_URI_EPISODES,
+            projection,
+            selection,
+            selectionArgs,
+            sortOrder
+        )?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                val idIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_ID)
+                val nameIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_NAME)
+                val overviewIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_OVERVIEW)
+                val seasonIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_SEASON_NUMBER)
+                val episodeIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_EPISODE_NUMBER)
+                val firstAiredIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_FIRST_AIRED)
+                val watchedIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_WATCHED)
+                
+                return NextEpisode(
+                    id = cursor.getInt(idIndex),
+                    name = cursor.getString(nameIndex),
+                    overview = if (cursor.isNull(overviewIndex)) null else cursor.getString(overviewIndex),
+                    seasonNumber = cursor.getInt(seasonIndex),
+                    episodeNumber = cursor.getInt(episodeIndex),
+                    firstAired = if (cursor.isNull(firstAiredIndex)) null else cursor.getLong(firstAiredIndex),
+                    watched = cursor.getInt(watchedIndex) > 0
+                )
+            }
+        }
+        
+        return null
+    }
+    
+    fun setWatched(watched: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val episode = _nextEpisode.value ?: return@launch
+            
+            val uri = Uri.withAppendedPath(ShowsProvider.CONTENT_URI_EPISODES, episode.id.toString())
+            val values = ContentValues().apply {
+                put(EpisodesTable.COLUMN_WATCHED, if (watched) 1 else 0)
+            }
+            
+            contentResolver.update(uri, values, null, null)
+            
+            // Reload to get the next unwatched episode
+            loadNextEpisode()
+        }
+    }
+}

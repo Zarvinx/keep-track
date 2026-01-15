@@ -1,0 +1,118 @@
+package com.redcoracle.episodes.ui
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.redcoracle.episodes.R
+import java.text.DateFormat
+import java.util.*
+
+@Composable
+fun NextEpisodeScreen(
+    showId: Int,
+    onEpisodeWatchedChanged: () -> Unit = {}
+) {
+    val context = LocalContext.current
+    val viewModel: NextEpisodeViewModel = viewModel(
+        factory = NextEpisodeViewModelFactory(
+            application = context.applicationContext as android.app.Application,
+            showId = showId
+        ),
+        key = "next_$showId"
+    )
+    
+    val episode by viewModel.nextEpisode.collectAsState()
+    val scrollState = rememberScrollState()
+    
+    if (episode == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No unwatched episodes",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    } else {
+        episode?.let { ep ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Title with season/episode prefix
+                Text(
+                    text = buildString {
+                        if (ep.seasonNumber != 0) {
+                            append(stringResource(R.string.season_episode_prefix, ep.seasonNumber, ep.episodeNumber))
+                        }
+                        append(ep.name)
+                    },
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                // Date and watched checkbox row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Air date
+                    ep.firstAired?.let { timestamp ->
+                        val date = Date(timestamp * 1000)
+                        val dateText = DateFormat.getDateInstance(DateFormat.LONG).format(date)
+                        Text(
+                            text = dateText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    
+                    // Watched checkbox
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.watched_check_box),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Checkbox(
+                            checked = ep.watched,
+                            onCheckedChange = { isChecked ->
+                                viewModel.setWatched(isChecked)
+                                onEpisodeWatchedChanged()
+                            }
+                        )
+                    }
+                }
+                
+                // Overview
+                ep.overview?.let { overview ->
+                    if (overview.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = overview,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
