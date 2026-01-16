@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2012 Jamie Nicol <jamie@thenicols.net>
+ * Copyright (C) 2026 Zarvinx (Kotlin/Compose conversion)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,31 +16,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.redcoracle.episodes;
+package com.redcoracle.episodes
 
-import com.redcoracle.episodes.tvdb.Show;
+import com.redcoracle.episodes.tvdb.Show
 
-import java.util.List;
-
-public class AddShowSearchResults
-{
-	// singleton instance
-	private static AddShowSearchResults instance = new AddShowSearchResults();
-
-	private List<Show> data;
-
-	private AddShowSearchResults() {
-	}
-
-	public static AddShowSearchResults getInstance() {
-		return instance;
-	}
-
-	public List<Show> getData() {
-		return data;
-	}
-
-	public void setData(List<Show> data) {
-		this.data = data;
-	}
+/**
+ * Singleton for sharing search results between AddShowSearchActivity and AddShowPreviewActivity.
+ * 
+ * TODO: Replace this with proper state management:
+ * - Option 1: Use Compose Navigation with arguments (requires full navigation migration)
+ * - Option 2: Use shared ViewModel scope between activities
+ * - Option 3: Store in SavedStateHandle with proper serialization
+ * 
+ * Current limitation: Android can destroy this data if process is killed.
+ */
+object AddShowSearchResults {
+    var data: List<Show>? = null
 }

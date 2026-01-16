@@ -132,13 +132,26 @@ fun SeasonListItem(
                     
                     Text(
                         text = countText,
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            shadow = androidx.compose.ui.graphics.Shadow(
+                                color = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.75f),
+                                offset = androidx.compose.ui.geometry.Offset(1f, 1f),
+                                blurRadius = 3f
+                            )
+                        ),
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier
                             .align(Alignment.CenterStart)
                             .padding(start = 4.dp)
                     )
                 }
+            } else if (season.upcomingCount > 0) {
+                // Show upcoming count for seasons with no aired episodes yet
+                Text(
+                    text = stringResource(R.string.upcoming_count, season.upcomingCount),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

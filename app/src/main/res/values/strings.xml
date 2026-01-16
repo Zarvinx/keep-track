@@ -12,7 +12,7 @@
   <string name="error_adding_show">Could not add %s to library</string>
   <string name="first_aired">First Aired: %s</string>
   <string name="menu_about">About</string>
-  <string name="menu_add_show_search_hint">Search for new show</string>
+  <string name="menu_add_show_search_hint">Show name</string>
   <string name="menu_add_new_show">Add new show to library</string>
   <string name="menu_add_show">Add show to library</string>
   <string name="menu_back_up">Back up library</string>
@@ -21,7 +21,7 @@
   <string name="menu_filter_all">All</string>
   <string name="menu_filter_starred">Starred</string>
   <string name="menu_filter_archived">Archived</string>
-  <string name="menu_filter_uncompleted">Underway</string>
+  <string name="menu_filter_uncompleted">Watching</string>
   <string name="menu_filter_upcoming">Upcoming</string>
   <string name="menu_mark_season_not_watched">Mark season as unwatched</string>
   <string name="menu_mark_season_watched">Mark season as watched</string>

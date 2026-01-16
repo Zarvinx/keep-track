@@ -29,26 +29,32 @@ import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.SearchView
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.ImeAction
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.preference.PreferenceManager
 import com.redcoracle.episodes.ui.ShowsListScreen
 import com.redcoracle.episodes.ui.ShowsViewModel
 import androidx.core.content.ContextCompat
-import androidx.core.view.MenuItemCompat
 import com.bumptech.glide.Glide
 import com.redcoracle.episodes.db.DatabaseOpenHelper
 import com.redcoracle.episodes.db.ShowsProvider
@@ -78,12 +84,15 @@ class MainActivity : AppCompatActivity(),
         
         context = applicationContext
         AutoRefreshHelper.getInstance(applicationContext).rescheduleAlarm()
+        
+        // Hide the default action bar to prevent double title bars
+        supportActionBar?.hide()
 
         setContent {
             EpisodesTheme {
                 MainScreen(
                     onShowSelected = { showId -> onShowSelected(showId) },
-                    onBackup = { back_up() },
+                    onBackup = { backUp() },
                     onRestore = { restore() },
                     onSettings = { showSettings() },
                     onAbout = { showAbout() },
@@ -95,10 +104,6 @@ class MainActivity : AppCompatActivity(),
                 )
             }
         }
-    }
-    
-    override fun onResume() {
-        super.onResume()
     }
 
     fun onShowSelected(showId: Int) {
@@ -122,7 +127,7 @@ class MainActivity : AppCompatActivity(),
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    private fun back_up() {
+    private fun backUp() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
             val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
@@ -204,7 +209,11 @@ class MainActivity : AppCompatActivity(),
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+// Menu item data classes (outside Composable to avoid recreation on recompose)
+private data class FilterMenuItem(val labelResId: Int, val filterValue: Int)
+private data class MainMenuItem(val labelResId: Int, val action: () -> Unit)
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun MainScreen(
     onShowSelected: (Int) -> Unit,
@@ -220,17 +229,52 @@ fun MainScreen(
     var searchQuery by remember { mutableStateOf("") }
     var isSearching by remember { mutableStateOf(false) }
     
-    // Filter constants (matching ShowsListFragment)
-    val SHOWS_FILTER_ALL = 0
-    val SHOWS_FILTER_STARRED = 1
-    val SHOWS_FILTER_UNCOMPLETED = 2
-    val SHOWS_FILTER_ARCHIVED = 3
-    val SHOWS_FILTER_UPCOMING = 4
-    val KEY_PREF_SHOWS_FILTER = "pref_shows_filter"
+    // For auto-focus when search starts
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    
+    // Auto-focus and show keyboard when search mode starts
+    LaunchedEffect(isSearching) {
+        if (isSearching) {
+            focusRequester.requestFocus()
+            keyboardController?.show()
+        }
+    }
+    
+    // Submit search handler
+    val submitSearch: () -> Unit = {
+        if (searchQuery.isNotEmpty()) {
+            onAddShow(searchQuery)
+            searchQuery = ""
+            isSearching = false
+            keyboardController?.hide()
+        }
+    }
+    
+    // Filter menu items (using constants from ShowsViewModel)
+    val filterMenuItems = remember {
+        listOf(
+            FilterMenuItem(R.string.menu_filter_uncompleted, ShowsViewModel.SHOWS_FILTER_WATCHING),
+            FilterMenuItem(R.string.menu_filter_starred, ShowsViewModel.SHOWS_FILTER_STARRED),
+            FilterMenuItem(R.string.menu_filter_archived, ShowsViewModel.SHOWS_FILTER_ARCHIVED),
+            FilterMenuItem(R.string.menu_filter_upcoming, ShowsViewModel.SHOWS_FILTER_UPCOMING),
+            FilterMenuItem(R.string.menu_filter_all, ShowsViewModel.SHOWS_FILTER_ALL)
+        )
+    }
+    
+    // Main menu items
+    val mainMenuItems = remember(onBackup, onRestore, onSettings, onAbout) {
+        listOf(
+            MainMenuItem(R.string.menu_back_up, onBackup),
+            MainMenuItem(R.string.menu_restore, onRestore),
+            MainMenuItem(R.string.menu_settings, onSettings),
+            MainMenuItem(R.string.menu_about, onAbout)
+        )
+    }
     
     fun applyFilter(filter: Int) {
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-        prefs.edit().putInt(KEY_PREF_SHOWS_FILTER, filter).apply()
+        prefs.edit().putInt(ShowsViewModel.KEY_PREF_SHOWS_FILTER, filter).apply()
     }
 
     Scaffold(
@@ -243,6 +287,13 @@ fun MainScreen(
                             onValueChange = { searchQuery = it },
                             placeholder = { Text(stringResource(R.string.menu_add_show_search_hint)) },
                             singleLine = true,
+                            modifier = Modifier.focusRequester(focusRequester),
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Search
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onSearch = { submitSearch() }
+                            ),
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = MaterialTheme.colorScheme.surface,
                                 unfocusedContainerColor = MaterialTheme.colorScheme.surface
@@ -254,14 +305,15 @@ fun MainScreen(
                 },
                 actions = {
                     if (isSearching) {
-                        IconButton(onClick = { 
-                            if (searchQuery.isNotEmpty()) {
-                                onAddShow(searchQuery)
-                                searchQuery = ""
-                                isSearching = false
-                            }
-                        }) {
-                            Icon(Icons.Default.Add, contentDescription = "Search")
+                        // Show search icon when text is entered, otherwise + icon
+                        IconButton(
+                            onClick = submitSearch,
+                            enabled = searchQuery.isNotEmpty()
+                        ) {
+                            Icon(
+                                imageVector = if (searchQuery.isNotEmpty()) Icons.Default.Search else Icons.Default.Add,
+                                contentDescription = if (searchQuery.isNotEmpty()) "Search" else stringResource(R.string.menu_add_new_show)
+                            )
                         }
                     } else {
                         IconButton(onClick = { isSearching = true }) {
@@ -281,41 +333,15 @@ fun MainScreen(
                         expanded = showFilterMenu,
                         onDismissRequest = { showFilterMenu = false }
                     ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.menu_filter_all)) },
-                            onClick = {
-                                showFilterMenu = false
-                                applyFilter(SHOWS_FILTER_ALL)
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.menu_filter_starred)) },
-                            onClick = {
-                                showFilterMenu = false
-                                applyFilter(SHOWS_FILTER_STARRED)
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.menu_filter_archived)) },
-                            onClick = {
-                                showFilterMenu = false
-                                applyFilter(SHOWS_FILTER_ARCHIVED)
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.menu_filter_uncompleted)) },
-                            onClick = {
-                                showFilterMenu = false
-                                applyFilter(SHOWS_FILTER_UNCOMPLETED)
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.menu_filter_upcoming)) },
-                            onClick = {
-                                showFilterMenu = false
-                                applyFilter(SHOWS_FILTER_UPCOMING)
-                            }
-                        )
+                        filterMenuItems.forEach { item ->
+                            DropdownMenuItem(
+                                text = { Text(stringResource(item.labelResId)) },
+                                onClick = {
+                                    showFilterMenu = false
+                                    applyFilter(item.filterValue)
+                                }
+                            )
+                        }
                         Divider()
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.menu_refresh_all_shows)) },
@@ -335,34 +361,15 @@ fun MainScreen(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false }
                     ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.menu_back_up)) },
-                            onClick = {
-                                showMenu = false
-                                onBackup()
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.menu_restore)) },
-                            onClick = {
-                                showMenu = false
-                                onRestore()
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.menu_settings)) },
-                            onClick = {
-                                showMenu = false
-                                onSettings()
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.menu_about)) },
-                            onClick = {
-                                showMenu = false
-                                onAbout()
-                            }
-                        )
+                        mainMenuItems.forEach { item ->
+                            DropdownMenuItem(
+                                text = { Text(stringResource(item.labelResId)) },
+                                onClick = {
+                                    showMenu = false
+                                    item.action()
+                                }
+                            )
+                        }
                     }
                 }
             )

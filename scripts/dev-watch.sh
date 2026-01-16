@@ -2,29 +2,29 @@
 # Development watch script for Episodes app
 # Watches for changes and auto-rebuilds/reinstalls
 
-echo "🔍 Starting development watch mode..."
-echo "📱 Make sure your device is connected (adb devices)"
-echo "💡 Press Ctrl+C to stop"
-echo ""
+printf "🔍 Starting development watch mode...\n"
+printf "📱 Make sure your device is connected (adb devices)\n"
+printf "💡 Press Ctrl+C to stop\n"
+printf "\n"
 
 # Check if device is connected
 if ! adb devices | grep -q "device$"; then
-    echo "❌ No Android device connected!"
-    echo "Connect a device or start an emulator first."
+    printf "❌ No Android device connected!\n"
+    printf "Connect a device or start an emulator first.\n"
     exit 1
 fi
 
 # Initial build and install
-echo "🔨 Initial build..."
+printf "🔨 Initial build...\n"
 ./gradlew installStandardDebug
 
 if [ $? -eq 0 ]; then
-    echo "✅ Initial install complete!"
-    echo ""
-    echo "👀 Watching for changes in app/src/..."
-    echo ""
+    printf "✅ Initial install complete!\n"
+    printf "\n"
+    printf "👀 Watching for changes in app/src/...\n"
+    printf "\n"
 else
-    echo "❌ Initial build failed"
+    printf "❌ Initial build failed\n"
     exit 1
 fi
 
@@ -35,22 +35,22 @@ if command -v inotifywait &> /dev/null; then
             --exclude '(\.gradle|build|\.git)' \
             app/src/
         
-        echo ""
-        echo "🔄 Change detected! Rebuilding..."
+        printf "\n"
+        printf "🔄 Change detected! Rebuilding...\n"
         
         if ./gradlew installStandardDebug; then
-            echo "✅ App updated on device!"
-            echo "🔔 You may need to restart the app to see changes"
-            echo ""
+            printf "✅ App updated on device!\n"
+            printf "🔔 You may need to restart the app to see changes\n"
+            printf "\n"
         else
-            echo "❌ Build failed - fix errors and save again"
-            echo ""
+            printf "❌ Build failed - fix errors and save again\n"
+            printf "\n"
         fi
     done
 else
-    echo "⚠️  inotifywait not found. Install it for auto-watch:"
-    echo "   sudo apt install inotify-tools"
-    echo ""
-    echo "For now, manually run after each change:"
-    echo "   ./gradlew installStandardDebug"
+    printf "⚠️  inotifywait not found. Install it for auto-watch:\n"
+    printf "   sudo apt install inotify-tools\n"
+    printf "\n"
+    printf "For now, manually run after each change:\n"
+    printf "   ./gradlew installStandardDebug\n"
 fi

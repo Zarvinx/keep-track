@@ -153,14 +153,19 @@ fun ShowDetailScreen(
         ) {
             // Header image
             showDetails?.posterPath?.let { posterPath ->
-                AsyncImage(
-                    model = "https://image.tmdb.org/t/p/w1280/$posterPath",
-                    contentDescription = showDetails?.name,
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp),
-                    contentScale = ContentScale.Crop
-                )
+                        .height(250.dp)
+                ) {
+                    AsyncImage(
+                        model = "https://image.tmdb.org/t/p/w780/$posterPath",
+                        contentDescription = showDetails?.name,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Fit,
+                        alignment = androidx.compose.ui.Alignment.TopCenter
+                    )
+                }
             }
             
             // Tabs

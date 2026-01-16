@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.ContentResolver
 import android.content.SharedPreferences
 import android.database.Cursor
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.preference.PreferenceManager
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+@Stable
 data class Show(
     val id: Int,
     val name: String,
@@ -43,24 +45,24 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
     val currentFilter: StateFlow<Int> = _currentFilter.asStateFlow()
     
     companion object {
-        const val SHOWS_FILTER_ALL = 0
+        const val SHOWS_FILTER_WATCHING = 0
         const val SHOWS_FILTER_STARRED = 1
-        const val SHOWS_FILTER_UNCOMPLETED = 2
-        const val SHOWS_FILTER_ARCHIVED = 3
-        const val SHOWS_FILTER_UPCOMING = 4
+        const val SHOWS_FILTER_ARCHIVED = 2
+        const val SHOWS_FILTER_UPCOMING = 3
+        const val SHOWS_FILTER_ALL = 4
         const val KEY_PREF_SHOWS_FILTER = "pref_shows_filter"
     }
     
     private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         if (key == KEY_PREF_SHOWS_FILTER) {
-            _currentFilter.value = prefs.getInt(KEY_PREF_SHOWS_FILTER, SHOWS_FILTER_ALL)
+            _currentFilter.value = prefs.getInt(KEY_PREF_SHOWS_FILTER, SHOWS_FILTER_WATCHING)
             loadShows()
         }
     }
     
     init {
         prefs.registerOnSharedPreferenceChangeListener(prefsListener)
-        _currentFilter.value = prefs.getInt(KEY_PREF_SHOWS_FILTER, SHOWS_FILTER_ALL)
+        _currentFilter.value = prefs.getInt(KEY_PREF_SHOWS_FILTER, SHOWS_FILTER_WATCHING)
         loadShows()
     }
     
@@ -131,9 +133,9 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
                 // Apply filter
                 val filter = _currentFilter.value
                 val shouldInclude = when (filter) {
+                    SHOWS_FILTER_WATCHING -> !archived
                     SHOWS_FILTER_STARRED -> starred
                     SHOWS_FILTER_ARCHIVED -> archived
-                    SHOWS_FILTER_UNCOMPLETED -> counts.watched < counts.aired && !archived
                     SHOWS_FILTER_UPCOMING -> counts.upcoming > 0 && counts.watched == counts.aired && !archived
                     else -> true // SHOWS_FILTER_ALL
                 }
@@ -162,7 +164,23 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
         
-        return showsList
+        // Sort shows: by % watched (ascending), then 100% shows alphabetically
+        return showsList.sortedWith(
+            compareBy<Show> { show ->
+                if (show.totalCount > 0) {
+                    show.watchedCount.toFloat() / show.totalCount.toFloat()
+                } else {
+                    0f
+                }
+            }.thenBy { show ->
+                // For 100% watched shows, sort alphabetically
+                if (show.totalCount > 0 && show.watchedCount == show.totalCount) {
+                    show.name.lowercase()
+                } else {
+                    null
+                }
+            }
+        )
     }
     
     private data class EpisodeCounts(
@@ -247,32 +265,46 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
     }
     
     fun toggleStarred(showId: Int, starred: Boolean) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val values = android.content.ContentValues().apply {
-                put(ShowsTable.COLUMN_STARRED, if (starred) 1 else 0)
+        viewModelScope.launch {
+            // Optimistically update UI immediately
+            _shows.value = _shows.value.map { show ->
+                if (show.id == showId) show.copy(starred = starred) else show
             }
-            contentResolver.update(
-                ShowsProvider.CONTENT_URI_SHOWS,
-                values,
-                "${ShowsTable.COLUMN_ID}=?",
-                arrayOf(showId.toString())
-            )
-            loadShows()
+            
+            // Then update database in background
+            withContext(Dispatchers.IO) {
+                val values = android.content.ContentValues().apply {
+                    put(ShowsTable.COLUMN_STARRED, if (starred) 1 else 0)
+                }
+                contentResolver.update(
+                    ShowsProvider.CONTENT_URI_SHOWS,
+                    values,
+                    "${ShowsTable.COLUMN_ID}=?",
+                    arrayOf(showId.toString())
+                )
+            }
         }
     }
     
     fun toggleArchived(showId: Int, archived: Boolean) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val values = android.content.ContentValues().apply {
-                put(ShowsTable.COLUMN_ARCHIVED, if (archived) 1 else 0)
+        viewModelScope.launch {
+            // Optimistically update UI immediately
+            _shows.value = _shows.value.map { show ->
+                if (show.id == showId) show.copy(archived = archived) else show
             }
-            contentResolver.update(
-                ShowsProvider.CONTENT_URI_SHOWS,
-                values,
-                "${ShowsTable.COLUMN_ID}=?",
-                arrayOf(showId.toString())
-            )
-            loadShows()
+            
+            // Then update database in background
+            withContext(Dispatchers.IO) {
+                val values = android.content.ContentValues().apply {
+                    put(ShowsTable.COLUMN_ARCHIVED, if (archived) 1 else 0)
+                }
+                contentResolver.update(
+                    ShowsProvider.CONTENT_URI_SHOWS,
+                    values,
+                    "${ShowsTable.COLUMN_ID}=?",
+                    arrayOf(showId.toString())
+                )
+            }
         }
     }
     
@@ -285,8 +317,10 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
             
             contentResolver.update(uri, values, null, null)
             
-            // Reload shows to update counts and next episode
-            loadShows()
+            // Reload shows to update counts and next episode (but in background)
+            withContext(Dispatchers.Main) {
+                loadShows()
+            }
         }
     }
     

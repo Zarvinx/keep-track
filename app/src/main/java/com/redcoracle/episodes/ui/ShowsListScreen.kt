@@ -30,20 +30,26 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.redcoracle.episodes.R
+import com.redcoracle.episodes.ui.theme.AppShadows
 
 @Composable
 fun ShowsListScreen(
@@ -51,10 +57,19 @@ fun ShowsListScreen(
     onShowClick: (Int) -> Unit
 ) {
     val shows by viewModel.shows.collectAsState()
+    val lifecycleOwner = LocalLifecycleOwner.current
     
-    // Reload shows when the screen is displayed
-    androidx.compose.runtime.LaunchedEffect(Unit) {
-        viewModel.loadShows()
+    // Only reload on RESUME, but use a key to prevent redundant calls
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.loadShows()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
     
     if (shows.isEmpty()) {
@@ -71,17 +86,17 @@ fun ShowsListScreen(
         LazyColumn(
             modifier = Modifier.fillMaxSize()
         ) {
-            items(shows, key = { it.id }) { show ->
+            items(
+                items = shows, 
+                key = { it.id },
+                contentType = { "show_item" }
+            ) { show ->
                 ShowListItem(
                     show = show,
-                    onShowClick = { onShowClick(show.id) },
-                    onStarClick = { viewModel.toggleStarred(show.id, !show.starred) },
-                    onArchiveClick = { viewModel.toggleArchived(show.id, !show.archived) },
-                    onWatchNextClick = { 
-                        show.nextEpisodeId?.let { episodeId ->
-                            viewModel.markEpisodeWatched(episodeId, true)
-                        }
-                    }
+                    onShowClick = onShowClick,
+                    onStarClick = remember { { id -> viewModel.toggleStarred(id, !show.starred) } },
+                    onArchiveClick = remember { { id -> viewModel.toggleArchived(id, !show.archived) } },
+                    onWatchNextClick = remember { { episodeId: Int -> viewModel.markEpisodeWatched(episodeId, true) } }
                 )
             }
         }
@@ -91,29 +106,41 @@ fun ShowsListScreen(
 @Composable
 fun ShowListItem(
     show: Show,
-    onShowClick: () -> Unit,
-    onStarClick: () -> Unit,
-    onArchiveClick: () -> Unit,
-    onWatchNextClick: () -> Unit
+    onShowClick: (Int) -> Unit,
+    onStarClick: (Int) -> Unit,
+    onArchiveClick: (Int) -> Unit,
+    onWatchNextClick: (Int) -> Unit
 ) {
-    Card(
+    val imageUrl = remember(show.bannerPath) {
+        show.bannerPath?.takeIf { it.isNotEmpty() }?.let { "https://image.tmdb.org/t/p/w500/$it" }
+    }
+    val progress = remember(show.watchedCount, show.totalCount) {
+        if (show.totalCount > 0) show.watchedCount.toFloat() / show.totalCount.toFloat() else 0f
+    }
+    val episodeCode = remember(show.nextEpisodeSeasonNumber, show.nextEpisodeNumber) {
+        if (show.nextEpisodeSeasonNumber != null && show.nextEpisodeNumber != null) {
+            "S%02dE%02d".format(show.nextEpisodeSeasonNumber, show.nextEpisodeNumber)
+        } else null
+    }
+    
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 0.dp, vertical = 0.dp)
-            .clickable(onClick = onShowClick),
-        shape = MaterialTheme.shapes.extraSmall
+            .padding(bottom = 8.dp)
+            .clickable { onShowClick(show.id) },
+        tonalElevation = 1.dp
     ) {
         Column {
             // Banner image with fixed height
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(150.dp)
+                    .height(130.dp)
             ) {
                 // Banner image
-                if (show.bannerPath != null && show.bannerPath.isNotEmpty()) {
+                if (imageUrl != null) {
                     AsyncImage(
-                        model = "https://image.tmdb.org/t/p/w1280/${show.bannerPath}",
+                        model = imageUrl,
                         contentDescription = show.name,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,
@@ -147,11 +174,7 @@ fun ShowListItem(
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         style = MaterialTheme.typography.titleLarge.copy(
-                            shadow = androidx.compose.ui.graphics.Shadow(
-                                color = Color.Black.copy(alpha = 0.5f),
-                                offset = androidx.compose.ui.geometry.Offset(2f, 2f),
-                                blurRadius = 4f
-                            )
+                            shadow = AppShadows.TextOnImage
                         )
                     )
                 }
@@ -164,7 +187,7 @@ fun ShowListItem(
                 ) {
                     // Archive toggle
                     IconButton(
-                        onClick = onArchiveClick,
+                        onClick = { onArchiveClick(show.id) },
                         modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
@@ -181,7 +204,7 @@ fun ShowListItem(
                     
                     // Star toggle
                     IconButton(
-                        onClick = onStarClick,
+                        onClick = { onStarClick(show.id) },
                         modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
@@ -196,7 +219,6 @@ fun ShowListItem(
             
             // Progress bar (thin line)
             if (show.totalCount > 0) {
-                val progress = show.watchedCount.toFloat() / show.totalCount.toFloat()
                 LinearProgressIndicator(
                     progress = progress,
                     modifier = Modifier
@@ -208,10 +230,11 @@ fun ShowListItem(
             }
             
             // Next episode info on dark background
-            if (show.nextEpisodeName != null && show.nextEpisodeSeasonNumber != null && show.nextEpisodeNumber != null) {
+            if (show.nextEpisodeName != null && episodeCode != null) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .height(52.dp)
                         .background(Color(0xFF2A2A2A))
                         .padding(horizontal = 12.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -222,7 +245,7 @@ fun ShowListItem(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "S%02dE%02d".format(show.nextEpisodeSeasonNumber, show.nextEpisodeNumber),
+                            text = episodeCode,
                             color = Color(0xFFF5F5F5),
                             fontSize = 16.sp,
                             style = MaterialTheme.typography.bodyMedium.copy(
@@ -242,7 +265,7 @@ fun ShowListItem(
                     
                     // Watch button
                     IconButton(
-                        onClick = { onWatchNextClick() },
+                        onClick = { show.nextEpisodeId?.let(onWatchNextClick) },
                         modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
@@ -252,6 +275,22 @@ fun ShowListItem(
                             modifier = Modifier.size(28.dp)
                         )
                     }
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .background(Color(0xFF2A2A2A))
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Text(
+                        text = "You are all caught up",
+                        color = Color(0xFFAAAAAA),
+                        fontSize = 14.sp,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
             }
         }
