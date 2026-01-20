@@ -24,28 +24,28 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.redcoracle.episodes.R
@@ -57,19 +57,15 @@ fun ShowsListScreen(
     onShowClick: (Int) -> Unit
 ) {
     val shows by viewModel.shows.collectAsState()
-    val lifecycleOwner = LocalLifecycleOwner.current
+    val listState = rememberLazyListState()
+    var previousShowCount by remember { mutableStateOf(shows.size) }
     
-    // Only reload on RESUME, but use a key to prevent redundant calls
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.loadShows()
-            }
+    // Scroll to top when a new show is added
+    LaunchedEffect(shows.size) {
+        if (shows.size > previousShowCount && listState.firstVisibleItemIndex > 0) {
+            listState.animateScrollToItem(0)
         }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
+        previousShowCount = shows.size
     }
     
     if (shows.isEmpty()) {
@@ -84,6 +80,7 @@ fun ShowsListScreen(
         }
     } else {
         LazyColumn(
+            state = listState,
             modifier = Modifier.fillMaxSize()
         ) {
             items(

@@ -56,7 +56,6 @@ fun ShowDetailScreen(
     val showDetails by viewModel.showDetails.collectAsState()
     var selectedTab by remember { mutableIntStateOf(0) }
     var showMenu by remember { mutableStateOf(false) }
-    var refreshKey by remember { mutableIntStateOf(0) }
     
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     
@@ -195,8 +194,8 @@ fun ShowDetailScreen(
             ) {
                 when (selectedTab) {
                     0 -> ShowOverviewTab(showId)
-                    1 -> SeasonsListTab(showId, onSeasonSelected, refreshKey)
-                    2 -> NextEpisodeTab(showId, onEpisodeWatchedChanged = { refreshKey++ })
+                    1 -> SeasonsListTab(showId, onSeasonSelected)
+                    2 -> NextEpisodeTab(showId)
                 }
             }
         }
@@ -209,18 +208,16 @@ fun ShowOverviewTab(showId: Int) {
 }
 
 @Composable
-fun SeasonsListTab(showId: Int, onSeasonSelected: (Int) -> Unit, refreshKey: Int) {
+fun SeasonsListTab(showId: Int, onSeasonSelected: (Int) -> Unit) {
     SeasonsListScreen(
         showId = showId,
-        onSeasonClick = onSeasonSelected,
-        refreshKey = refreshKey
+        onSeasonClick = onSeasonSelected
     )
 }
 
 @Composable
-fun NextEpisodeTab(showId: Int, onEpisodeWatchedChanged: () -> Unit) {
+fun NextEpisodeTab(showId: Int) {
     NextEpisodeScreen(
-        showId = showId,
-        onEpisodeWatchedChanged = onEpisodeWatchedChanged
+        showId = showId
     )
 }

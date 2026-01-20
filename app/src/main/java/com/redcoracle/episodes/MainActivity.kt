@@ -90,7 +90,10 @@ class MainActivity : AppCompatActivity(),
 
         setContent {
             EpisodesTheme {
+                val viewModel: ShowsViewModel = viewModel()
+                
                 MainScreen(
+                    viewModel = viewModel,
                     onShowSelected = { showId -> onShowSelected(showId) },
                     onBackup = { backUp() },
                     onRestore = { restore() },
@@ -216,6 +219,7 @@ private data class MainMenuItem(val labelResId: Int, val action: () -> Unit)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun MainScreen(
+    viewModel: ShowsViewModel,
     onShowSelected: (Int) -> Unit,
     onBackup: () -> Unit,
     onRestore: () -> Unit,
@@ -381,6 +385,7 @@ fun MainScreen(
                 .padding(paddingValues)
         ) {
             ShowsListScreen(
+                viewModel = viewModel,
                 onShowClick = onShowSelected
             )
         }

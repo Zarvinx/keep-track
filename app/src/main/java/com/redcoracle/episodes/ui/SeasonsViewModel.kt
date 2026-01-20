@@ -26,10 +26,12 @@ import androidx.lifecycle.viewModelScope
 import com.redcoracle.episodes.EpisodesCounter
 import com.redcoracle.episodes.db.EpisodesTable
 import com.redcoracle.episodes.db.ShowsProvider
+import com.redcoracle.episodes.db.observeQuery
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -48,36 +50,32 @@ class SeasonsViewModel(application: Application, private val showId: Int) : Andr
     val seasons: StateFlow<List<Season>> = _seasons.asStateFlow()
     
     init {
-        loadSeasons()
-    }
-    
-    fun loadSeasons() {
+        // Observe episodes for this show and automatically update seasons list
         viewModelScope.launch {
-            val seasonsList = withContext(Dispatchers.IO) {
-                loadSeasonsFromDatabase()
+            contentResolver.observeQuery(
+                uri = ShowsProvider.CONTENT_URI_EPISODES,
+                projection = arrayOf(
+                    EpisodesTable.COLUMN_SEASON_NUMBER,
+                    EpisodesTable.COLUMN_FIRST_AIRED,
+                    EpisodesTable.COLUMN_WATCHED
+                ),
+                selection = "${EpisodesTable.COLUMN_SHOW_ID}=?",
+                selectionArgs = arrayOf(showId.toString()),
+                sortOrder = "${EpisodesTable.COLUMN_SEASON_NUMBER} ASC, ${EpisodesTable.COLUMN_EPISODE_NUMBER} ASC"
+            ).map { cursor ->
+                withContext(Dispatchers.IO) {
+                    cursor?.let { loadSeasonsFromCursor(it) } ?: emptyList()
+                }
+            }.collect { seasonsList ->
+                _seasons.value = seasonsList
             }
-            _seasons.value = seasonsList
         }
     }
     
-    private fun loadSeasonsFromDatabase(): List<Season> {
+    private fun loadSeasonsFromCursor(cursor: Cursor): List<Season> {
         val seasonsList = mutableListOf<Season>()
         
-        val projection = arrayOf(
-            EpisodesTable.COLUMN_SEASON_NUMBER,
-            EpisodesTable.COLUMN_FIRST_AIRED,
-            EpisodesTable.COLUMN_WATCHED
-        )
-        
-        val cursor = contentResolver.query(
-            ShowsProvider.CONTENT_URI_EPISODES,
-            projection,
-            "${EpisodesTable.COLUMN_SHOW_ID}=?",
-            arrayOf(showId.toString()),
-            "${EpisodesTable.COLUMN_SEASON_NUMBER} ASC"
-        )
-        
-        cursor?.use {
+        cursor.use {
             val episodesCounter = EpisodesCounter(EpisodesTable.COLUMN_SEASON_NUMBER)
             episodesCounter.swapCursor(it)
             

@@ -37,8 +37,7 @@ import java.util.*
 
 @Composable
 fun NextEpisodeScreen(
-    showId: Int,
-    onEpisodeWatchedChanged: () -> Unit = {}
+    showId: Int
 ) {
     val context = LocalContext.current
     val viewModel: NextEpisodeViewModel = viewModel(
@@ -113,7 +112,6 @@ fun NextEpisodeScreen(
                             checked = ep.watched,
                             onCheckedChange = { isChecked ->
                                 viewModel.setWatched(isChecked)
-                                onEpisodeWatchedChanged()
                             }
                         )
                     }

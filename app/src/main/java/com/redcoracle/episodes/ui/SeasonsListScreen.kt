@@ -36,8 +36,7 @@ import com.redcoracle.episodes.R
 @Composable
 fun SeasonsListScreen(
     showId: Int,
-    onSeasonClick: (Int) -> Unit,
-    refreshKey: Int = 0
+    onSeasonClick: (Int) -> Unit
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val viewModel: SeasonsViewModel = viewModel(
@@ -49,12 +48,7 @@ fun SeasonsListScreen(
     )
     
     val seasons by viewModel.seasons.collectAsState()
-    
-    // Reload seasons when refreshKey changes
-    androidx.compose.runtime.LaunchedEffect(refreshKey) {
-        viewModel.loadSeasons()
-    }
-    
+
     if (seasons.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxSize(),
