@@ -19,8 +19,8 @@
 package com.redcoracle.episodes
 
 import android.os.Bundle
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -37,7 +37,7 @@ import com.redcoracle.episodes.ui.AddShowSearchViewModel
 import com.redcoracle.episodes.ui.AddShowSearchViewModelFactory
 import com.redcoracle.episodes.ui.theme.EpisodesTheme
 
-class AddShowPreviewActivity : AppCompatActivity() {
+class AddShowPreviewActivity : ComponentActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

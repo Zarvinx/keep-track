@@ -20,8 +20,8 @@ package com.redcoracle.episodes
 
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -41,7 +41,7 @@ import com.redcoracle.episodes.ui.theme.EpisodesTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class SeasonActivity : AppCompatActivity() {
+class SeasonActivity : ComponentActivity() {
     
     private var showId: Int = -1
     private var seasonNumber: Int = -1

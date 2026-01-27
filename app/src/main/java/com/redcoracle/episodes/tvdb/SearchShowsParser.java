@@ -42,6 +42,7 @@ class SearchShowsParser {
                 show.setLanguage(language);
                 show.setOverview(s.overview);
                 show.setFirstAired(s.first_air_date);
+                show.setPosterPath(s.poster_path);
                 parsed.add(show);
             }
         } catch (Exception e) {

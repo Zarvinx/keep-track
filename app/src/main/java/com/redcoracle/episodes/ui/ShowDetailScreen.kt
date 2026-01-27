@@ -64,9 +64,9 @@ fun ShowDetailScreen(
         topBar = {
             MediumTopAppBar(
                 title = { 
-                    Text(
+                    MarqueeText(
                         text = showDetails?.name ?: "",
-                        maxLines = 2
+                        maxLines = 1
                     )
                 },
                 navigationIcon = {

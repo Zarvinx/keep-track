@@ -20,12 +20,12 @@ package com.redcoracle.episodes
 
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
 import com.redcoracle.episodes.ui.ShowDetailScreen
 import com.redcoracle.episodes.ui.theme.EpisodesTheme
 
-class ShowActivity : AppCompatActivity() {
+class ShowActivity : ComponentActivity() {
     
     private var showId: Int = -1
     

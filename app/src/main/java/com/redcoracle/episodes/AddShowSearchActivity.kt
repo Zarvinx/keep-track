@@ -20,24 +20,28 @@ package com.redcoracle.episodes
 
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.ImeAction
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.redcoracle.episodes.ui.AddShowSearchScreen
 import com.redcoracle.episodes.ui.AddShowSearchViewModel
 import com.redcoracle.episodes.ui.AddShowSearchViewModelFactory
 import com.redcoracle.episodes.ui.theme.EpisodesTheme
 
-class AddShowSearchActivity : AppCompatActivity() {
+class AddShowSearchActivity : ComponentActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,13 +80,48 @@ fun AddShowSearchScaffold(
     onNavigateBack: () -> Unit,
     onShowClick: (Int) -> Unit
 ) {
+    val viewModel: AddShowSearchViewModel = viewModel(
+        factory = AddShowSearchViewModelFactory(
+            application = LocalContext.current.applicationContext as android.app.Application,
+            query = query
+        )
+    )
+    
+    val currentQuery by viewModel.query.collectAsState()
+    
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(query) },
+                title = {
+                    TextField(
+                        value = currentQuery,
+                        onValueChange = { viewModel.updateQuery(it) },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Search for shows...") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(
+                            onSearch = { viewModel.searchShows() }
+                        ),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0f),
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0f),
+                            disabledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0f),
+                            focusedIndicatorColor = MaterialTheme.colorScheme.surface.copy(alpha = 0f),
+                            unfocusedIndicatorColor = MaterialTheme.colorScheme.surface.copy(alpha = 0f),
+                            disabledIndicatorColor = MaterialTheme.colorScheme.surface.copy(alpha = 0f)
+                        ),
+                        textStyle = MaterialTheme.typography.titleLarge
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { viewModel.searchShows() }) {
+                        Icon(Icons.Default.Search, contentDescription = "Search")
                     }
                 }
             )
@@ -94,8 +133,9 @@ fun AddShowSearchScaffold(
                 .padding(paddingValues)
         ) {
             AddShowSearchScreen(
-                query = query,
-                onShowClick = onShowClick
+                query = currentQuery,
+                onShowClick = onShowClick,
+                viewModel = viewModel
             )
         }
     }

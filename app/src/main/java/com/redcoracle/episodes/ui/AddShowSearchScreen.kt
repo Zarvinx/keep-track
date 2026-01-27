@@ -28,24 +28,22 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.redcoracle.episodes.R
 import com.redcoracle.episodes.tvdb.Show
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
 fun AddShowSearchScreen(
     query: String,
     onShowClick: (Int) -> Unit,
-    viewModel: AddShowSearchViewModel = viewModel(
-        factory = AddShowSearchViewModelFactory(
-            application = LocalContext.current.applicationContext as android.app.Application,
-            query = query
-        )
-    )
+    viewModel: AddShowSearchViewModel
 ) {
     val searchState by viewModel.searchState.collectAsState()
     
@@ -115,6 +113,20 @@ fun ShowSearchResultItem(
     show: Show,
     onClick: () -> Unit
 ) {
+    val releaseYear = show.firstAired?.let { date ->
+        SimpleDateFormat("yyyy", Locale.getDefault()).format(date)
+    }
+    
+    val posterUrl = show.posterPath?.takeIf { it.isNotEmpty() }?.let {
+        "https://image.tmdb.org/t/p/w185$it"
+    }
+    
+    val displayName = if (releaseYear != null) {
+        "${show.name} ($releaseYear)"
+    } else {
+        show.name
+    }
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -124,10 +136,31 @@ fun ShowSearchResultItem(
             containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
-        Text(
-            text = show.name,
-            modifier = Modifier.padding(16.dp),
-            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Show name with year
+            Text(
+                text = displayName,
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                modifier = Modifier.weight(1f)
+            )
+            
+            Spacer(modifier = Modifier.width(16.dp))
+            
+            // Poster thumbnail on the right
+            AsyncImage(
+                model = posterUrl,
+                contentDescription = show.name,
+                modifier = Modifier
+                    .width(60.dp)
+                    .height(90.dp)
+                    .clip(MaterialTheme.shapes.small),
+                contentScale = ContentScale.Crop
+            )
+        }
     }
 }

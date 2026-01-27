@@ -160,19 +160,17 @@ fun ShowListItem(
                         .height(60.dp)
                         .align(Alignment.TopStart)
                 ) {
-                    // Show name
-                    Text(
+                    // Show name with marquee effect
+                    MarqueeText(
                         text = show.name,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(start = 8.dp, top = 4.dp, end = 80.dp),
                         color = Color.White,
                         fontSize = 22.sp,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            shadow = AppShadows.TextOnImage
-                        )
+                        style = MaterialTheme.typography.titleLarge,
+                        shadow = AppShadows.TextOnImage,
+                        maxLines = 1
                     )
                 }
                 
@@ -250,13 +248,13 @@ fun ShowListItem(
                             )
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(
+                        MarqueeText(
                             text = show.nextEpisodeName,
+                            modifier = Modifier.weight(1f),
                             color = Color(0xFFF5F5F5),
                             fontSize = 16.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 1
                         )
                     }
                     

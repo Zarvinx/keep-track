@@ -42,9 +42,12 @@ sealed class SearchState {
     data class Error(val message: String) : SearchState()
 }
 
-class AddShowSearchViewModel(application: Application, private val query: String) : AndroidViewModel(application) {
+class AddShowSearchViewModel(application: Application, initialQuery: String) : AndroidViewModel(application) {
     private val _searchState = MutableStateFlow<SearchState>(SearchState.Idle)
     val searchState: StateFlow<SearchState> = _searchState.asStateFlow()
+    
+    private val _query = MutableStateFlow(initialQuery)
+    val query: StateFlow<String> = _query.asStateFlow()
     
     private val _selectedShow = MutableStateFlow<Show?>(null)
     val selectedShow: StateFlow<Show?> = _selectedShow.asStateFlow()
@@ -53,7 +56,17 @@ class AddShowSearchViewModel(application: Application, private val query: String
         searchShows()
     }
     
+    fun updateQuery(newQuery: String) {
+        _query.value = newQuery
+    }
+    
     fun searchShows() {
+        val currentQuery = _query.value
+        if (currentQuery.isBlank()) {
+            _searchState.value = SearchState.Success(emptyList())
+            return
+        }
+        
         viewModelScope.launch {
             _searchState.value = SearchState.Loading
             
@@ -63,16 +76,16 @@ class AddShowSearchViewModel(application: Application, private val query: String
                     val preferences = Preferences.getSharedPreferences()
                     val language = preferences.getString("pref_language", "en")
                     
-                    var searchResults = tmdbClient.searchShows(query, language)
+                    var searchResults = tmdbClient.searchShows(currentQuery, language)
                     
                     // If no results, try substituting " and " with " & "
-                    if (searchResults.isEmpty() && query.contains(" and ")) {
-                        searchResults = tmdbClient.searchShows(query.replace(" and ", " & "), null)
+                    if (searchResults.isEmpty() && currentQuery.contains(" and ")) {
+                        searchResults = tmdbClient.searchShows(currentQuery.replace(" and ", " & "), null)
                     }
                     
                     // If still no results, search all languages
                     if (searchResults.isEmpty()) {
-                        searchResults = tmdbClient.searchShows(query, null)
+                        searchResults = tmdbClient.searchShows(currentQuery, null)
                     }
                     
                     searchResults

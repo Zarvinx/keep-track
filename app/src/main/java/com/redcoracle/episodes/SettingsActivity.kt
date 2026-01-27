@@ -19,8 +19,8 @@
 package com.redcoracle.episodes
 
 import android.os.Bundle
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -38,12 +38,9 @@ import androidx.compose.ui.unit.dp
 import androidx.preference.PreferenceManager
 import com.redcoracle.episodes.ui.theme.EpisodesTheme
 
-class SettingsActivity : AppCompatActivity() {
+class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        // Hide default action bar
-        supportActionBar?.hide()
         
         setContent {
             EpisodesTheme {

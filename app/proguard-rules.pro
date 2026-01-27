@@ -29,3 +29,24 @@
 
 # R8 said to add these
 -dontwarn kotlin.coroutines.Continuation
+
+# Retrofit
+-dontwarn retrofit2.**
+-keep class retrofit2.** { *; }
+-keepattributes Signature
+-keepattributes Exceptions
+-keepclasseswithmembers class * {
+    @retrofit2.http.* <methods>;
+}
+
+# RxJava2
+-dontwarn io.reactivex.**
+-keep class io.reactivex.** { *; }
+-keep interface io.reactivex.** { *; }
+-keepclassmembers class io.reactivex.** { *; }
+
+# Retrofit RxJava2 Adapter
+-keep class retrofit2.adapter.rxjava2.** { *; }
+-dontwarn retrofit2.adapter.rxjava2.**
+
+

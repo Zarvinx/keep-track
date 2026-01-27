@@ -77,6 +77,7 @@ These can stay in Java for now, but should eventually be converted:
 ### UI/UX
 - [ ] **Add status text above show cards**
   - Display next episode air date ("Next episode airs in X days")
+  - When next episode is not released, don't allow it to be selected as watched.
   - Show status for ended shows ("This show has ended")
   - Handle missing data ("No information about next episode")
   - Position above the progress bar in show list items
