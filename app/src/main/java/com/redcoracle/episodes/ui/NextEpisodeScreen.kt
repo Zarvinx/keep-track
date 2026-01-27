@@ -101,18 +101,30 @@ fun NextEpisodeScreen(
                     }
                     
                     // Watched checkbox
+                    val now = System.currentTimeMillis()
+                    val isWatchable = ep.firstAired?.let { it * 1000 <= now } ?: false
+                    
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = stringResource(R.string.watched_check_box),
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (isWatchable) {
+                                MaterialTheme.colorScheme.onSurface
+                            } else {
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                            }
                         )
+                        if (!isWatchable) {
+                            Spacer(modifier = Modifier.width(4.dp))
+                        }
                         Checkbox(
                             checked = ep.watched,
-                            onCheckedChange = { isChecked ->
+                            onCheckedChange = if (isWatchable) { isChecked ->
                                 viewModel.setWatched(isChecked)
-                            }
+                            } else null,
+                            enabled = isWatchable
                         )
                     }
                 }

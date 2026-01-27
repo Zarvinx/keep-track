@@ -60,6 +60,7 @@ import com.redcoracle.episodes.db.DatabaseOpenHelper
 import com.redcoracle.episodes.db.ShowsProvider
 import com.redcoracle.episodes.services.AsyncTask
 import com.redcoracle.episodes.services.BackupTask
+import com.redcoracle.episodes.services.RefreshAllShowsTask
 import com.redcoracle.episodes.services.RestoreTask
 import com.redcoracle.episodes.ui.theme.EpisodesTheme
 import java.io.FileInputStream
@@ -99,6 +100,7 @@ class MainActivity : AppCompatActivity(),
                     onRestore = { restore() },
                     onSettings = { showSettings() },
                     onAbout = { showAbout() },
+                    onRefreshAll = { refreshAllShows() },
                     onAddShow = { query -> 
                         val intent = Intent(this, AddShowSearchActivity::class.java)
                         intent.putExtra("query", query)
@@ -200,6 +202,11 @@ class MainActivity : AppCompatActivity(),
     override fun onBackupSelected(backupFilename: String) {
         AsyncTask().executeAsync(RestoreTask(backupFilename))
     }
+    
+    private fun refreshAllShows() {
+        AsyncTask().executeAsync(RefreshAllShowsTask())
+        Toast.makeText(this, "Refreshing all shows in background...", Toast.LENGTH_LONG).show()
+    }
 
     private fun showSettings() {
         val intent = Intent(this, SettingsActivity::class.java)
@@ -225,6 +232,7 @@ fun MainScreen(
     onRestore: () -> Unit,
     onSettings: () -> Unit,
     onAbout: () -> Unit,
+    onRefreshAll: () -> Unit,
     onAddShow: (String) -> Unit
 ) {
     val context = LocalContext.current
@@ -351,7 +359,7 @@ fun MainScreen(
                             text = { Text(stringResource(R.string.menu_refresh_all_shows)) },
                             onClick = {
                                 showFilterMenu = false
-                                // TODO: Implement refresh all shows
+                                onRefreshAll()
                             }
                         )
                     }

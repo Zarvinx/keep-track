@@ -49,6 +49,7 @@ class GetShowParser {
             show.setFirstAired(series.first_air_date);
             show.setBannerPath(series.backdrop_path);
             show.setPosterPath(series.poster_path);
+            show.setStatus(series.status);
         } catch (Exception e) {
 	        Log.w(TAG, e);
             return null;

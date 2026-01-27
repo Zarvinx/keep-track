@@ -32,6 +32,7 @@ public class Show {
 	private String bannerPath;
 	private String fanartPath;
 	private String posterPath;
+	private String status;
 	private List<Episode> episodes;
 
 	public Show() {
@@ -42,6 +43,7 @@ public class Show {
 		bannerPath = "";
 		fanartPath = "";
 		posterPath = "";
+		status = "";
 		episodes = null;
 	}
 
@@ -131,6 +133,14 @@ public class Show {
 
 	public void setPosterPath(String posterPath) {
 		this.posterPath = posterPath;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
 	}
 
 	public List<Episode> getEpisodes() {

@@ -33,7 +33,9 @@ data class Show(
     val nextEpisodeId: Int?,
     val nextEpisodeName: String?,
     val nextEpisodeSeasonNumber: Int?,
-    val nextEpisodeNumber: Int?
+    val nextEpisodeNumber: Int?,
+    val nextEpisodeAirDate: Long?,
+    val status: String?
 )
 
 class ShowsViewModel(application: Application) : AndroidViewModel(application) {
@@ -139,6 +141,7 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
         val starredIndex = cursor.getColumnIndexOrThrow(ShowsTable.COLUMN_STARRED)
         val archivedIndex = cursor.getColumnIndexOrThrow(ShowsTable.COLUMN_ARCHIVED)
         val bannerIndex = cursor.getColumnIndexOrThrow(ShowsTable.COLUMN_BANNER_PATH)
+        val statusIndex = cursor.getColumnIndexOrThrow(ShowsTable.COLUMN_STATUS)
         
         while (cursor.moveToNext()) {
                 val id = cursor.getInt(idIndex)
@@ -146,6 +149,7 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
                 val starred = cursor.getInt(starredIndex) > 0
                 val archived = cursor.getInt(archivedIndex) > 0
                 val bannerPath = cursor.getString(bannerIndex)
+                val status = cursor.getString(statusIndex)
                 
                 val counts = episodeCounts[id] ?: EpisodeCounts(0, 0, 0)
                 
@@ -175,7 +179,9 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
                             nextEpisodeId = nextEpisode?.id,
                             nextEpisodeName = nextEpisode?.name,
                             nextEpisodeSeasonNumber = nextEpisode?.seasonNumber,
-                            nextEpisodeNumber = nextEpisode?.episodeNumber
+                            nextEpisodeNumber = nextEpisode?.episodeNumber,
+                            nextEpisodeAirDate = nextEpisode?.airDate,
+                            status = status
                         )
                     )
                 }
@@ -210,7 +216,8 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
         val id: Int,
         val name: String,
         val seasonNumber: Int,
-        val episodeNumber: Int
+        val episodeNumber: Int,
+        val airDate: Long?
     )
     
     private fun getNextEpisode(showId: Int): NextEpisodeInfo? {
@@ -218,7 +225,8 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
             EpisodesTable.COLUMN_ID,
             EpisodesTable.COLUMN_NAME,
             EpisodesTable.COLUMN_SEASON_NUMBER,
-            EpisodesTable.COLUMN_EPISODE_NUMBER
+            EpisodesTable.COLUMN_EPISODE_NUMBER,
+            EpisodesTable.COLUMN_FIRST_AIRED
         )
         
         val selection = "${EpisodesTable.COLUMN_SHOW_ID}=? AND ${EpisodesTable.COLUMN_SEASON_NUMBER}!=0 AND (${EpisodesTable.COLUMN_WATCHED}==0 OR ${EpisodesTable.COLUMN_WATCHED} IS NULL)"
@@ -237,12 +245,16 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
                 val nameIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_NAME)
                 val seasonIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_SEASON_NUMBER)
                 val episodeIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_EPISODE_NUMBER)
+                val airDateIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_FIRST_AIRED)
+                
+                val airDateSeconds = cursor.getLong(airDateIndex)
                 
                 return NextEpisodeInfo(
                     id = cursor.getInt(idIndex),
                     name = cursor.getString(nameIndex),
                     seasonNumber = cursor.getInt(seasonIndex),
-                    episodeNumber = cursor.getInt(episodeIndex)
+                    episodeNumber = cursor.getInt(episodeIndex),
+                    airDate = if (airDateSeconds > 0) airDateSeconds * 1000 else null
                 )
             }
         }

@@ -62,6 +62,12 @@ These can stay in Java for now, but should eventually be converted:
 
 ## Code Quality
 
+### Component Organization
+- [ ] **Refactor show status text into separate component**
+  - Extract status message display (ended/caught up) from ShowListItem
+  - Create reusable StatusText composable
+  - Improves maintainability and testability
+
 ### Testing
 - [ ] Add unit tests for ViewModels
 - [ ] Add UI tests for main flows
@@ -75,7 +81,7 @@ These can stay in Java for now, but should eventually be converted:
 ## Feature Improvements
 
 ### UI/UX
-- [ ] **Add status text above show cards**
+- [x] **Add status text above show cards**
   - Display next episode air date ("Next episode airs in X days")
   - When next episode is not released, don't allow it to be selected as watched.
   - Show status for ended shows ("This show has ended")
@@ -103,3 +109,7 @@ These can stay in Java for now, but should eventually be converted:
 - [x] Add lifecycle-aware data reloading
 - [x] Centralize shadow styles in theme
 - [x] Convert AddShowSearchResults to Kotlin object
+- [x] Add status text above show cards with air date countdown
+- [x] Implement show status tracking from TMDB (Ended/Canceled)
+- [x] Implement "Refresh All Shows" feature
+- [x] Disable watch buttons for unreleased/TBA episodes

@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Beenhere
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
@@ -43,13 +44,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.redcoracle.episodes.R
 import com.redcoracle.episodes.ui.theme.AppShadows
+
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun ShowsListScreen(
@@ -118,6 +120,14 @@ fun ShowListItem(
         if (show.nextEpisodeSeasonNumber != null && show.nextEpisodeNumber != null) {
             "S%02dE%02d".format(show.nextEpisodeSeasonNumber, show.nextEpisodeNumber)
         } else null
+    }
+    val episodeStatus = remember(show.nextEpisodeAirDate) {
+        calculateEpisodeStatus(show)
+    }
+    
+    // Episode is watchable only if it has an air date AND it has already aired
+    val isWatchable = remember(show.nextEpisodeAirDate) {
+        show.nextEpisodeAirDate?.let { it <= System.currentTimeMillis() } ?: false
     }
     
     Surface(
@@ -210,6 +220,24 @@ fun ShowListItem(
                         )
                     }
                 }
+                
+                // Status text overlay at bottom of banner (for upcoming episodes)
+                if (episodeStatus != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomStart)
+                            .background(Color(0xFF000000).copy(alpha = 0.75f))
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = episodeStatus.text,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 12.sp,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
             }
             
             // Progress bar (thin line)
@@ -258,20 +286,29 @@ fun ShowListItem(
                         )
                     }
                     
-                    // Watch button
+                    // Watch button (disabled if episode hasn't aired yet or has no air date)
                     IconButton(
                         onClick = { show.nextEpisodeId?.let(onWatchNextClick) },
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(36.dp),
+                        enabled = isWatchable
                     ) {
                         Icon(
                             imageVector = Icons.Filled.CheckCircle,
-                            contentDescription = "Mark as watched",
-                            tint = MaterialTheme.colorScheme.primary,
+                            contentDescription = if (isWatchable) "Mark as watched" else "Not yet available",
+                            tint = if (isWatchable) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                Color(0xFF555555)
+                            },
                             modifier = Modifier.size(28.dp)
                         )
                     }
                 }
             } else {
+                // Show has no next episode - determine status message
+                val isEnded = show.status in listOf("Ended", "Canceled")
+                val statusText = if (isEnded) "This show has ended" else "You are all caught up"
+                
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -280,14 +317,71 @@ fun ShowListItem(
                         .padding(horizontal = 12.dp, vertical = 8.dp),
                     contentAlignment = Alignment.CenterStart
                 ) {
-                    Text(
-                        text = "You are all caught up",
-                        color = Color(0xFFAAAAAA),
-                        fontSize = 14.sp,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (isEnded) {
+                            Icon(
+                                imageVector = Icons.Filled.Beenhere,
+                                contentDescription = null,
+                                tint = Color(0xFF4CAF50),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        Text(
+                            text = statusText,
+                            color = Color(0xFFAAAAAA),
+                            fontSize = 14.sp,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Data class to hold episode status information for upcoming episodes
+ */
+private data class EpisodeStatus(
+    val text: String
+)
+
+/**
+ * Calculate status text for upcoming episodes only
+ * Returns null for aired episodes, missing data, or caught-up shows
+ */
+private fun calculateEpisodeStatus(show: Show): EpisodeStatus? {
+    val airDate = show.nextEpisodeAirDate ?: return null
+    val diffMillis = airDate - System.currentTimeMillis()
+    
+    // Only show status for episodes that haven't aired yet
+    if (diffMillis <= 0) return null
+    
+    val daysUntil = TimeUnit.MILLISECONDS.toDays(diffMillis)
+    return when {
+        daysUntil == 0L -> EpisodeStatus(
+            text = "Next episode airs today"
+        )
+        daysUntil == 1L -> EpisodeStatus(
+            text = "Next episode airs tomorrow"
+        )
+        daysUntil < 7 -> EpisodeStatus(
+            text = "Next episode airs in $daysUntil days"
+        )
+        daysUntil < 30 -> {
+            val weeks = daysUntil / 7
+            EpisodeStatus(
+                text = "Next episode airs in ${weeks} week${if (weeks > 1) "s" else ""}"
+            )
+        }
+        else -> {
+            val months = daysUntil / 30
+            EpisodeStatus(
+                text = "Next episode airs in ${months} month${if (months > 1) "s" else ""}"
+            )
         }
     }
 }

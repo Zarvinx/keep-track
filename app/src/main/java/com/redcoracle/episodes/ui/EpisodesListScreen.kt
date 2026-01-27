@@ -95,9 +95,10 @@ fun EpisodeListItem(
     onWatchedChange: (Boolean) -> Unit
 ) {
     val now = Date()
-    val isUpcoming = episode.firstAired?.let { Date(it * 1000).after(now) } ?: false
     
-    val textColor = if (isUpcoming) {
+    val isWatchable = episode.firstAired?.let { Date(it * 1000).before(now) || Date(it * 1000) == now } ?: false
+    
+    val textColor = if (!isWatchable) {
         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
     } else {
         MaterialTheme.colorScheme.onSurface
@@ -148,7 +149,8 @@ fun EpisodeListItem(
             // Watched checkbox
             Checkbox(
                 checked = episode.watched,
-                onCheckedChange = onWatchedChange
+                onCheckedChange = if (isWatchable) onWatchedChange else null,
+                enabled = isWatchable
             )
         }
     }

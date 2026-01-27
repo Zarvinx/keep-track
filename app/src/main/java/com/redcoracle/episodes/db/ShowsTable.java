@@ -41,6 +41,7 @@ public class ShowsTable {
     public static final String COLUMN_FANART_PATH = "fanart_path";
     public static final String COLUMN_POSTER_PATH = "poster_path";
     public static final String COLUMN_NOTES = "notes";
+    public static final String COLUMN_STATUS = "status";
 
     public static final String COLUMN_TYPE_ID = "INTEGER PRIMARY KEY";
     public static final String COLUMN_TYPE_TVDB_ID = "INTEGER UNIQUE";
@@ -56,10 +57,12 @@ public class ShowsTable {
     public static final String COLUMN_TYPE_FANART_PATH = "TEXT";
     public static final String COLUMN_TYPE_POSTER_PATH = "TEXT";
     public static final String COLUMN_TYPE_NOTES = "TEXT";
+    public static final String COLUMN_TYPE_STATUS = "TEXT";
 
     public static String createTableSQL(String table_name) {
         return String.format(
             "CREATE TABLE %s ("  +
+            "    %s %s," +
             "    %s %s," +
             "    %s %s," +
             "    %s %s," +
@@ -89,7 +92,8 @@ public class ShowsTable {
             COLUMN_BANNER_PATH, COLUMN_TYPE_BANNER_PATH,
             COLUMN_FANART_PATH, COLUMN_TYPE_FANART_PATH,
             COLUMN_POSTER_PATH, COLUMN_TYPE_POSTER_PATH,
-            COLUMN_NOTES, COLUMN_TYPE_NOTES
+            COLUMN_NOTES, COLUMN_TYPE_NOTES,
+            COLUMN_STATUS, COLUMN_TYPE_STATUS
         );
     }
 
@@ -195,6 +199,15 @@ public class ShowsTable {
             } finally {
                 db.endTransaction();
             }
+        }
+
+        if (oldVersion < 10) {
+            // Add status column
+            Log.d(TAG, "upgrading shows table: adding status column");
+            db.execSQL(String.format("ALTER TABLE %s ADD COLUMN %s %s",
+                    TABLE_NAME,
+                    COLUMN_STATUS,
+                    COLUMN_TYPE_STATUS));
         }
     }
 }
