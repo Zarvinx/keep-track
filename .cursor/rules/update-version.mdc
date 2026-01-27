@@ -1,0 +1,16 @@
+---
+name: update-version
+description: This is a new rule
+---
+
+# Overview
+
+Increment the versionName in /build.gradle in:
+
+```
+android {
+    defaultConfig {
+        versionName "[update_this]"
+```
+
+Base the incrementation on the scope and size of the changes. You can run a git diff beforehand.
