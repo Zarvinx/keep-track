@@ -56,9 +56,11 @@ These can stay in Java for now, but should eventually be converted:
   - Memory optimization for large lists
 
 ### Async Operations
-- [ ] **Replace remaining AsyncTask usage**
-  - File in MainActivity.kt line 183 still uses deprecated android.os.AsyncTask
-  - Convert to Kotlin coroutines
+- [x] **Replace remaining AsyncTask usage**
+  - Converted deprecated android.os.AsyncTask to Kotlin coroutines
+  - Converted AsyncTask wrapper and all task classes to Kotlin
+  - All background tasks now use CoroutineScope with Dispatchers.IO
+
 
 ## Code Quality
 

@@ -66,6 +66,9 @@ import com.redcoracle.episodes.ui.theme.EpisodesTheme
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity(), 
     ActivityCompat.OnRequestPermissionsResultCallback {
@@ -193,7 +196,9 @@ class MainActivity : AppCompatActivity(),
                         FileOutputStream(getDatabasePath(DatabaseOpenHelper.getDbName())).channel
                     )
                     ShowsProvider.reloadDatabase(this)
-                    android.os.AsyncTask.execute { Glide.get(applicationContext).clearDiskCache() }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        Glide.get(applicationContext).clearDiskCache()
+                    }
                     Toast.makeText(this, getString(R.string.restore_success_message), Toast.LENGTH_LONG).show()
                 }
             }
@@ -282,9 +287,10 @@ fun MainScreen(
     }
     
     // Main menu items
-    val mainMenuItems = remember(onBackup, onRestore, onSettings, onAbout) {
+    val mainMenuItems = remember(onBackup, onRestore, onRefreshAll, onSettings, onAbout) {
         listOf(
             MainMenuItem(R.string.menu_back_up, onBackup),
+            MainMenuItem(R.string.menu_refresh_all_shows, onRefreshAll),
             MainMenuItem(R.string.menu_restore, onRestore),
             MainMenuItem(R.string.menu_settings, onSettings),
             MainMenuItem(R.string.menu_about, onAbout)
@@ -361,14 +367,6 @@ fun MainScreen(
                                 }
                             )
                         }
-                        Divider()
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.menu_refresh_all_shows)) },
-                            onClick = {
-                                showFilterMenu = false
-                                onRefreshAll()
-                            }
-                        )
                     }
                     
                     // Main overflow menu

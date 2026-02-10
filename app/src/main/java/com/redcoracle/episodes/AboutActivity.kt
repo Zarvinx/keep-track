@@ -122,8 +122,44 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
                             uriHandler.openUri(annotation.item)
                         }
                 },
-                modifier = Modifier.padding(vertical = 8.dp)
+                modifier = Modifier.padding(bottom = 8.dp)
             )
+            
+            // Original source attribution
+            val sourceUrl = stringResource(R.string.about_website_source)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = "Fork of:",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
+                val sourceText = buildAnnotatedString {
+                    pushStringAnnotation(tag = "URL", annotation = sourceUrl)
+                    withStyle(
+                        style = SpanStyle(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 14.sp
+                        )
+                    ) {
+                        append(sourceUrl)
+                    }
+                    pop()
+                }
+                
+                ClickableText(
+                    text = sourceText,
+                    onClick = { offset ->
+                        sourceText.getStringAnnotations(tag = "URL", start = offset, end = offset)
+                            .firstOrNull()?.let { annotation ->
+                                uriHandler.openUri(annotation.item)
+                            }
+                    }
+                )
+            }
             
             Divider()
             
