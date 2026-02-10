@@ -187,21 +187,21 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
         
-        // Sort shows: by % watched (ascending), then 100% shows alphabetically
+        // Sort shows:
+        // 1. Starred shows at the top, sorted by name
+        // 2. Unfinished shows (watching), sorted by name
+        // 3. Finished shows (100% complete), sorted by name
         return showsList.sortedWith(
             compareBy<Show> { show ->
-                if (show.totalCount > 0) {
-                    show.watchedCount.toFloat() / show.totalCount.toFloat()
-                } else {
-                    0f
-                }
+                // First: starred = 0, not starred = 1 (starred shows first)
+                if (show.starred) 0 else 1
             }.thenBy { show ->
-                // For 100% watched shows, sort alphabetically
-                if (show.totalCount > 0 && show.watchedCount == show.totalCount) {
-                    show.name.lowercase()
-                } else {
-                    null
-                }
+                // Second: finished = 1, not finished = 0 (unfinished shows before finished)
+                val isFinished = show.totalCount > 0 && show.watchedCount == show.totalCount
+                if (isFinished) 1 else 0
+            }.thenBy { show ->
+                // Third: sort alphabetically by name (case-insensitive)
+                show.name.lowercase()
             }
         )
     }

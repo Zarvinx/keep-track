@@ -26,9 +26,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Beenhere
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -184,40 +186,49 @@ fun ShowListItem(
                     )
                 }
                 
-                // Star and Archive toggles
-                Row(
+                // Star and Archive toggles on dark background in corner
+                Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
+                        .background(
+                            color = Color.DarkGray.copy(alpha = 0.7f),
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(
+                                topStart = 0.dp,
+                                topEnd = 0.dp,
+                                bottomStart = 8.dp,
+                                bottomEnd = 0.dp
+                            )
+                        )
                         .padding(4.dp)
                 ) {
-                    // Archive toggle
-                    IconButton(
-                        onClick = { onArchiveClick(show.id) },
-                        modifier = Modifier.size(32.dp)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Icon(
-                            painter = if (show.archived) {
-                                painterResource(R.drawable.ic_show_archived)
-                            } else {
-                                painterResource(R.drawable.ic_show_unarchived)
-                            },
-                            contentDescription = if (show.archived) "Unarchive" else "Archive",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                    
-                    // Star toggle
-                    IconButton(
-                        onClick = { onStarClick(show.id) },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (show.starred) Icons.Filled.Star else Icons.Outlined.Star,
-                            contentDescription = if (show.starred) "Unstar" else "Star",
-                            tint = if (show.starred) Color(0xFFFFD700) else Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
+                        // Archive toggle
+                        IconButton(
+                            onClick = { onArchiveClick(show.id) },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (show.archived) Icons.Filled.Archive else Icons.Filled.Unarchive,
+                                contentDescription = if (show.archived) "Unarchive" else "Archive",
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        
+                        // Star toggle
+                        IconButton(
+                            onClick = { onStarClick(show.id) },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (show.starred) Icons.Filled.Star else Icons.Outlined.Star,
+                                contentDescription = if (show.starred) "Unstar" else "Star",
+                                tint = if (show.starred) Color(0xFFFFD700) else Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                     }
                 }
                 
