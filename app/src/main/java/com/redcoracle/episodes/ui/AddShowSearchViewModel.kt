@@ -74,7 +74,7 @@ class AddShowSearchViewModel(application: Application, initialQuery: String) : A
                 val results = withContext(Dispatchers.IO) {
                     val tmdbClient = Client()
                     val preferences = Preferences.getSharedPreferences()
-                    val language = preferences.getString("pref_language", "en")
+                    val language = preferences?.getString("pref_language", "en") ?: "en"
                     
                     var searchResults = tmdbClient.searchShows(currentQuery, language)
                     

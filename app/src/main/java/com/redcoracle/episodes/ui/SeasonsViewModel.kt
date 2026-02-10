@@ -79,7 +79,7 @@ class SeasonsViewModel(application: Application, private val showId: Int) : Andr
             val episodesCounter = EpisodesCounter(EpisodesTable.COLUMN_SEASON_NUMBER)
             episodesCounter.swapCursor(it)
             
-            val seasonNumbers = episodesCounter.keys.toList().sorted()
+            val seasonNumbers = episodesCounter.getKeys().toList().sorted()
             
             for (seasonNumber in seasonNumbers) {
                 val name = if (seasonNumber == 0) {

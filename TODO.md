@@ -34,12 +34,12 @@
 
 ### Utilities (Lower Priority)
 These can stay in Java for now, but should eventually be converted:
-- [ ] `EpisodesApplication.java` - Application class
-- [ ] `AutoRefreshHelper.java` - Background refresh logic
-- [ ] `EpisodesCounter.java` - Episode counting utilities
-- [ ] `FileUtilities.java` - File operations
-- [ ] `Preferences.java` - Shared preferences wrapper
-- [ ] `RefreshShowUtil.java` - Show refresh logic
+- [x] `EpisodesApplication.java` - Application class
+- [x] `AutoRefreshHelper.java` - Background refresh logic
+- [x] `EpisodesCounter.java` - Episode counting utilities
+- [x] `FileUtilities.java` - File operations
+- [x] `Preferences.java` - Shared preferences wrapper
+- [x] `RefreshShowUtil.java` - Show refresh logic
 
 ## Performance Optimizations
 
