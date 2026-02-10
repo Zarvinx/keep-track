@@ -23,14 +23,14 @@
 ## Remaining Java → Kotlin/Compose Conversions
 
 ### Activities
-- [ ] `AboutActivity.java` - Simple activity, should be quick
-- [ ] `EpisodeActivity.java` - Episode details viewer
-- [ ] `SettingsActivity.java` - Settings screen
+- [x] `AboutActivity.java` - Simple activity
+- [x] `EpisodeActivity.java` - Episode details viewer
+- [x] `SettingsActivity.java` - Settings screen
 
 ### Fragments
-- [ ] `EpisodeDetailsFragment.java` - Episode details UI
-- [ ] `SettingsFragment.java` - Settings UI (or use Compose Settings)
-- [ ] `SelectBackupDialog.java` - Backup selection dialog
+- [x] `EpisodeDetailsFragment.java` - Episode details UI
+- [x] `SettingsFragment.java` - Settings UI
+- [x] `SelectBackupDialog.java` - Backup selection dialog
 
 ### Utilities (Lower Priority)
 These can stay in Java for now, but should eventually be converted:

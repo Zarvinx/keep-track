@@ -68,7 +68,6 @@ import java.io.FileNotFoundException
 import java.io.FileOutputStream
 
 class MainActivity : AppCompatActivity(), 
-    SelectBackupDialog.OnBackupSelectedListener,
     ActivityCompat.OnRequestPermissionsResultCallback {
 
     companion object {
@@ -79,6 +78,8 @@ class MainActivity : AppCompatActivity(),
         @JvmStatic
         fun getAppContext(): Context? = context
     }
+    
+    private var showBackupDialog by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -105,7 +106,10 @@ class MainActivity : AppCompatActivity(),
                         val intent = Intent(this, AddShowSearchActivity::class.java)
                         intent.putExtra("query", query)
                         startActivity(intent)
-                    }
+                    },
+                    showBackupDialog = showBackupDialog,
+                    onDismissBackupDialog = { showBackupDialog = false },
+                    onBackupSelected = { backupFilename -> onBackupSelected(backupFilename) }
                 )
             }
         }
@@ -157,8 +161,7 @@ class MainActivity : AppCompatActivity(),
             startActivityForResult(intent, READ_REQUEST_CODE)
         } else {
             if (hasStoragePermission()) {
-                val dialog = SelectBackupDialog()
-                dialog.show(supportFragmentManager, "select_backup_dialog")
+                showBackupDialog = true
             }
         }
     }
@@ -199,7 +202,8 @@ class MainActivity : AppCompatActivity(),
         }
     }
 
-    override fun onBackupSelected(backupFilename: String) {
+    private fun onBackupSelected(backupFilename: String) {
+        showBackupDialog = false
         AsyncTask().executeAsync(RestoreTask(backupFilename))
     }
     
@@ -233,7 +237,10 @@ fun MainScreen(
     onSettings: () -> Unit,
     onAbout: () -> Unit,
     onRefreshAll: () -> Unit,
-    onAddShow: (String) -> Unit
+    onAddShow: (String) -> Unit,
+    showBackupDialog: Boolean,
+    onDismissBackupDialog: () -> Unit,
+    onBackupSelected: (String) -> Unit
 ) {
     val context = LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
@@ -397,6 +404,14 @@ fun MainScreen(
                 onShowClick = onShowSelected
             )
         }
+    }
+    
+    // Backup selection dialog
+    if (showBackupDialog) {
+        SelectBackupDialog(
+            onBackupSelected = onBackupSelected,
+            onDismiss = onDismissBackupDialog
+        )
     }
 }
 

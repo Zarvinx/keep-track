@@ -39,8 +39,10 @@ import kotlinx.coroutines.withContext
 @Stable
 data class Episode(
     val id: Int,
+    val seasonNumber: Int,
     val episodeNumber: Int,
     val name: String,
+    val overview: String?,
     val firstAired: Long?,
     val watched: Boolean
 )
@@ -73,8 +75,10 @@ class EpisodesViewModel(
         
         val projection = arrayOf(
             EpisodesTable.COLUMN_ID,
+            EpisodesTable.COLUMN_SEASON_NUMBER,
             EpisodesTable.COLUMN_EPISODE_NUMBER,
             EpisodesTable.COLUMN_NAME,
+            EpisodesTable.COLUMN_OVERVIEW,
             EpisodesTable.COLUMN_FIRST_AIRED,
             EpisodesTable.COLUMN_WATCHED
         )
@@ -90,8 +94,10 @@ class EpisodesViewModel(
             "${EpisodesTable.COLUMN_EPISODE_NUMBER} ASC"
         )?.use { cursor ->
             val idIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_ID)
+            val seasonNumberIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_SEASON_NUMBER)
             val episodeNumberIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_EPISODE_NUMBER)
             val nameIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_NAME)
+            val overviewIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_OVERVIEW)
             val firstAiredIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_FIRST_AIRED)
             val watchedIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_WATCHED)
             
@@ -99,8 +105,10 @@ class EpisodesViewModel(
                 episodesList.add(
                     Episode(
                         id = cursor.getInt(idIndex),
+                        seasonNumber = cursor.getInt(seasonNumberIndex),
                         episodeNumber = cursor.getInt(episodeNumberIndex),
                         name = cursor.getString(nameIndex),
+                        overview = if (cursor.isNull(overviewIndex)) null else cursor.getString(overviewIndex),
                         firstAired = if (cursor.isNull(firstAiredIndex)) null else cursor.getLong(firstAiredIndex),
                         watched = cursor.getInt(watchedIndex) > 0
                     )
