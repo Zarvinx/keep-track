@@ -41,16 +41,17 @@ class RefreshAllShowsTask : Callable<Void?> {
         notificationBuilder.setProgress(total, current, false)
         notificationManager.notify(0, notificationBuilder.build())
 
-        cursor.moveToFirst()
-        do {
-            val showId = cursor.getInt(idColumnIndex)
-            val showName = cursor.getString(nameColumnIndex)
-            notificationBuilder.setContentText(showName)
-            notificationBuilder.setProgress(total, current, false)
-            notificationManager.notify(0, notificationBuilder.build())
-            refreshShow(showId, resolver)
-            current += 1
-        } while (cursor.moveToNext())
+        if (cursor.moveToFirst()) {
+            do {
+                val showId = cursor.getInt(idColumnIndex)
+                val showName = cursor.getString(nameColumnIndex)
+                notificationBuilder.setContentText(showName)
+                notificationBuilder.setProgress(total, current, false)
+                notificationManager.notify(0, notificationBuilder.build())
+                refreshShow(showId, resolver)
+                current += 1
+            } while (cursor.moveToNext())
+        }
         
         cursor.close()
         

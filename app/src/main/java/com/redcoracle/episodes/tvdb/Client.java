@@ -35,26 +35,122 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import retrofit2.Response;
 
 public class Client {
     private static final String TAG = Client.class.getName();
+    private static final Object REQUEST_LOCK = new Object();
+    // Keep headroom below TMDB's documented limit.
+    private static final long MIN_REQUEST_INTERVAL_MS = 35L;
+    private static final int MAX_429_RETRIES = 4;
+    private static final int MAX_IO_RETRIES = 2;
+    private static final long BASE_RETRY_DELAY_MS = 1000L;
+    private static long lastRequestAtMs = 0L;
     private final Tmdb tmdb;
 
     public Client() {
         this.tmdb = EpisodesApplication.getInstance().getTmdbClient();
     }
 
-    public List<Show> searchShows(String query, String language) {
-        this.tmdb.searchService().tv(query, null, language, null, false);
+    private void throttleRequestRate() {
+        synchronized (REQUEST_LOCK) {
+            final long now = System.currentTimeMillis();
+            final long waitMs = (lastRequestAtMs + MIN_REQUEST_INTERVAL_MS) - now;
+            if (waitMs > 0) {
+                sleep(waitMs);
+            }
+            lastRequestAtMs = System.currentTimeMillis();
+        }
+    }
 
+    private void sleep(long durationMs) {
         try {
-            final TvShowResultsPage results = this.tmdb
-                    .searchService()
-                    .tv(query, null, language, null, false)
-                    .execute()
-                    .body();
+            Thread.sleep(durationMs);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private long parseRetryAfterMillis(Response<?> response) {
+        String retryAfter = response.headers().get("Retry-After");
+        if (retryAfter == null) {
+            return -1L;
+        }
+        try {
+            long seconds = Long.parseLong(retryAfter.trim());
+            return seconds >= 0 ? seconds * 1000L : -1L;
+        } catch (NumberFormatException e) {
+            return -1L;
+        }
+    }
+
+    private <T> T bodyOrNull(Response<T> response) {
+        if (response == null) {
+            return null;
+        }
+        if (response.isSuccessful()) {
+            return response.body();
+        }
+        if (response.errorBody() != null) {
+            response.errorBody().close();
+        }
+        Log.w(TAG, String.format("TMDB request failed: %d %s", response.code(), response.message()));
+        return null;
+    }
+
+    private <T> Response<T> executeWithRetry(Callable<Response<T>> request) throws IOException {
+        int ioFailures = 0;
+        for (int attempt = 0; attempt <= MAX_429_RETRIES; attempt++) {
+            throttleRequestRate();
+
+            final Response<T> response;
+            try {
+                response = request.call();
+            } catch (IOException e) {
+                if (ioFailures >= MAX_IO_RETRIES) {
+                    throw e;
+                }
+                ioFailures += 1;
+                long backoffMs = BASE_RETRY_DELAY_MS * ioFailures;
+                Log.w(TAG, String.format("TMDB I/O failure, retrying in %dms", backoffMs), e);
+                sleep(backoffMs);
+                continue;
+            } catch (Exception e) {
+                throw new IOException("TMDB request failed unexpectedly", e);
+            }
+
+            if (response.code() != 429) {
+                return response;
+            }
+
+            long retryAfterMs = parseRetryAfterMillis(response);
+            if (retryAfterMs < 0L) {
+                retryAfterMs = BASE_RETRY_DELAY_MS * (attempt + 1L);
+            }
+
+            if (response.errorBody() != null) {
+                response.errorBody().close();
+            }
+            if (attempt == MAX_429_RETRIES) {
+                Log.w(TAG, "TMDB rate limited after max retries.");
+                return response;
+            }
+
+            Log.w(TAG, String.format("TMDB rate limited (429), retrying in %dms", retryAfterMs));
+            sleep(retryAfterMs);
+        }
+
+        throw new IOException("Unreachable TMDB retry state");
+    }
+
+    public List<Show> searchShows(String query, String language) {
+        try {
+            final Response<TvShowResultsPage> response = executeWithRetry(
+                    () -> this.tmdb.searchService().tv(query, null, language, null, false).execute()
+            );
+            final TvShowResultsPage results = bodyOrNull(response);
             if (results != null) {
                 final SearchShowsParser parser = new SearchShowsParser();
                 return parser.parse(results, language);
@@ -75,36 +171,48 @@ public class Client {
 
             if (showIds.get("tmdbId") != null) {
                 int tmdbId = Integer.parseInt(showIds.get("tmdbId"));
-                Response<TvShow> seriesResponse = this.tmdb.tvService().tv(tmdbId, language, includes).execute();
-                if (seriesResponse.isSuccessful() && seriesResponse.body() != null) {
-                    lookupResult = seriesResponse.body();
-                }
+                Response<TvShow> seriesResponse = executeWithRetry(
+                        () -> this.tmdb.tvService().tv(tmdbId, language, includes).execute()
+                );
+                lookupResult = bodyOrNull(seriesResponse);
             }
 
             if (lookupResult == null && showIds.get("tvdbId") != null) {
-                Response<FindResults> seriesResponse = this.tmdb.findService().find(
-                        showIds.get("tvdbId"),
-                        ExternalSource.TVDB_ID,
-                        language
-                ).execute();
-                if (seriesResponse.isSuccessful() && seriesResponse.body() != null) {
-                    if (seriesResponse.body().tv_results != null && seriesResponse.body().tv_results.size() > 0) {
-                        BaseTvShow sparseShow = seriesResponse.body().tv_results.get(0);
-                        lookupResult = tmdb.tvService().tv(sparseShow.id, language, includes).execute().body();
+                Response<FindResults> seriesResponse = executeWithRetry(
+                        () -> this.tmdb.findService().find(
+                                showIds.get("tvdbId"),
+                                ExternalSource.TVDB_ID,
+                                language
+                        ).execute()
+                );
+                FindResults findResults = bodyOrNull(seriesResponse);
+                if (findResults != null) {
+                    if (findResults.tv_results != null && findResults.tv_results.size() > 0) {
+                        BaseTvShow sparseShow = findResults.tv_results.get(0);
+                        Response<TvShow> showResponse = executeWithRetry(
+                                () -> tmdb.tvService().tv(sparseShow.id, language, includes).execute()
+                        );
+                        lookupResult = bodyOrNull(showResponse);
                     }
                 }
             }
 
-            if (lookupResult == null && showIds.get("imbId") != null) {
-                Response<FindResults> seriesResponse = this.tmdb.findService().find(
-                        showIds.get("imbId"),
-                        ExternalSource.IMDB_ID,
-                        language
-                ).execute();
-                if (seriesResponse.isSuccessful() && seriesResponse.body() != null) {
-                    if (seriesResponse.body().tv_results != null && seriesResponse.body().tv_results.size() > 0) {
-                        BaseTvShow sparseShow = seriesResponse.body().tv_results.get(0);
-                        lookupResult = tmdb.tvService().tv(sparseShow.id, language, includes).execute().body();
+            if (lookupResult == null && showIds.get("imdbId") != null) {
+                Response<FindResults> seriesResponse = executeWithRetry(
+                        () -> this.tmdb.findService().find(
+                                showIds.get("imdbId"),
+                                ExternalSource.IMDB_ID,
+                                language
+                        ).execute()
+                );
+                FindResults findResults = bodyOrNull(seriesResponse);
+                if (findResults != null) {
+                    if (findResults.tv_results != null && findResults.tv_results.size() > 0) {
+                        BaseTvShow sparseShow = findResults.tv_results.get(0);
+                        Response<TvShow> showResponse = executeWithRetry(
+                                () -> tmdb.tvService().tv(sparseShow.id, language, includes).execute()
+                        );
+                        lookupResult = bodyOrNull(showResponse);
                     }
                 }
             }
@@ -124,11 +232,13 @@ public class Client {
     public Show getShow(int id, String language, boolean includeEpisodes) {
         try {
             AppendToResponse includes = new AppendToResponse(AppendToResponseItem.EXTERNAL_IDS);
-            Response<TvShow> seriesResponse = this.tmdb.tvService().tv(id, language, includes).execute();
+            Response<TvShow> seriesResponse = executeWithRetry(
+                    () -> this.tmdb.tvService().tv(id, language, includes).execute()
+            );
             Log.d(TAG, String.format("Received response %d: %s", seriesResponse.code(), seriesResponse.message()));
-            if (seriesResponse.isSuccessful() && seriesResponse.body() != null) {
+            final TvShow series = bodyOrNull(seriesResponse);
+            if (series != null) {
                 final GetShowParser parser = new GetShowParser();
-                final TvShow series = seriesResponse.body();
                 Show show = parser.parse(series, language);
 
                 if (show != null && includeEpisodes) {
@@ -153,7 +263,13 @@ public class Client {
             for (TvSeason season : series.seasons) {
                 try {
                     AppendToResponse includes = new AppendToResponse(AppendToResponseItem.EXTERNAL_IDS);
-                    season = this.tmdb.tvSeasonsService().season(series.id, season.season_number, language, includes).execute().body();
+                    final int seasonNumber = season.season_number;
+                    Response<TvSeason> seasonResponse = executeWithRetry(
+                            () -> this.tmdb.tvSeasonsService()
+                                    .season(series.id, seasonNumber, language, includes)
+                                    .execute()
+                    );
+                    season = bodyOrNull(seasonResponse);
                     if (season != null) {
                         episodes.addAll(episodesParser.parse(season.episodes));
                     }
