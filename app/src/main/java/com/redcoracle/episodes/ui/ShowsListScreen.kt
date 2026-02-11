@@ -42,6 +42,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -72,33 +73,50 @@ fun ShowsListScreen(
         previousShowCount = shows.size
     }
     
-    if (shows.isEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = stringResource(R.string.no_search_results_found),
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-    } else {
-        LazyColumn(
-            state = listState,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            items(
-                items = shows, 
-                key = { it.id },
-                contentType = { "show_item" }
-            ) { show ->
-                ShowListItem(
-                    show = show,
-                    onShowClick = onShowClick,
-                    onStarClick = remember { { id -> viewModel.toggleStarred(id, !show.starred) } },
-                    onArchiveClick = remember { { id -> viewModel.toggleArchived(id, !show.archived) } },
-                    onWatchNextClick = remember { { episodeId: Int -> viewModel.markEpisodeWatched(episodeId, true) } }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFF1A1A1A), // Very dark grey (top-left)
+                        Color(0xFF2D1B4E), // Deep purple (middle)
+                        Color(0xFF2A456F)  // Medium blue (bottom-right)
+                    ),
+                    start = androidx.compose.ui.geometry.Offset(0f, 0f),
+                    end = androidx.compose.ui.geometry.Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
                 )
+            )
+    ) {
+        if (shows.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(R.string.no_search_results_found),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.White
+                )
+            }
+        } else {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(
+                    items = shows, 
+                    key = { it.id },
+                    contentType = { "show_item" }
+                ) { show ->
+                    ShowListItem(
+                        show = show,
+                        onShowClick = onShowClick,
+                        onStarClick = remember { { id -> viewModel.toggleStarred(id, !show.starred) } },
+                        onArchiveClick = remember { { id -> viewModel.toggleArchived(id, !show.archived) } },
+                        onWatchNextClick = remember { { episodeId: Int -> viewModel.markEpisodeWatched(episodeId, true) } }
+                    )
+                }
             }
         }
     }
@@ -135,9 +153,11 @@ fun ShowListItem(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 8.dp)
+            .padding(horizontal = 8.dp, vertical = 4.dp)
             .clickable { onShowClick(show.id) },
-        tonalElevation = 1.dp
+        tonalElevation = 1.dp,
+        shadowElevation = 4.dp,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
     ) {
         Column {
             // Banner image with fixed height
@@ -194,7 +214,7 @@ fun ShowListItem(
                             color = Color.DarkGray.copy(alpha = 0.7f),
                             shape = androidx.compose.foundation.shape.RoundedCornerShape(
                                 topStart = 0.dp,
-                                topEnd = 0.dp,
+                                topEnd = 8.dp,
                                 bottomStart = 8.dp,
                                 bottomEnd = 0.dp
                             )
