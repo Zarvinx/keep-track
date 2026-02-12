@@ -37,6 +37,15 @@
     </activity>
 
     <activity
+        android:name=".BackupSettingsActivity"
+        android:label="@string/pref_backup_restore_title"
+        android:parentActivityName=".SettingsActivity">
+      <meta-data
+          android:name="android.support.PARENT_ACTIVITY"
+          android:value=".SettingsActivity"/>
+    </activity>
+
+    <activity
         android:name=".AboutActivity"
         android:label="@string/about_title" >
     </activity>
@@ -87,6 +96,10 @@
         <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
       </intent-filter>
     </receiver>
+
+    <receiver
+        android:name=".AutoBackupHelper$Receiver"
+        android:exported="false" />
 
     <provider
         android:name=".db.ShowsProvider"

@@ -21,6 +21,7 @@ package com.redcoracle.episodes
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
+import java.io.File
 import java.nio.channels.FileChannel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -48,6 +49,33 @@ object FileUtilities {
             destination.close()
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    fun get_backup_directory(context: Context): File {
+        val backupDirectory = File(context.filesDir, "backups")
+        if (!backupDirectory.exists()) {
+            backupDirectory.mkdirs()
+        }
+        return backupDirectory
+    }
+
+    fun get_backup_files(context: Context): List<File> {
+        val files = get_backup_directory(context).listFiles()
+        return files?.sortedByDescending { it.lastModified() } ?: emptyList()
+    }
+
+    fun prune_old_backups(context: Context, maxBackupCount: Int) {
+        val keep = maxBackupCount.coerceIn(1, 100)
+        val backups = get_backup_files(context)
+        if (backups.size <= keep) {
+            return
+        }
+
+        backups.drop(keep).forEach { file ->
+            if (file.exists()) {
+                file.delete()
+            }
         }
     }
 }

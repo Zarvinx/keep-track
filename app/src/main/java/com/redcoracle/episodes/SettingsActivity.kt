@@ -18,10 +18,7 @@
 
 package com.redcoracle.episodes
 
-import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
@@ -39,68 +36,27 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import com.redcoracle.episodes.ui.theme.EpisodesTheme
 
 class SettingsActivity : AppCompatActivity() {
-    private var showBackupDialog by mutableStateOf(false)
-    private lateinit var backupRestoreCoordinator: BackupRestoreCoordinator
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        backupRestoreCoordinator = BackupRestoreCoordinator(
-            activity = this,
-            hasStoragePermission = this::hasStoragePermission,
-            showLegacyRestoreDialog = { showBackupDialog = true }
-        )
 
         setContent {
             EpisodesTheme {
                 SettingsScreen(
-                    onNavigateBack = { finish() },
-                    onBackup = backupRestoreCoordinator::backUp,
-                    onRestore = backupRestoreCoordinator::restore
+                    onNavigateBack = { finish() }
                 )
-
-                if (showBackupDialog) {
-                    SelectBackupDialog(
-                        onBackupSelected = { backupFilename ->
-                            showBackupDialog = false
-                            backupRestoreCoordinator.onBackupSelected(backupFilename)
-                        },
-                        onDismiss = { showBackupDialog = false }
-                    )
-                }
             }
         }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (backupRestoreCoordinator.onActivityResult(requestCode, resultCode, data)) {
-            return
-        }
-        super.onActivityResult(requestCode, resultCode, data)
-    }
-
-    private fun hasStoragePermission(): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            return true
-        }
-        return ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-        ) == PackageManager.PERMISSION_GRANTED
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onNavigateBack: () -> Unit,
-    onBackup: () -> Unit,
-    onRestore: () -> Unit
+    onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
     val prefs = remember { PreferenceManager.getDefaultSharedPreferences(context) }
@@ -118,7 +74,6 @@ fun SettingsScreen(
     
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showPeriodDialog by remember { mutableStateOf(false) }
-    var showBackupRestoreDialog by remember { mutableStateOf(false) }
     
     Scaffold(
         topBar = {
@@ -195,7 +150,9 @@ fun SettingsScreen(
             SettingsListItem(
                 title = stringResource(R.string.pref_backup_restore_title),
                 summary = stringResource(R.string.pref_backup_restore_summary),
-                onClick = { showBackupRestoreDialog = true }
+                onClick = {
+                    context.startActivity(Intent(context, BackupSettingsActivity::class.java))
+                }
             )
         }
     }
@@ -224,39 +181,6 @@ fun SettingsScreen(
                 AutoRefreshHelper.getInstance(context).rescheduleAlarm()
             },
             onDismiss = { showPeriodDialog = false }
-        )
-    }
-
-    if (showBackupRestoreDialog) {
-        AlertDialog(
-            onDismissRequest = { showBackupRestoreDialog = false },
-            title = { Text(stringResource(R.string.pref_backup_restore_title)) },
-            text = { Text(stringResource(R.string.pref_backup_restore_summary)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showBackupRestoreDialog = false
-                        onBackup()
-                    }
-                ) {
-                    Text(stringResource(R.string.menu_back_up))
-                }
-            },
-            dismissButton = {
-                Row {
-                    TextButton(onClick = { showBackupRestoreDialog = false }) {
-                        Text(stringResource(android.R.string.cancel))
-                    }
-                    TextButton(
-                        onClick = {
-                            showBackupRestoreDialog = false
-                            onRestore()
-                        }
-                    ) {
-                        Text(stringResource(R.string.menu_restore))
-                    }
-                }
-            }
         )
     }
 }

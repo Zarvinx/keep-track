@@ -1,7 +1,6 @@
 package com.redcoracle.episodes.services
 
 import android.content.Context
-import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -20,10 +19,6 @@ class RestoreTask(private val filename: String) : Callable<Void?> {
     private val context: Context = EpisodesApplication.instance.applicationContext
 
     override fun call(): Void? {
-        if (!isExternalStorageWritable()) {
-            return null
-        }
-
         val backupFile = File(filename)
         val databaseFile = context.getDatabasePath(DatabaseOpenHelper.getDbName())
         
@@ -52,11 +47,6 @@ class RestoreTask(private val filename: String) : Callable<Void?> {
         }
         
         return null
-    }
-
-    private fun isExternalStorageWritable(): Boolean {
-        val state = Environment.getExternalStorageState()
-        return state == Environment.MEDIA_MOUNTED
     }
 
     companion object {

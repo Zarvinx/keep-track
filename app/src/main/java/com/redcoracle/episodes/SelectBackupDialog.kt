@@ -92,7 +92,7 @@ private fun NoBackupsDialog(
     context: Context,
     onDismiss: () -> Unit
 ) {
-    val directory = File(context.getExternalFilesDir(null), "episodes")
+    val directory = FileUtilities.get_backup_directory(context)
     val message = stringResource(R.string.restore_dialog_no_backups_message, directory)
     
     AlertDialog(
@@ -108,7 +108,5 @@ private fun NoBackupsDialog(
 }
 
 private fun getBackupFiles(context: Context): List<File> {
-    val files = File(context.getExternalFilesDir(null), "episodes").listFiles()
-    
-    return files?.sortedByDescending { it.lastModified() } ?: emptyList()
+    return FileUtilities.get_backup_files(context)
 }

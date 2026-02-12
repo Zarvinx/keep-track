@@ -169,6 +169,7 @@ class AutoRefreshHelper private constructor(
                 Log.i(TAG, "Boot received.")
                 // Ensure that the auto-refresh alarm is scheduled
                 getInstance(context.applicationContext).rescheduleAlarm()
+                AutoBackupHelper.getInstance(context.applicationContext).rescheduleAlarm()
             }
         }
     }

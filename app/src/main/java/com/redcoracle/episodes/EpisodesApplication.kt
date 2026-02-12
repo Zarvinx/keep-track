@@ -49,6 +49,7 @@ class EpisodesApplication : Application(), ImageLoaderFactory {
             Log.d(TAG, "Error initialising TmdbClient", e)
         }
 
+        AutoBackupHelper.getInstance(applicationContext).rescheduleAlarm()
         createNotificationChannel()
     }
 
