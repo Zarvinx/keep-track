@@ -179,7 +179,7 @@ fun SettingsScreen(
                 selectedLanguage = it
                 prefs.edit().putString("pref_language", it).apply()
                 if (languageChanged) {
-                    scheduleLanguageRefresh()
+                    SettingsActivity.scheduleLanguageRefresh()
                 }
             },
             onDismiss = { showLanguageDialog = false }
