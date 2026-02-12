@@ -80,7 +80,7 @@
   <string name="pref_auto_backup_frequency_weekly">Weekly</string>
   <string name="pref_auto_backup_frequency_monthly">Monthly</string>
   <string name="pref_auto_backup_retention_title">Backups to keep</string>
-  <string name="pref_auto_backup_retention_summary">Keep up to %d backups. Older backups are deleted automatically.</string>
+  <string name="pref_auto_backup_retention_summary">Keep up to %d backups. Older backups are deleted automatically. Tap to edit.</string>
   <string name="pref_auto_backup_retention_hint">Enter a value between 1 and 100.</string>
   <string name="pref_backup_location_title">Backup folder</string>
   <string name="pref_interface_category">Interface</string>

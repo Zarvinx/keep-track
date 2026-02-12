@@ -6,7 +6,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import android.os.Build
 import android.util.Log
 import androidx.preference.PreferenceManager
 import com.redcoracle.episodes.services.AsyncTask
@@ -72,11 +71,9 @@ class AutoBackupHelper private constructor(
         }.coerceAtLeast(System.currentTimeMillis() + 60_000L)
 
         Log.i(TAG, "Scheduling auto backup alarm for $nextRun.")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextRun, pendingIntent)
-        } else {
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, nextRun, pendingIntent)
-        }
+        // Non-exact alarms are sufficient for daily/weekly/monthly backups and avoid
+        // Android 12+ exact-alarm permission requirements.
+        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextRun, pendingIntent)
     }
 
     fun runBackupNow() {
@@ -99,11 +96,7 @@ class AutoBackupHelper private constructor(
 
     private fun getPendingIntent(): PendingIntent {
         val intent = Intent(context, Receiver::class.java)
-        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        } else {
-            PendingIntent.FLAG_UPDATE_CURRENT
-        }
+        val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         return PendingIntent.getBroadcast(context, 1, intent, flags)
     }
 
