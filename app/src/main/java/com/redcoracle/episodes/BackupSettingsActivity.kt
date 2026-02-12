@@ -38,6 +38,7 @@ class BackupSettingsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        supportActionBar?.hide()
 
         backupRestoreCoordinator = BackupRestoreCoordinator(
             activity = this,

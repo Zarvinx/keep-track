@@ -42,6 +42,7 @@ import com.redcoracle.episodes.ui.theme.EpisodesTheme
 class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        supportActionBar?.hide()
 
         setContent {
             EpisodesTheme {
