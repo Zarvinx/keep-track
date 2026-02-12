@@ -68,7 +68,6 @@ fun SettingsScreen(
     val periodValues = context.resources.getStringArray(R.array.auto_refresh_period_values)
     
     var selectedLanguage by remember { mutableStateOf(prefs.getString("pref_language", "en") ?: "en") }
-    var reverseSortOrder by remember { mutableStateOf(prefs.getBoolean("reverse_sort_order", false)) }
     var autoRefreshEnabled by remember { mutableStateOf(prefs.getBoolean("pref_auto_refresh_enabled", false)) }
     var autoRefreshPeriod by remember { mutableStateOf(prefs.getString("pref_auto_refresh_period", "168") ?: "168") }
     var autoRefreshWifiOnly by remember { mutableStateOf(prefs.getBoolean("pref_auto_refresh_wifi_only", true)) }
@@ -100,16 +99,6 @@ fun SettingsScreen(
                 title = stringResource(R.string.pref_language_title),
                 summary = languageEntries[languageValues.indexOf(selectedLanguage)],
                 onClick = { showLanguageDialog = true }
-            )
-            
-            SettingsSwitchItem(
-                title = stringResource(R.string.pref_reverse_sort_order),
-                summary = stringResource(R.string.pref_reverse_sort_order_summary),
-                checked = reverseSortOrder,
-                onCheckedChange = { 
-                    reverseSortOrder = it
-                    prefs.edit().putBoolean("reverse_sort_order", it).apply()
-                }
             )
             
             Divider(modifier = Modifier.padding(vertical = 8.dp))

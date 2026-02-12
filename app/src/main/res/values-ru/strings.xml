@@ -21,8 +21,6 @@
     <string name="restore_error_message">Не удалось восстановить библиотеку</string>
     <string name="restore_dialog_title">Восстановить из резервной копии</string>
     <string name="restore_dialog_no_backups_message">В папке \'%s\' нет резервных копий.</string>
-    <string name="pref_reverse_sort_order_summary">Отображать сначала новейший сезон</string>
-    <string name="pref_reverse_sort_order">Обратный порядок сортировки</string>
     <string name="pref_language_title">Язык</string>
     <string name="pref_auto_refresh_wifi_only_title">Только на безлимитных соединениях</string>
     <string name="pref_auto_refresh_enabled_title">Автоматическое обновление</string>

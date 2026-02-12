@@ -33,8 +33,6 @@
     <string name="restore_error_message">Impossible de restaurer la bibliothèque</string>
     <string name="restore_dialog_title">Restaurer à partir d\'une sauvegarde</string>
     <string name="restore_dialog_no_backups_message">Aucune sauvegarde trouvée dans le dossier « %s ».</string>
-    <string name="pref_reverse_sort_order_summary">Affiche la dernière saison en premier</string>
-    <string name="pref_reverse_sort_order">Inverser l\'ordre de tri</string>
     <string name="pref_language_title">Langue</string>
     <string name="pref_auto_refresh_wifi_only_title">Seulement sur les connexions non limitées</string>
     <string name="pref_auto_refresh_enabled_title">Actualisation auto activée</string>

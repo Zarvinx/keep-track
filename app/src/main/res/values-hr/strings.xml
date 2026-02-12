@@ -16,7 +16,6 @@
     <string name="about_description">Prati stanja gledanja epizoda tvojih omiljenih emisija</string>
     <string name="show_added">Emisija „%s” je dodana u biblioteku</string>
     <string name="menu_add_new_show">Dodaj novu emisiju u biblioteku</string>
-    <string name="pref_reverse_sort_order">Obrni redoslijed</string>
     <string name="watched_check_box">Pogledano</string>
     <string name="show_tab_episodes">Epizode</string>
     <string name="restore_dialog_title">Obnovi iz sigurnosne kopije</string>
@@ -26,7 +25,6 @@
     <string name="about_license">„Epizode” je copyleft slobodni softver s licencom GPLv3+. Prijavi greške, programiraj, prevodi ili pomogni na bilo koji drugi način!</string>
     <string name="show_tab_overview">Pregled</string>
     <string name="show_already_added">Emisija „%s” se već nalazi u biblioteci</string>
-    <string name="pref_reverse_sort_order_summary">Prikazuje najnoviju sezonu na prvom mjestu</string>
     <string name="menu_filter_archived">Arhivirane</string>
     <string name="show_tab_notes">Napomene</string>
     <string name="show_tab_next">Sljedeća</string>

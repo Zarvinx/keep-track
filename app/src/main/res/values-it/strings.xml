@@ -26,8 +26,6 @@
     <string name="restore_error_message">Non è stato possibile ripristinare la raccolta</string>
     <string name="restore_dialog_title">Ripristina da un backup</string>
     <string name="restore_dialog_no_backups_message">Nessun backup trovato nella cartella «%s».</string>
-    <string name="pref_reverse_sort_order_summary">Visualizza prima la stagione più recente</string>
-    <string name="pref_reverse_sort_order">Invertisci l\'ordine di ordinamento</string>
     <string name="pref_language_title">Lingua</string>
     <string name="pref_auto_refresh_wifi_only_title">Solo con connessioni non misurate</string>
     <string name="pref_auto_refresh_enabled_title">Aggiornamento automatico abilitato</string>

@@ -21,8 +21,6 @@
     <string name="restore_error_message">Klarte ikke å gjenopprette bibliotek</string>
     <string name="restore_dialog_title">Gjenopprett fra sikkehetskopi</string>
     <string name="restore_dialog_no_backups_message">Fant ingen sikkerhetskopier i «%s»-mappen.</string>
-    <string name="pref_reverse_sort_order_summary">Vis nyeste sesong først</string>
-    <string name="pref_reverse_sort_order">Reverser sorteringsrekkefølge</string>
     <string name="pref_language_title">Språk</string>
     <string name="pref_auto_refresh_wifi_only_title">Kun på ubegrensede tilkoblinger</string>
     <string name="pref_auto_refresh_enabled_title">Auto-gjenoppfrisking påskrudd</string>

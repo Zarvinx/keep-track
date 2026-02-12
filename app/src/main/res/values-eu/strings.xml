@@ -22,8 +22,6 @@
     <string name="restore_error_message">Ezin izan da liburutegia leheneratu</string>
     <string name="restore_dialog_title">Leheneratu segurtasun kopiatik</string>
     <string name="restore_dialog_no_backups_message">Ez da babeskopiarik aurkitu \'%s\' karpetan.</string>
-    <string name="pref_reverse_sort_order_summary">Denboraldi berriena erakusten du lehenengo</string>
-    <string name="pref_reverse_sort_order">Alderantziz ordenatzeko ordena</string>
     <string name="pref_language_title">Hizkuntza</string>
     <string name="pref_auto_refresh_wifi_only_title">Meditu gabeko konexioetan soilik</string>
     <string name="pref_auto_refresh_enabled_title">Freskatze automatikoa aktibatuta</string>

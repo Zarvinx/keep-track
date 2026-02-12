@@ -22,8 +22,6 @@
     <string name="restore_error_message">Kitaplık geri yüklenemedi</string>
     <string name="restore_dialog_title">Yedekten geri yükle</string>
     <string name="restore_dialog_no_backups_message">\'%s\' klasöründe yedek bulunamadı.</string>
-    <string name="pref_reverse_sort_order_summary">Önce en yeni sezonu görüntüler</string>
-    <string name="pref_reverse_sort_order">Ters sıralama düzeni</string>
     <string name="pref_language_title">Dil</string>
     <string name="pref_auto_refresh_wifi_only_title">Yalnızca ölçülmemiş bağlantılarda</string>
     <string name="pref_auto_refresh_enabled_title">Otomatik yenileme açık</string>

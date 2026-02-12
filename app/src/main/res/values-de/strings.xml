@@ -19,8 +19,6 @@
     <string name="restore_error_message">Bibliothek konnte nicht wiederhergestellt werden</string>
     <string name="restore_dialog_title">Aus einer Sicherung wiederherstellen</string>
     <string name="restore_dialog_no_backups_message">Keine Datensicherungen im Ordner „%s“ gefunden</string>
-    <string name="pref_reverse_sort_order_summary">Neueste Staffel zuerst</string>
-    <string name="pref_reverse_sort_order">Reihenfolge umkehren</string>
     <string name="pref_language_title">Sprache</string>
     <string name="pref_auto_refresh_wifi_only_title">Nur bei nicht gemessenen Verbindungen</string>
     <string name="pref_auto_refresh_enabled_title">Automatisch aktualisieren</string>

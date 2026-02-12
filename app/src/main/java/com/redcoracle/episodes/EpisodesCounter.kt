@@ -30,14 +30,7 @@ class EpisodesCounter(private val keyColumn: String) {
     private val numUpcomingEpisodesMap = SparseIntArray()
 
     init {
-        val preferences = Preferences.getSharedPreferences()
-        val reverseSortOrder = preferences?.getBoolean("reverse_sort_order", false) ?: false
-
-        keys = if (reverseSortOrder) {
-            TreeSet(Collections.reverseOrder())
-        } else {
-            TreeSet()
-        }
+        keys = TreeSet()
     }
 
     fun swapCursor(episodesCursor: Cursor?) {
