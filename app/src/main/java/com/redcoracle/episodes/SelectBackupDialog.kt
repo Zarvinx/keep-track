@@ -30,6 +30,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun SelectBackupDialog(
@@ -66,7 +69,7 @@ private fun BackupsListDialog(
             LazyColumn {
                 items(backups) { backup ->
                     Text(
-                        text = backup.name,
+                        text = formatBackupDisplayDate(backup),
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -109,4 +112,9 @@ private fun NoBackupsDialog(
 
 private fun getBackupFiles(context: Context): List<File> {
     return FileUtilities.get_backup_files(context)
+}
+
+private fun formatBackupDisplayDate(file: File): String {
+    val date = Date(file.lastModified())
+    return "${SimpleDateFormat("MMM d, yyyy HH:mm", Locale.getDefault()).format(date)}"
 }
