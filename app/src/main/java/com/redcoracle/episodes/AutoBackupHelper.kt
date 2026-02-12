@@ -18,6 +18,7 @@ class AutoBackupHelper private constructor(
     private val preferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
 
     init {
+        ensureDefaults()
         preferences.registerOnSharedPreferenceChangeListener(this)
     }
 
@@ -49,6 +50,28 @@ class AutoBackupHelper private constructor(
             KEY_PREF_AUTO_BACKUP_ENABLED,
             KEY_PREF_AUTO_BACKUP_PERIOD,
             KEY_PREF_AUTO_BACKUP_RETENTION -> rescheduleAlarm()
+        }
+    }
+
+    private fun ensureDefaults() {
+        val editor = preferences.edit()
+        var changed = false
+
+        if (!preferences.contains(KEY_PREF_AUTO_BACKUP_ENABLED)) {
+            editor.putBoolean(KEY_PREF_AUTO_BACKUP_ENABLED, false)
+            changed = true
+        }
+        if (!preferences.contains(KEY_PREF_AUTO_BACKUP_PERIOD)) {
+            editor.putString(KEY_PREF_AUTO_BACKUP_PERIOD, PERIOD_WEEKLY)
+            changed = true
+        }
+        if (!preferences.contains(KEY_PREF_AUTO_BACKUP_RETENTION)) {
+            editor.putInt(KEY_PREF_AUTO_BACKUP_RETENTION, 10)
+            changed = true
+        }
+
+        if (changed) {
+            editor.apply()
         }
     }
 

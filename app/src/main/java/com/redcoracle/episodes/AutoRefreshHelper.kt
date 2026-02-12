@@ -28,7 +28,6 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
-import android.os.Build
 import android.util.Log
 import androidx.core.net.ConnectivityManagerCompat
 import androidx.preference.PreferenceManager
@@ -123,11 +122,7 @@ class AutoRefreshHelper private constructor(
 
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(context, Service::class.java)
-        val intentFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        } else {
-            PendingIntent.FLAG_UPDATE_CURRENT
-        }
+        val intentFlag = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         val pendingIntent = PendingIntent.getService(context, 0, intent, intentFlag)
 
         if (getAutoRefreshEnabled() && getAutoRefreshPeriod() != 0L) {
