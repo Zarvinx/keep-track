@@ -65,6 +65,9 @@
   <string name="channel_name">Show sync</string>
   <string name="channel_description">Notification when syncing shows</string>
   <string name="pref_auto_refresh_category">Auto-refresh series</string>
+  <string name="pref_data_category">Data</string>
+  <string name="pref_backup_restore_title">Backup and restore</string>
+  <string name="pref_backup_restore_summary">Create a backup file or restore from an existing backup.</string>
   <string name="pref_interface_category">Interface</string>
   <string name="version">Version %s (Commit %s)</string>
   <string name="no_search_results_found">No search results found</string>
