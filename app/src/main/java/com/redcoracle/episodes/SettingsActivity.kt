@@ -20,9 +20,13 @@ package com.redcoracle.episodes
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -37,9 +41,27 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
+import com.redcoracle.episodes.services.AsyncTask
+import com.redcoracle.episodes.services.RefreshAllShowsTask
 import com.redcoracle.episodes.ui.theme.EpisodesTheme
 
 class SettingsActivity : AppCompatActivity() {
+    companion object {
+        private const val LANGUAGE_REFRESH_DEBOUNCE_MS = 5_000L
+        private val languageRefreshHandler = Handler(Looper.getMainLooper())
+        private var pendingLanguageRefresh: Runnable? = null
+
+        fun scheduleLanguageRefresh() {
+            pendingLanguageRefresh?.let(languageRefreshHandler::removeCallbacks)
+            pendingLanguageRefresh = Runnable {
+                AsyncTask().executeAsync(RefreshAllShowsTask())
+                pendingLanguageRefresh = null
+            }.also {
+                languageRefreshHandler.postDelayed(it, LANGUAGE_REFRESH_DEBOUNCE_MS)
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         supportActionBar?.hide()
@@ -97,7 +119,7 @@ fun SettingsScreen(
             
             SettingsListItem(
                 title = stringResource(R.string.pref_language_title),
-                summary = languageEntries[languageValues.indexOf(selectedLanguage)],
+                summary = selectedLanguage.labelFor(languageEntries, languageValues),
                 onClick = { showLanguageDialog = true }
             )
             
@@ -118,7 +140,7 @@ fun SettingsScreen(
             
             SettingsListItem(
                 title = stringResource(R.string.pref_auto_refresh_period_title),
-                summary = periodEntries[periodValues.indexOf(autoRefreshPeriod)],
+                summary = autoRefreshPeriod.labelFor(periodEntries, periodValues),
                 enabled = autoRefreshEnabled,
                 onClick = { showPeriodDialog = true }
             )
@@ -153,8 +175,12 @@ fun SettingsScreen(
             options = languageEntries.zip(languageValues),
             selectedValue = selectedLanguage,
             onSelect = { 
+                val languageChanged = selectedLanguage != it
                 selectedLanguage = it
                 prefs.edit().putString("pref_language", it).apply()
+                if (languageChanged) {
+                    scheduleLanguageRefresh()
+                }
             },
             onDismiss = { showLanguageDialog = false }
         )
@@ -187,8 +213,8 @@ fun SelectionDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
-            Column {
-                options.forEach { (label, value) ->
+            LazyColumn(modifier = Modifier.heightIn(max = 360.dp)) {
+                items(options) { (label, value) ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -213,6 +239,11 @@ fun SelectionDialog(
             TextButton(onClick = onDismiss) { Text("Cancel") }
         }
     )
+}
+
+private fun String.labelFor(entries: Array<String>, values: Array<String>): String {
+    val index = values.indexOf(this)
+    return if (index in entries.indices) entries[index] else entries.firstOrNull() ?: this
 }
 
 @Composable

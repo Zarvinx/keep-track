@@ -24,7 +24,7 @@ android {
         minSdkVersion 23
         targetSdkVersion 34
         versionCode 25
-        versionName "0.5.1"
+        versionName "0.5.2"
         buildConfigField "String", "TMDB_KEY", "\"1553d2e4fa2912fc0953305d4d3e7c44\""
         buildConfigField "String", "GIT_COMMIT_ID", "\"${getCommitId()}\""
     }
