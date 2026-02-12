@@ -47,6 +47,9 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
     
     private val _currentFilter = MutableStateFlow(0)
     val currentFilter: StateFlow<Int> = _currentFilter.asStateFlow()
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
     
     companion object {
         const val SHOWS_FILTER_WATCHING = 0
@@ -84,8 +87,9 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
                     selectionArgs = null,
                     sortOrder = null
                 ),
-                _currentFilter
-            ) { _, _, filter ->
+                _currentFilter,
+                _searchQuery
+            ) { _, _, filter, searchQuery ->
                 withContext(Dispatchers.IO) {
                     try {
                         val showsCursor = contentResolver.query(
@@ -97,7 +101,7 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
                         )
                         
                         if (showsCursor != null) {
-                            val result = loadShowsFromCursor(showsCursor, filter)
+                            val result = loadShowsFromCursor(showsCursor, filter, searchQuery)
                             showsCursor.close()
                             result
                         } else {
@@ -113,7 +117,7 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     
-    private fun loadShowsFromCursor(cursor: Cursor, filter: Int): List<Show> {
+    private fun loadShowsFromCursor(cursor: Cursor, filter: Int, searchQuery: String): List<Show> {
         val showsList = mutableListOf<Show>()
         
         // Load episodes for counting
@@ -162,7 +166,9 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
                     else -> true // SHOWS_FILTER_ALL
                 }
                 
-                if (shouldInclude) {
+                val matchesSearch = searchQuery.isBlank() || name.contains(searchQuery, ignoreCase = true)
+
+                if (shouldInclude && matchesSearch) {
                     // Get next unwatched episode
                     val nextEpisode = getNextEpisode(id)
                     
@@ -346,6 +352,10 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
             
             contentResolver.update(uri, values, null, null)
         }
+    }
+
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
     }
     
     override fun onCleared() {

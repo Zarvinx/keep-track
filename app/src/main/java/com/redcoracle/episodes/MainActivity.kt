@@ -26,10 +26,19 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
@@ -41,15 +50,18 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.preference.PreferenceManager
 import com.redcoracle.episodes.ui.ShowsListScreen
@@ -105,9 +117,8 @@ class MainActivity : AppCompatActivity(),
                     onSettings = { showSettings() },
                     onAbout = { showAbout() },
                     onRefreshAll = { refreshAllShows() },
-                    onAddShow = { query -> 
+                    onAddShow = {
                         val intent = Intent(this, AddShowSearchActivity::class.java)
-                        intent.putExtra("query", query)
                         startActivity(intent)
                     },
                     showBackupDialog = showBackupDialog,
@@ -242,38 +253,20 @@ fun MainScreen(
     onSettings: () -> Unit,
     onAbout: () -> Unit,
     onRefreshAll: () -> Unit,
-    onAddShow: (String) -> Unit,
+    onAddShow: () -> Unit,
     showBackupDialog: Boolean,
     onDismissBackupDialog: () -> Unit,
     onBackupSelected: (String) -> Unit
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     var showMenu by remember { mutableStateOf(false) }
     var showFilterMenu by remember { mutableStateOf(false) }
-    var searchQuery by remember { mutableStateOf("") }
     var isSearching by remember { mutableStateOf(false) }
-    
-    // For auto-focus when search starts
+    var showActionOverlay by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
-    
-    // Auto-focus and show keyboard when search mode starts
-    LaunchedEffect(isSearching) {
-        if (isSearching) {
-            focusRequester.requestFocus()
-            keyboardController?.show()
-        }
-    }
-    
-    // Submit search handler
-    val submitSearch: () -> Unit = {
-        if (searchQuery.isNotEmpty()) {
-            onAddShow(searchQuery)
-            searchQuery = ""
-            isSearching = false
-            keyboardController?.hide()
-        }
-    }
     
     // Filter menu items (using constants from ShowsViewModel)
     val filterMenuItems = remember {
@@ -302,94 +295,168 @@ fun MainScreen(
         prefs.edit().putInt(ShowsViewModel.KEY_PREF_SHOWS_FILTER, filter).apply()
     }
 
+    fun updateSearch(query: String) {
+        searchQuery = query
+        viewModel.setSearchQuery(query)
+    }
+
+    fun closeSearch() {
+        isSearching = false
+        updateSearch("")
+        keyboardController?.hide()
+    }
+
+    LaunchedEffect(isSearching) {
+        if (isSearching) {
+            focusRequester.requestFocus()
+            keyboardController?.show()
+        }
+    }
+
+    BackHandler(enabled = isSearching) {
+        closeSearch()
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                closeSearch()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { 
-                    if (isSearching) {
-                        TextField(
-                            value = searchQuery,
-                            onValueChange = { searchQuery = it },
-                            placeholder = { Text(stringResource(R.string.menu_add_show_search_hint)) },
-                            singleLine = true,
-                            modifier = Modifier.focusRequester(focusRequester),
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Search
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onSearch = { submitSearch() }
-                            ),
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surface
+            Box {
+                TopAppBar(
+                    title = { 
+                        if (isSearching) {
+                            TextField(
+                                value = searchQuery,
+                                onValueChange = { updateSearch(it) },
+                                placeholder = {
+                                    Text(
+                                        text = stringResource(R.string.menu_search_library_hint),
+                                        maxLines = 1,
+                                        softWrap = false
+                                    )
+                                },
+                                singleLine = true,
+                                modifier = Modifier.focusRequester(focusRequester),
+                                keyboardOptions = KeyboardOptions(
+                                    imeAction = ImeAction.Search
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onSearch = {
+                                        keyboardController?.hide()
+                                    }
+                                ),
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                                )
                             )
-                        )
-                    } else {
-                        Text(stringResource(R.string.app_name))
-                    }
-                },
-                actions = {
-                    if (isSearching) {
-                        // Show search icon when text is entered, otherwise + icon
-                        IconButton(
-                            onClick = submitSearch,
-                            enabled = searchQuery.isNotEmpty()
+                        } else {
+                            Text(stringResource(R.string.app_name))
+                        }
+                    },
+                    actions = {
+                        AnimatedVisibility(
+                            visible = !isSearching,
+                            enter = slideInHorizontally(
+                                initialOffsetX = { fullWidth -> fullWidth },
+                                animationSpec = tween(260)
+                            ) + fadeIn(animationSpec = tween(200)),
+                            exit = ExitTransition.None
                         ) {
+                            Row {
+                                IconButton(onClick = onAddShow) {
+                                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.menu_add_new_show))
+                                }
+                                IconButton(onClick = {
+                                    showActionOverlay = true
+                                    isSearching = true
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = stringResource(R.string.menu_search_library)
+                                    )
+                                }
+                                IconButton(onClick = { showFilterMenu = true }) {
+                                    Icon(
+                                        painter = androidx.compose.ui.res.painterResource(R.drawable.ic_menu_filter_shows_list),
+                                        contentDescription = stringResource(R.string.menu_filter_shows_list)
+                                    )
+                                }
+                                IconButton(onClick = { showMenu = true }) {
+                                    Icon(Icons.Default.MoreVert, contentDescription = "Menu")
+                                }
+                            }
+                        }
+
+                        DropdownMenu(
+                            expanded = showFilterMenu,
+                            onDismissRequest = { showFilterMenu = false }
+                        ) {
+                            filterMenuItems.forEach { item ->
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(item.labelResId)) },
+                                    onClick = {
+                                        showFilterMenu = false
+                                        applyFilter(item.filterValue)
+                                    }
+                                )
+                            }
+                        }
+
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            mainMenuItems.forEach { item ->
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(item.labelResId)) },
+                                    onClick = {
+                                        showMenu = false
+                                        item.action()
+                                    }
+                                )
+                            }
+                        }
+                    }
+                )
+                AnimatedVisibility(
+                    visible = showActionOverlay,
+                    modifier = Modifier.align(Alignment.CenterEnd),
+                    enter = EnterTransition.None,
+                    exit = slideOutHorizontally(
+                        targetOffsetX = { fullWidth -> fullWidth },
+                        animationSpec = tween(260)
+                    ) + fadeOut(animationSpec = tween(200))
+                ) {
+                    Row {
+                        IconButton(onClick = {}, enabled = false) {
+                            Icon(Icons.Default.Add, contentDescription = null)
+                        }
+                        IconButton(onClick = {}, enabled = false) {
+                            Icon(Icons.Default.Search, contentDescription = null)
+                        }
+                        IconButton(onClick = {}, enabled = false) {
                             Icon(
-                                imageVector = if (searchQuery.isNotEmpty()) Icons.Default.Search else Icons.Default.Add,
-                                contentDescription = if (searchQuery.isNotEmpty()) "Search" else stringResource(R.string.menu_add_new_show)
+                                painter = androidx.compose.ui.res.painterResource(R.drawable.ic_menu_filter_shows_list),
+                                contentDescription = null
                             )
                         }
-                    } else {
-                        IconButton(onClick = { isSearching = true }) {
-                            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.menu_add_new_show))
-                        }
-                    }
-                    
-                    // Filter menu button
-                    IconButton(onClick = { showFilterMenu = true }) {
-                        Icon(
-                            painter = androidx.compose.ui.res.painterResource(R.drawable.ic_menu_filter_shows_list),
-                            contentDescription = stringResource(R.string.menu_filter_shows_list)
-                        )
-                    }
-                    
-                    DropdownMenu(
-                        expanded = showFilterMenu,
-                        onDismissRequest = { showFilterMenu = false }
-                    ) {
-                        filterMenuItems.forEach { item ->
-                            DropdownMenuItem(
-                                text = { Text(stringResource(item.labelResId)) },
-                                onClick = {
-                                    showFilterMenu = false
-                                    applyFilter(item.filterValue)
-                                }
-                            )
-                        }
-                    }
-                    
-                    // Main overflow menu
-                    IconButton(onClick = { showMenu = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "Menu")
-                    }
-                    
-                    DropdownMenu(
-                        expanded = showMenu,
-                        onDismissRequest = { showMenu = false }
-                    ) {
-                        mainMenuItems.forEach { item ->
-                            DropdownMenuItem(
-                                text = { Text(stringResource(item.labelResId)) },
-                                onClick = {
-                                    showMenu = false
-                                    item.action()
-                                }
-                            )
+                        IconButton(onClick = {}, enabled = false) {
+                            Icon(Icons.Default.MoreVert, contentDescription = null)
                         }
                     }
                 }
-            )
+            }
         }
     ) { paddingValues ->
         Box(
@@ -411,5 +478,10 @@ fun MainScreen(
             onDismiss = onDismissBackupDialog
         )
     }
-}
 
+    LaunchedEffect(showActionOverlay) {
+        if (showActionOverlay) {
+            showActionOverlay = false
+        }
+    }
+}

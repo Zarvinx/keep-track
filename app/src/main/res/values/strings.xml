@@ -24,6 +24,9 @@
   <string name="menu_filter_archived">Archived</string>
   <string name="menu_filter_uncompleted">Watching</string>
   <string name="menu_filter_upcoming">Upcoming</string>
+  <string name="menu_search_library">Search library</string>
+  <string name="menu_search_library_hint">Search shows in library</string>
+  <string name="menu_close_search">Close search</string>
   <string name="menu_mark_season_not_watched">Mark season as unwatched</string>
   <string name="menu_mark_season_watched">Mark season as watched</string>
   <string name="menu_mark_show_not_watched">Mark show as unwatched</string>
