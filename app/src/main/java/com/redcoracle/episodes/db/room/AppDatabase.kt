@@ -21,6 +21,7 @@ import com.redcoracle.episodes.db.DatabaseOpenHelper
 abstract class AppDatabase : RoomDatabase() {
     abstract fun episodesDao(): EpisodesRoomDao
     abstract fun addShowDao(): AddShowRoomDao
+    abstract fun refreshShowDao(): RefreshShowRoomDao
 
     companion object {
         @Volatile

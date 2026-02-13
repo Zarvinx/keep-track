@@ -27,6 +27,7 @@ import android.util.SparseArray
 import com.redcoracle.episodes.db.EpisodesTable
 import com.redcoracle.episodes.db.ShowsProvider
 import com.redcoracle.episodes.db.ShowsTable
+import com.redcoracle.episodes.db.room.RefreshShowWriter
 import com.redcoracle.episodes.tvdb.Client
 import com.redcoracle.episodes.tvdb.Episode
 import org.apache.commons.collections4.map.MultiKeyMap
@@ -46,9 +47,21 @@ object RefreshShowUtil {
         val show = tmdbClient.getShow(showIds, showLanguage)
 
         if (show != null) {
-            updateShow(showId, show, contentResolver)
             show.episodes?.let { episodes ->
-                updateEpisodes(showId, episodes, contentResolver)
+                val roomEpisodes = episodes.toMutableList()
+                val legacyEpisodes = episodes.toMutableList()
+                val writer = RefreshShowWriter(
+                    context = EpisodesApplication.instance.applicationContext,
+                    contentResolver = contentResolver
+                )
+                writer.refreshShow(
+                    showId = showId,
+                    show = show,
+                    episodes = roomEpisodes
+                ) {
+                    updateShow(showId, show, contentResolver)
+                    updateEpisodes(showId, legacyEpisodes, contentResolver)
+                }
             }
         }
     }
