@@ -25,13 +25,9 @@ import android.os.Build
 import android.util.Log
 import coil.ImageLoader
 import coil.ImageLoaderFactory
-import coil.decode.DataSource
 import coil.disk.DiskCache
 import coil.memory.MemoryCache
 import coil.request.CachePolicy
-import coil.request.ErrorResult
-import coil.request.ImageRequest
-import coil.request.SuccessResult
 import com.uwetrottmann.tmdb2.Tmdb
 
 class EpisodesApplication : Application(), ImageLoaderFactory {
@@ -57,7 +53,7 @@ class EpisodesApplication : Application(), ImageLoaderFactory {
         return ImageLoader.Builder(this)
             .memoryCache {
                 MemoryCache.Builder(this)
-                    .maxSizePercent(0.25) // Use 25% of app memory for image cache
+                    .maxSizePercent(0.20)
                     .build()
             }
             .diskCache {
@@ -66,6 +62,9 @@ class EpisodesApplication : Application(), ImageLoaderFactory {
                     .maxSizePercent(0.02) // Use 2% of disk space
                     .build()
             }
+            .memoryCachePolicy(CachePolicy.ENABLED)
+            .diskCachePolicy(CachePolicy.ENABLED)
+            .networkCachePolicy(CachePolicy.ENABLED)
             .crossfade(true) // Smooth fade-in for images
             .respectCacheHeaders(false) // Don't rely on server cache headers
             .build()

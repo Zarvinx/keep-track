@@ -19,8 +19,6 @@
 package com.redcoracle.episodes.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -158,11 +156,12 @@ fun ShowDetailScreen(
                         .height(250.dp)
                 ) {
                     AsyncImage(
-                        model = "https://image.tmdb.org/t/p/w780/$posterPath",
+                        model = "https://image.tmdb.org/t/p/w500/$posterPath",
                         contentDescription = showDetails?.name,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Fit,
-                        alignment = androidx.compose.ui.Alignment.TopCenter
+                        placeholder = painterResource(R.drawable.blank_show_banner),
+                        error = painterResource(R.drawable.blank_show_banner)
                     )
                 }
             }

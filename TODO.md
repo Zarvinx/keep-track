@@ -50,7 +50,7 @@ These can stay in Java for now, but should eventually be converted:
   - Compile-time query verification
 
 ### Image Loading
-- [ ] **Audit Coil image loading configuration**
+- [x] **Audit Coil image loading configuration**
   - Ensure proper caching
   - Consider placeholder/error states
   - Memory optimization for large lists
