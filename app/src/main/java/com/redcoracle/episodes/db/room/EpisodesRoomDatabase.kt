@@ -11,6 +11,13 @@ import com.redcoracle.episodes.db.DatabaseOpenHelper
     version = 10,
     exportSchema = false
 )
+/**
+ * Transitional Room database for watch-state write migration.
+ *
+ * This database intentionally opens the existing legacy file `episodes.db` to support
+ * incremental adoption. During this phase, callers must be resilient to schema-validation
+ * failures on older installs (see EpisodeWatchStateWriter fallback paths).
+ */
 abstract class EpisodesRoomDatabase : RoomDatabase() {
     abstract fun episodesDao(): EpisodesRoomDao
 

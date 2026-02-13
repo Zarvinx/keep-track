@@ -5,6 +5,13 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "episodes")
+/**
+ * Room view of legacy `episodes` table.
+ *
+ * Note: Existing installs may have legacy SQL declarations that differ by declared type
+ * names (e.g. VARCHAR/DATE/BOOLEAN). SQLite can store compatible values, but Room schema
+ * validation can still reject mismatched declarations until a full migration normalizes them.
+ */
 data class EpisodeEntity(
     @PrimaryKey
     @ColumnInfo(name = "_id")
