@@ -11,7 +11,7 @@ Current branch intent:
 Relevant files:
 - `app/src/main/java/com/redcoracle/episodes/db/room/EpisodeWatchStateWriter.kt`
 - `app/src/main/java/com/redcoracle/episodes/db/room/EpisodesRoomDao.kt`
-- `app/src/main/java/com/redcoracle/episodes/db/room/EpisodesRoomDatabase.kt`
+- `app/src/main/java/com/redcoracle/episodes/db/room/AppDatabase.kt`
 - `app/src/main/java/com/redcoracle/episodes/db/room/EpisodeEntity.kt`
 
 ## Why There Is a Fallback Path

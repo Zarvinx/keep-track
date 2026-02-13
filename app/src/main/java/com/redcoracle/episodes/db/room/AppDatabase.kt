@@ -18,18 +18,19 @@ import com.redcoracle.episodes.db.DatabaseOpenHelper
  * incremental adoption. During this phase, callers must be resilient to schema-validation
  * failures on older installs (see EpisodeWatchStateWriter fallback paths).
  */
-abstract class EpisodesRoomDatabase : RoomDatabase() {
+abstract class AppDatabase : RoomDatabase() {
     abstract fun episodesDao(): EpisodesRoomDao
+    abstract fun addShowDao(): AddShowRoomDao
 
     companion object {
         @Volatile
-        private var instance: EpisodesRoomDatabase? = null
+        private var instance: AppDatabase? = null
 
-        fun getInstance(context: Context): EpisodesRoomDatabase {
+        fun getInstance(context: Context): AppDatabase {
             return instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
                     context.applicationContext,
-                    EpisodesRoomDatabase::class.java,
+                    AppDatabase::class.java,
                     DatabaseOpenHelper.getDbName()
                 ).build().also { instance = it }
             }

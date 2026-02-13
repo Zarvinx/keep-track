@@ -27,7 +27,7 @@ import com.redcoracle.episodes.db.ShowsProvider
 class EpisodeWatchStateWriter(context: Context) {
     private val contentResolver: ContentResolver = context.applicationContext.contentResolver
     private val episodesDao: EpisodesRoomDao =
-        EpisodesRoomDatabase.getInstance(context.applicationContext).episodesDao()
+        AppDatabase.getInstance(context.applicationContext).episodesDao()
 
     suspend fun setEpisodeWatched(episodeId: Int, watched: Boolean) {
         // TODO(room-migration): Remove fallback path after Room schema alignment is complete.
