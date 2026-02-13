@@ -25,7 +25,9 @@ internal object LegacySchemaNormalizer {
                 if (cursor.moveToFirst()) cursor.getString(0) else null
             } ?: return
 
-            val normalizedAlready = !hasLegacyTypeDeclarations(createSql)
+            val needsTypeNormalization = hasLegacyTypeDeclarations(createSql)
+            val needsRowIdNotNullNormalization = hasImplicitNullablePrimaryKey(createSql)
+            val normalizedAlready = !needsTypeNormalization && !needsRowIdNotNullNormalization
             if (normalizedAlready) {
                 return
             }
@@ -35,7 +37,7 @@ internal object LegacySchemaNormalizer {
                 sqliteDb.execSQL(
                     """
                     CREATE TABLE episodes_room_normalized (
-                        _id INTEGER PRIMARY KEY,
+                        _id INTEGER NOT NULL PRIMARY KEY,
                         tvdb_id INTEGER UNIQUE,
                         tmdb_id INTEGER UNIQUE,
                         imdb_id TEXT UNIQUE,
@@ -84,5 +86,12 @@ internal object LegacySchemaNormalizer {
     private fun hasLegacyTypeDeclarations(createSql: String): Boolean {
         val sql = createSql.uppercase()
         return sql.contains("VARCHAR(200)") || sql.contains(" DATE") || sql.contains("BOOLEAN")
+    }
+
+    private fun hasImplicitNullablePrimaryKey(createSql: String): Boolean {
+        val sql = createSql.uppercase().replace('\n', ' ')
+        val hasPrimaryKey = sql.contains("_ID INTEGER PRIMARY KEY")
+        val hasExplicitNotNullPrimaryKey = sql.contains("_ID INTEGER NOT NULL PRIMARY KEY")
+        return hasPrimaryKey && !hasExplicitNotNullPrimaryKey
     }
 }
