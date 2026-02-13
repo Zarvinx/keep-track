@@ -24,9 +24,9 @@ import android.content.ContentValues
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.redcoracle.episodes.db.EpisodesTable
 import com.redcoracle.episodes.db.ShowsProvider
 import com.redcoracle.episodes.db.ShowsTable
+import com.redcoracle.episodes.db.room.EpisodeWatchStateWriter
 import com.redcoracle.episodes.services.AsyncTask
 import com.redcoracle.episodes.services.DeleteShowTask
 import com.redcoracle.episodes.services.RefreshShowTask
@@ -48,6 +48,7 @@ data class ShowDetails(
 
 class ShowViewModel(application: Application, private val showId: Int) : AndroidViewModel(application) {
     private val contentResolver: ContentResolver = application.contentResolver
+    private val watchStateWriter = EpisodeWatchStateWriter(application.applicationContext)
     
     private val _showDetails = MutableStateFlow<ShowDetails?>(null)
     val showDetails: StateFlow<ShowDetails?> = _showDetails.asStateFlow()
@@ -137,15 +138,7 @@ class ShowViewModel(application: Application, private val showId: Int) : Android
     
     fun markShowWatched(watched: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val values = ContentValues().apply {
-                put(EpisodesTable.COLUMN_WATCHED, if (watched) 1 else 0)
-            }
-            contentResolver.update(
-                ShowsProvider.CONTENT_URI_EPISODES,
-                values,
-                "${EpisodesTable.COLUMN_SHOW_ID}=? AND ${EpisodesTable.COLUMN_SEASON_NUMBER}!=?",
-                arrayOf(showId.toString(), "0")
-            )
+            watchStateWriter.setShowWatched(showId, watched)
         }
     }
     

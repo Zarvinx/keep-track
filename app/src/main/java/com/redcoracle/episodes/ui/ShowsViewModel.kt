@@ -12,6 +12,7 @@ import com.redcoracle.episodes.db.EpisodesTable
 import com.redcoracle.episodes.db.ShowsProvider
 import com.redcoracle.episodes.db.ShowsTable
 import com.redcoracle.episodes.db.observeQuery
+import com.redcoracle.episodes.db.room.EpisodeWatchStateWriter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,6 +41,7 @@ data class Show(
 
 class ShowsViewModel(application: Application) : AndroidViewModel(application) {
     private val contentResolver: ContentResolver = application.contentResolver
+    private val watchStateWriter = EpisodeWatchStateWriter(application.applicationContext)
     private val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(application)
     
     private val _shows = MutableStateFlow<List<Show>>(emptyList())
@@ -345,12 +347,7 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
     
     fun markEpisodeWatched(episodeId: Int, watched: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val uri = android.net.Uri.withAppendedPath(ShowsProvider.CONTENT_URI_EPISODES, episodeId.toString())
-            val values = android.content.ContentValues().apply {
-                put(EpisodesTable.COLUMN_WATCHED, if (watched) 1 else 0)
-            }
-            
-            contentResolver.update(uri, values, null, null)
+            watchStateWriter.setEpisodeWatched(episodeId, watched)
         }
     }
 

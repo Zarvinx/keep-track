@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
 
 def getCommitId = { ->
     def gitOutput = new ByteArrayOutputStream()
@@ -90,7 +91,7 @@ dependencies {
     implementation 'com.squareup.retrofit2:adapter-rxjava2:2.9.0'
     implementation 'org.apache.commons:commons-collections4:4.4'
     debugImplementation 'com.android.support:multidex:2.0.1'
-    annotationProcessor 'com.github.bumptech.glide:compiler:4.14.1'
+    kapt 'com.github.bumptech.glide:compiler:4.14.1'
     
     // Kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
@@ -114,4 +115,9 @@ dependencies {
     
     // Coroutines
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+
+    // Room
+    implementation 'androidx.room:room-runtime:2.6.1'
+    implementation 'androidx.room:room-ktx:2.6.1'
+    kapt 'androidx.room:room-compiler:2.6.1'
 }

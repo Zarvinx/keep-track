@@ -20,8 +20,6 @@ package com.redcoracle.episodes.ui
 
 import android.app.Application
 import android.content.ContentResolver
-import android.content.ContentValues
-import android.net.Uri
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
@@ -29,6 +27,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.redcoracle.episodes.db.EpisodesTable
 import com.redcoracle.episodes.db.ShowsProvider
+import com.redcoracle.episodes.db.room.EpisodeWatchStateWriter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -53,6 +52,7 @@ class EpisodesViewModel(
     private val seasonNumber: Int
 ) : AndroidViewModel(application) {
     private val contentResolver: ContentResolver = application.contentResolver
+    private val watchStateWriter = EpisodeWatchStateWriter(application.applicationContext)
     
     private val _episodes = MutableStateFlow<List<Episode>>(emptyList())
     val episodes: StateFlow<List<Episode>> = _episodes.asStateFlow()
@@ -128,37 +128,14 @@ class EpisodesViewModel(
             
             // Update database in background
             withContext(Dispatchers.IO) {
-                val uri = Uri.withAppendedPath(ShowsProvider.CONTENT_URI_EPISODES, episodeId.toString())
-                val values = ContentValues().apply {
-                    put(EpisodesTable.COLUMN_WATCHED, if (watched) 1 else 0)
-                }
-                contentResolver.update(uri, values, null, null)
+                watchStateWriter.setEpisodeWatched(episodeId, watched)
             }
         }
     }
     
     fun markAllWatched(watched: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val values = ContentValues().apply {
-                put(EpisodesTable.COLUMN_WATCHED, if (watched) 1 else 0)
-            }
-            
-            var selection = "${EpisodesTable.COLUMN_SHOW_ID}=? AND ${EpisodesTable.COLUMN_SEASON_NUMBER}=?"
-            val selectionArgs = mutableListOf(showId.toString(), seasonNumber.toString())
-            
-            if (watched) {
-                // Only mark aired episodes as watched
-                val now = System.currentTimeMillis() / 1000
-                selection += " AND ${EpisodesTable.COLUMN_FIRST_AIRED} <= ? AND ${EpisodesTable.COLUMN_FIRST_AIRED} IS NOT NULL"
-                selectionArgs.add(now.toString())
-            }
-            
-            contentResolver.update(
-                ShowsProvider.CONTENT_URI_EPISODES,
-                values,
-                selection,
-                selectionArgs.toTypedArray()
-            )
+            watchStateWriter.setSeasonWatched(showId, seasonNumber, watched)
             
             // Reload to reflect changes
             withContext(Dispatchers.Main) {
