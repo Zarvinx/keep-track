@@ -20,12 +20,11 @@ package com.redcoracle.episodes.ui
 
 import android.app.Application
 import android.content.ContentResolver
-import android.content.ContentValues
-import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.redcoracle.episodes.db.EpisodesTable
 import com.redcoracle.episodes.db.ShowsProvider
+import com.redcoracle.episodes.db.room.EpisodeWatchStateWriter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,6 +44,7 @@ data class NextEpisode(
 
 class NextEpisodeViewModel(application: Application, private val showId: Int) : AndroidViewModel(application) {
     private val contentResolver: ContentResolver = application.contentResolver
+    private val watchStateWriter = EpisodeWatchStateWriter(application.applicationContext)
     
     private val _nextEpisode = MutableStateFlow<NextEpisode?>(null)
     val nextEpisode: StateFlow<NextEpisode?> = _nextEpisode.asStateFlow()
@@ -112,13 +112,7 @@ class NextEpisodeViewModel(application: Application, private val showId: Int) : 
     fun setWatched(watched: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             val episode = _nextEpisode.value ?: return@launch
-            
-            val uri = Uri.withAppendedPath(ShowsProvider.CONTENT_URI_EPISODES, episode.id.toString())
-            val values = ContentValues().apply {
-                put(EpisodesTable.COLUMN_WATCHED, if (watched) 1 else 0)
-            }
-            
-            contentResolver.update(uri, values, null, null)
+            watchStateWriter.setEpisodeWatched(episode.id, watched)
             
             // Reload to get the next unwatched episode
             loadNextEpisode()
