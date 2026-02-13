@@ -8,6 +8,7 @@ import com.redcoracle.episodes.EpisodesApplication
 import com.redcoracle.episodes.FileUtilities
 import com.redcoracle.episodes.R
 import com.redcoracle.episodes.db.DatabaseOpenHelper
+import com.redcoracle.episodes.db.room.AppDatabase
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
@@ -24,6 +25,9 @@ class BackupTask(
 
     override fun call(): Void? {
         Log.i(TAG, "Backing up library.")
+
+        // Ensure Room-flushed pages are in the main DB file before copying.
+        AppDatabase.checkpoint(context)
 
         val databaseFile = context.getDatabasePath(DatabaseOpenHelper.getDbName())
         val destinationDirectory = FileUtilities.get_backup_directory(context)

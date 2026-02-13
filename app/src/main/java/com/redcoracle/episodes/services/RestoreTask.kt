@@ -9,6 +9,7 @@ import com.redcoracle.episodes.EpisodesApplication
 import com.redcoracle.episodes.R
 import com.redcoracle.episodes.db.DatabaseOpenHelper
 import com.redcoracle.episodes.db.ShowsProvider
+import com.redcoracle.episodes.db.room.AppDatabase
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -23,6 +24,9 @@ class RestoreTask(private val filename: String) : Callable<Void?> {
         val databaseFile = context.getDatabasePath(DatabaseOpenHelper.getDbName())
         
         try {
+            // Close active Room connection before replacing the DB file.
+            AppDatabase.closeInstance()
+
             FileInputStream(backupFile).channel.use { src ->
                 FileOutputStream(databaseFile).channel.use { dest ->
                     dest.transferFrom(src, 0, src.size())
@@ -43,6 +47,8 @@ class RestoreTask(private val filename: String) : Callable<Void?> {
         } catch (e: IOException) {
             Log.e(TAG, "Error restoring library: $e")
         } finally {
+            // Ensure stale Room handles are cleared after replacement.
+            AppDatabase.closeInstance()
             ShowsProvider.reloadDatabase(context)
         }
         

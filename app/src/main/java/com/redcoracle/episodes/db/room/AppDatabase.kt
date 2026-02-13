@@ -12,11 +12,10 @@ import com.redcoracle.episodes.db.DatabaseOpenHelper
     exportSchema = false
 )
 /**
- * Transitional Room database for watch-state write migration.
+ * App-wide Room database entrypoint.
  *
- * This database intentionally opens the existing legacy file `episodes.db` to support
- * incremental adoption. During this phase, callers must be resilient to schema-validation
- * failures on older installs (see EpisodeWatchStateWriter fallback paths).
+ * The singleton normalizes legacy `episodes` table declarations before opening Room so
+ * schema validation passes without legacy fallback write paths.
  */
 abstract class AppDatabase : RoomDatabase() {
     abstract fun episodesDao(): EpisodesRoomDao
@@ -29,11 +28,32 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun getInstance(context: Context): AppDatabase {
             return instance ?: synchronized(this) {
+                LegacySchemaNormalizer.normalizeEpisodesTable(context.applicationContext)
                 instance ?: Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     DatabaseOpenHelper.getDbName()
                 ).build().also { instance = it }
+            }
+        }
+
+        /**
+         * Flushes WAL pages to the main DB file before file-copy backups.
+         */
+        fun checkpoint(context: Context) {
+            runCatching {
+                val db = getInstance(context)
+                db.openHelper.writableDatabase.query("PRAGMA wal_checkpoint(FULL)").use { }
+            }
+        }
+
+        /**
+         * Closes and clears the singleton so restore operations can safely replace DB files.
+         */
+        fun closeInstance() {
+            synchronized(this) {
+                instance?.close()
+                instance = null
             }
         }
     }

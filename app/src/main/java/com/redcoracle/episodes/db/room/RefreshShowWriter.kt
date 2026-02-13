@@ -7,12 +7,6 @@ import com.redcoracle.episodes.tvdb.Episode
 import com.redcoracle.episodes.tvdb.Show
 import org.apache.commons.collections4.map.MultiKeyMap
 
-/**
- * Transitional writer for refresh-show operations.
- *
- * It attempts a Room transaction first, then falls back to the legacy provider-based
- * implementation when Room cannot open due schema validation mismatch on existing installs.
- */
 class RefreshShowWriter(
     context: Context,
     private val contentResolver: ContentResolver
@@ -23,21 +17,11 @@ class RefreshShowWriter(
     fun refreshShow(
         showId: Int,
         show: Show,
-        episodes: MutableList<Episode>,
-        fallback: () -> Unit
+        episodes: MutableList<Episode>
     ) {
-        val usedRoom = runCatching {
-            refreshWithRoom(showId, show, episodes)
-            true
-        }.getOrElse {
-            fallback()
-            false
-        }
-
-        if (usedRoom) {
-            contentResolver.notifyChange(ShowsProvider.CONTENT_URI_SHOWS, null)
-            contentResolver.notifyChange(ShowsProvider.CONTENT_URI_EPISODES, null)
-        }
+        refreshWithRoom(showId, show, episodes)
+        contentResolver.notifyChange(ShowsProvider.CONTENT_URI_SHOWS, null)
+        contentResolver.notifyChange(ShowsProvider.CONTENT_URI_EPISODES, null)
     }
 
     private fun refreshWithRoom(showId: Int, show: Show, episodes: MutableList<Episode>) {
