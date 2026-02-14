@@ -22,13 +22,9 @@ import com.redcoracle.episodes.tvdb.Show
 
 /**
  * Singleton for sharing search results between AddShowSearchActivity and AddShowPreviewActivity.
- * 
- * TODO: Replace this with proper state management:
- * - Option 1: Use Compose Navigation with arguments (requires full navigation migration)
- * - Option 2: Use shared ViewModel scope between activities
- * - Option 3: Store in SavedStateHandle with proper serialization
- * 
- * Current limitation: Android can destroy this data if process is killed.
+ *
+ * Note: This is a temporary bridge. Replacement is tracked in TODO.md under
+ * Architecture Improvements -> State Management.
  */
 object AddShowSearchResults {
     var data: List<Show>? = null

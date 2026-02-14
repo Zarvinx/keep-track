@@ -44,12 +44,11 @@ These can stay in Java for now, but should eventually be converted:
 ## Performance Optimizations
 
 ### Database
-- [ ] **Consider Room instead of raw ContentProvider**
-  - Type safety
-  - Better coroutines support
-  - Compile-time query verification
+- [x] **Migrate from raw ContentProvider access to Room**
+  - Completed: reads/writes moved to Room DAOs across watch state, show mutations, refresh, add/delete, and backup/restore flows
+  - Result: type-safe DAO boundaries, coroutine-friendly APIs, and declarative query/flow usage
 - [x] **Remove temporary Room schema normalizer after rollout**
-  - Completed: removed `LegacySchemaNormalizer` and `AppDatabase.getInstance()` normalization hook
+  - Completed: removed temporary schema normalizer and `AppDatabase.getInstance()` normalization hook
 
 ### Image Loading
 - [x] **Audit Coil image loading configuration**
