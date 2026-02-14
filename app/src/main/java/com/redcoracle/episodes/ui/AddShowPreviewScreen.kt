@@ -25,15 +25,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.redcoracle.episodes.R
-import com.redcoracle.episodes.tvdb.Show
 import java.text.DateFormat
+import java.util.Date
 
 @Composable
 fun AddShowPreviewScreen(
-    show: Show
+    previewArgs: AddShowPreviewArgs
 ) {
     val scrollState = rememberScrollState()
     
@@ -44,7 +43,8 @@ fun AddShowPreviewScreen(
             .padding(16.dp)
     ) {
         // First aired date
-        show.firstAired?.let { date ->
+        previewArgs.firstAiredMillis?.let { millis ->
+            val date = Date(millis)
             val dateText = stringResource(
                 R.string.first_aired,
                 DateFormat.getDateInstance().format(date)
@@ -58,9 +58,9 @@ fun AddShowPreviewScreen(
         }
         
         // Overview
-        if (show.overview.isNotEmpty()) {
+        if (previewArgs.overview.isNotEmpty()) {
             Text(
-                text = show.overview,
+                text = previewArgs.overview,
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(bottom = 16.dp)
             )

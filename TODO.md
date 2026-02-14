@@ -3,7 +3,7 @@
 ## Architecture Improvements
 
 ### State Management
-- [ ] **Replace AddShowSearchResults singleton** with proper state management
+- [x] **Replace AddShowSearchResults singleton** with proper state management
   - Consider Compose Navigation with parcelable arguments
   - Or use Hilt with shared ViewModel scopes
   - Current issue: Singleton data can be destroyed by Android when process is killed
@@ -12,7 +12,7 @@
 - [ ] **Migrate to Jetpack Compose Navigation**
   - Currently using Activity-based navigation with Intents
   - Would enable proper argument passing and back stack management
-  - Would eliminate need for singletons like AddShowSearchResults
+  - Would simplify typed argument passing and back stack management
 
 ### Dependency Injection
 - [x] **Add Hilt for proper DI**

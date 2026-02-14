@@ -21,7 +21,7 @@ package com.redcoracle.episodes.ui
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -42,8 +42,7 @@ import java.util.Locale
 
 @Composable
 fun AddShowSearchScreen(
-    query: String,
-    onShowClick: (Int) -> Unit,
+    onShowClick: (AddShowPreviewArgs) -> Unit,
     viewModel: AddShowSearchViewModel
 ) {
     val searchState by viewModel.searchState.collectAsState()
@@ -73,15 +72,22 @@ fun AddShowSearchScreen(
                     LazyColumn(
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        itemsIndexed(
+                        items(
                             items = state.results,
-                            key = { _, show -> show.id }
-                        ) { index, show ->
+                            key = { show -> show.id }
+                        ) { show ->
                             ShowSearchResultItem(
                                 show = show,
                                 onClick = {
-                                    viewModel.selectShow(show)
-                                    onShowClick(index)
+                                    onShowClick(
+                                        AddShowPreviewArgs(
+                                            tmdbId = show.id,
+                                            name = show.name,
+                                            language = show.language,
+                                            overview = show.overview,
+                                            firstAiredMillis = show.firstAired?.time
+                                        )
+                                    )
                                 }
                             )
                         }

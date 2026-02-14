@@ -21,7 +21,6 @@ package com.redcoracle.episodes.ui
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.redcoracle.episodes.AddShowSearchResults
 import com.redcoracle.episodes.Preferences
 import com.redcoracle.episodes.tvdb.Client
 import com.redcoracle.episodes.tvdb.Show
@@ -48,9 +47,6 @@ class AddShowSearchViewModel @Inject constructor() : ViewModel() {
     
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query.asStateFlow()
-    
-    private val _selectedShow = MutableStateFlow<Show?>(null)
-    val selectedShow: StateFlow<Show?> = _selectedShow.asStateFlow()
     
     private var initialized = false
 
@@ -103,17 +99,4 @@ class AddShowSearchViewModel @Inject constructor() : ViewModel() {
         }
     }
     
-    fun selectShow(show: Show) {
-        _selectedShow.value = show
-        // Update the singleton for the preview activity
-        // TODO: This should be replaced with proper state management
-        AddShowSearchResults.data = getSearchResults()
-    }
-    
-    fun getSearchResults(): List<Show> {
-        return when (val state = _searchState.value) {
-            is SearchState.Success -> state.results
-            else -> emptyList()
-        }
-    }
 }

@@ -38,10 +38,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.redcoracle.episodes.ui.AddShowPreviewArgs
 import com.redcoracle.episodes.ui.AddShowSearchScreen
 import com.redcoracle.episodes.ui.AddShowSearchViewModel
 import com.redcoracle.episodes.ui.theme.EpisodesTheme
@@ -60,7 +60,7 @@ class AddShowSearchActivity : ComponentActivity() {
                 AddShowSearchScaffold(
                     query = query,
                     onNavigateBack = { navigateToMain() },
-                    onShowClick = { index -> navigateToPreview(index) }
+                    onShowClick = { args -> navigateToPreview(args) }
                 )
             }
         }
@@ -73,10 +73,8 @@ class AddShowSearchActivity : ComponentActivity() {
         finish()
     }
     
-    private fun navigateToPreview(resultIndex: Int) {
-        val intent = Intent(this, AddShowPreviewActivity::class.java)
-        intent.putExtra("searchResultIndex", resultIndex)
-        startActivity(intent)
+    private fun navigateToPreview(args: AddShowPreviewArgs) {
+        startActivity(AddShowPreviewActivity.createIntent(this, args))
     }
 }
 
@@ -85,7 +83,7 @@ class AddShowSearchActivity : ComponentActivity() {
 fun AddShowSearchScaffold(
     query: String,
     onNavigateBack: () -> Unit,
-    onShowClick: (Int) -> Unit
+    onShowClick: (AddShowPreviewArgs) -> Unit
 ) {
     val viewModel: AddShowSearchViewModel = hiltViewModel()
     
@@ -151,7 +149,6 @@ fun AddShowSearchScaffold(
                 .padding(paddingValues)
         ) {
             AddShowSearchScreen(
-                query = currentQuery,
                 onShowClick = onShowClick,
                 viewModel = viewModel
             )
