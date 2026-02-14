@@ -18,55 +18,25 @@
 
 package com.redcoracle.episodes
 
-import android.content.Context
-import android.content.Intent
-import android.os.Build
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import com.redcoracle.episodes.services.AddShowTask
 import com.redcoracle.episodes.services.AsyncTask
 import com.redcoracle.episodes.ui.AddShowPreviewArgs
 import com.redcoracle.episodes.ui.AddShowPreviewScreen
-import com.redcoracle.episodes.ui.theme.EpisodesTheme
-
-class AddShowPreviewActivity : ComponentActivity() {
-    companion object {
-        const val EXTRA_PREVIEW_ARGS = "preview_args"
-
-        fun createIntent(context: Context, args: AddShowPreviewArgs): Intent {
-            return Intent(context, AddShowPreviewActivity::class.java).putExtra(EXTRA_PREVIEW_ARGS, args)
-        }
-    }
-    
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        
-        val previewArgs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getParcelableExtra(EXTRA_PREVIEW_ARGS, AddShowPreviewArgs::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            intent.getParcelableExtra(EXTRA_PREVIEW_ARGS)
-        }
-        
-        setContent {
-            EpisodesTheme {
-                AddShowPreviewScaffold(
-                    previewArgs = previewArgs,
-                    onNavigateBack = { finish() },
-                    onAddShow = { finish() }
-                )
-            }
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,13 +46,12 @@ fun AddShowPreviewScaffold(
     onAddShow: () -> Unit
 ) {
     if (previewArgs == null) {
-        // Data was destroyed, navigate back
         LaunchedEffect(Unit) {
             onNavigateBack()
         }
         return
     }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -94,7 +63,6 @@ fun AddShowPreviewScaffold(
                 },
                 actions = {
                     IconButton(onClick = {
-                        // Add the show
                         AsyncTask().executeAsync(
                             AddShowTask(previewArgs.tmdbId, previewArgs.name, previewArgs.language)
                         )

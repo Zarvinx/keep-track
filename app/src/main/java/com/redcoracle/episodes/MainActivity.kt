@@ -19,7 +19,6 @@
 package com.redcoracle.episodes
 
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -48,11 +47,11 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.preference.PreferenceManager
+import com.redcoracle.episodes.navigation.AppNavGraph
 import com.redcoracle.episodes.services.AsyncTask
 import com.redcoracle.episodes.services.RefreshAllShowsTask
 import com.redcoracle.episodes.ui.ShowsListScreen
@@ -64,8 +63,7 @@ import kotlinx.coroutines.launch
 data class MainMenuItem(val labelResId: Int, val action: () -> Unit)
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity(),
-    ActivityCompat.OnRequestPermissionsResultCallback {
+class MainActivity : AppCompatActivity() {
 
     companion object {
         private var context: Context? = null
@@ -85,48 +83,15 @@ class MainActivity : AppCompatActivity(),
 
         setContent {
             EpisodesTheme {
-                val viewModel: ShowsViewModel = hiltViewModel()
-
-                MainScreen(
-                    viewModel = viewModel,
-                    onShowSelected = ::onShowSelected,
-                    onSettings = ::showSettings,
-                    onAbout = ::showAbout,
-                    onRefreshAll = ::refreshAllShows,
-                    onAddShow = {
-                        startActivity(Intent(this, AddShowSearchActivity::class.java))
-                    }
-                )
+                AppNavGraph()
             }
         }
     }
+}
 
-    fun onShowSelected(showId: Int) {
-        val intent = Intent(this, ShowActivity::class.java)
-        intent.putExtra("showId", showId)
-        startActivity(intent)
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    }
-
-    private fun refreshAllShows() {
-        AsyncTask().executeAsync(RefreshAllShowsTask())
-        Toast.makeText(this, "Refreshing all shows in background...", Toast.LENGTH_LONG).show()
-    }
-
-    private fun showSettings() {
-        startActivity(Intent(this, SettingsActivity::class.java))
-    }
-
-    private fun showAbout() {
-        startActivity(Intent(this, AboutActivity::class.java))
-    }
+fun refreshAllShows(context: Context) {
+    AsyncTask().executeAsync(RefreshAllShowsTask())
+    Toast.makeText(context, "Refreshing all shows in background...", Toast.LENGTH_LONG).show()
 }
 
 @OptIn(ExperimentalComposeUiApi::class)

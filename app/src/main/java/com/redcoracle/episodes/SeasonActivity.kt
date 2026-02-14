@@ -18,16 +18,29 @@
 
 package com.redcoracle.episodes
 
-import android.content.Intent
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -35,50 +48,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.redcoracle.episodes.db.room.AppDatabase
 import com.redcoracle.episodes.ui.EpisodesListScreen
 import com.redcoracle.episodes.ui.EpisodesViewModel
-import com.redcoracle.episodes.ui.theme.EpisodesTheme
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
-@AndroidEntryPoint
-class SeasonActivity : ComponentActivity() {
-    
-    private var showId: Int = -1
-    private var seasonNumber: Int = -1
-    
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        
-        showId = intent.getIntExtra("showId", -1)
-        if (showId == -1) {
-            throw IllegalArgumentException("must provide valid showId")
-        }
-        
-        seasonNumber = intent.getIntExtra("seasonNumber", -1)
-        if (seasonNumber == -1) {
-            throw IllegalArgumentException("must provide valid seasonNumber")
-        }
-        
-        setContent {
-            EpisodesTheme {
-                SeasonScreen(
-                    showId = showId,
-                    seasonNumber = seasonNumber,
-                    onNavigateBack = { finish() },
-                    onEpisodeSelected = { episodeId -> onEpisodeSelected(episodeId) }
-                )
-            }
-        }
-    }
-    
-    private fun onEpisodeSelected(episodeId: Int) {
-        val intent = Intent(this, EpisodeActivity::class.java)
-        intent.putExtra("showId", showId)
-        intent.putExtra("seasonNumber", seasonNumber)
-        intent.putExtra("initialEpisodeId", episodeId)
-        startActivity(intent)
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,11 +64,10 @@ fun SeasonScreen(
     LaunchedEffect(showId, seasonNumber) {
         viewModel.initialize(showId, seasonNumber)
     }
-    
+
     var showMenu by remember { mutableStateOf(false) }
     var showName by remember { mutableStateOf("") }
-    
-    // Load show name
+
     LaunchedEffect(showId) {
         showName = withContext(Dispatchers.IO) {
             AppDatabase.getInstance(context.applicationContext).showQueriesDao()
@@ -105,13 +75,13 @@ fun SeasonScreen(
                 ?: ""
         }
     }
-    
+
     val seasonName = if (seasonNumber == 0) {
         stringResource(R.string.season_name_specials)
     } else {
         stringResource(R.string.season_name, seasonNumber)
     }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -134,7 +104,7 @@ fun SeasonScreen(
                     IconButton(onClick = { showMenu = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "Menu")
                     }
-                    
+
                     DropdownMenu(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false }

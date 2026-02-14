@@ -18,55 +18,27 @@
 
 package com.redcoracle.episodes
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.redcoracle.episodes.ui.EpisodeDetailsScreen
 import com.redcoracle.episodes.ui.EpisodesViewModel
-import com.redcoracle.episodes.ui.theme.EpisodesTheme
-import dagger.hilt.android.AndroidEntryPoint
-
-@AndroidEntryPoint
-class EpisodeActivity : ComponentActivity() {
-    
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        
-        val showId = intent.getIntExtra("showId", -1)
-        if (showId == -1) {
-            throw IllegalArgumentException("must provide valid showId")
-        }
-        
-        val seasonNumber = intent.getIntExtra("seasonNumber", -1)
-        if (seasonNumber == -1) {
-            throw IllegalArgumentException("must provide valid seasonNumber")
-        }
-        
-        val episodeId = intent.getIntExtra("initialEpisodeId", -1)
-        if (episodeId == -1) {
-            throw IllegalArgumentException("must provide valid initialEpisodeId")
-        }
-        
-        setContent {
-            EpisodesTheme {
-                EpisodeScreen(
-                    showId = showId,
-                    seasonNumber = seasonNumber,
-                    episodeId = episodeId,
-                    onNavigateBack = { finish() }
-                )
-            }
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,10 +52,10 @@ fun EpisodeScreen(
     LaunchedEffect(showId, seasonNumber) {
         viewModel.initialize(showId, seasonNumber)
     }
-    
+
     val episodes by viewModel.episodes.collectAsState()
     val episode = episodes.find { it.id == episodeId }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
