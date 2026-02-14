@@ -5,6 +5,9 @@ import com.redcoracle.episodes.ui.AddShowPreviewArgs
 
 sealed class AppDestination(val route: String) {
     data object Main : AppDestination("main")
+    data object Settings : AppDestination("settings")
+    data object About : AppDestination("about")
+    data object BackupSettings : AppDestination("backupSettings")
 
     data object Show : AppDestination("show/{showId}") {
         const val ARG_SHOW_ID = "showId"

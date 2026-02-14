@@ -18,60 +18,63 @@
 
 package com.redcoracle.episodes
 
-import android.content.Intent
-import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
 import com.redcoracle.episodes.services.AsyncTask
 import com.redcoracle.episodes.services.RefreshAllShowsTask
-import com.redcoracle.episodes.ui.theme.EpisodesTheme
 
-class SettingsActivity : AppCompatActivity() {
-    companion object {
-        private const val LANGUAGE_REFRESH_DEBOUNCE_MS = 5_000L
-        private val languageRefreshHandler = Handler(Looper.getMainLooper())
-        private var pendingLanguageRefresh: Runnable? = null
+private object SettingsRefreshScheduler {
+    private const val LANGUAGE_REFRESH_DEBOUNCE_MS = 5_000L
+    private val languageRefreshHandler = Handler(Looper.getMainLooper())
+    private var pendingLanguageRefresh: Runnable? = null
 
-        fun scheduleLanguageRefresh() {
-            pendingLanguageRefresh?.let(languageRefreshHandler::removeCallbacks)
-            pendingLanguageRefresh = Runnable {
-                AsyncTask().executeAsync(RefreshAllShowsTask())
-                pendingLanguageRefresh = null
-            }.also {
-                languageRefreshHandler.postDelayed(it, LANGUAGE_REFRESH_DEBOUNCE_MS)
-            }
-        }
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        supportActionBar?.hide()
-
-        setContent {
-            EpisodesTheme {
-                SettingsScreen(
-                    onNavigateBack = { finish() }
-                )
-            }
+    fun scheduleLanguageRefresh() {
+        pendingLanguageRefresh?.let(languageRefreshHandler::removeCallbacks)
+        pendingLanguageRefresh = Runnable {
+            AsyncTask().executeAsync(RefreshAllShowsTask())
+            pendingLanguageRefresh = null
+        }.also {
+            languageRefreshHandler.postDelayed(it, LANGUAGE_REFRESH_DEBOUNCE_MS)
         }
     }
 }
@@ -79,24 +82,25 @@ class SettingsActivity : AppCompatActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onBackupSettings: () -> Unit
 ) {
     val context = LocalContext.current
     val prefs = remember { PreferenceManager.getDefaultSharedPreferences(context) }
-    
+
     val languageEntries = context.resources.getStringArray(R.array.language_entries)
     val languageValues = context.resources.getStringArray(R.array.language_values)
     val periodEntries = context.resources.getStringArray(R.array.auto_refresh_period_entries)
     val periodValues = context.resources.getStringArray(R.array.auto_refresh_period_values)
-    
+
     var selectedLanguage by remember { mutableStateOf(prefs.getString("pref_language", "en") ?: "en") }
     var autoRefreshEnabled by remember { mutableStateOf(prefs.getBoolean("pref_auto_refresh_enabled", false)) }
     var autoRefreshPeriod by remember { mutableStateOf(prefs.getString("pref_auto_refresh_period", "168") ?: "168") }
     var autoRefreshWifiOnly by remember { mutableStateOf(prefs.getBoolean("pref_auto_refresh_wifi_only", true)) }
-    
+
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showPeriodDialog by remember { mutableStateOf(false) }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -116,41 +120,41 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             SettingsCategoryHeader(stringResource(R.string.pref_interface_category))
-            
+
             SettingsListItem(
                 title = stringResource(R.string.pref_language_title),
                 summary = selectedLanguage.labelFor(languageEntries, languageValues),
                 onClick = { showLanguageDialog = true }
             )
-            
+
             Divider(modifier = Modifier.padding(vertical = 8.dp))
-            
+
             SettingsCategoryHeader(stringResource(R.string.pref_auto_refresh_category))
-            
+
             SettingsSwitchItem(
                 title = stringResource(R.string.pref_auto_refresh_enabled_title),
                 summary = null,
                 checked = autoRefreshEnabled,
-                onCheckedChange = { 
+                onCheckedChange = {
                     autoRefreshEnabled = it
                     prefs.edit().putBoolean("pref_auto_refresh_enabled", it).apply()
                     AutoRefreshHelper.getInstance(context).rescheduleAlarm()
                 }
             )
-            
+
             SettingsListItem(
                 title = stringResource(R.string.pref_auto_refresh_period_title),
                 summary = autoRefreshPeriod.labelFor(periodEntries, periodValues),
                 enabled = autoRefreshEnabled,
                 onClick = { showPeriodDialog = true }
             )
-            
+
             SettingsSwitchItem(
                 title = stringResource(R.string.pref_auto_refresh_wifi_only_title),
                 summary = null,
                 checked = autoRefreshWifiOnly,
                 enabled = autoRefreshEnabled,
-                onCheckedChange = { 
+                onCheckedChange = {
                     autoRefreshWifiOnly = it
                     prefs.edit().putBoolean("pref_auto_refresh_wifi_only", it).apply()
                 }
@@ -162,36 +166,34 @@ fun SettingsScreen(
             SettingsListItem(
                 title = stringResource(R.string.pref_backup_restore_title),
                 summary = stringResource(R.string.pref_backup_restore_summary),
-                onClick = {
-                    context.startActivity(Intent(context, BackupSettingsActivity::class.java))
-                }
+                onClick = onBackupSettings
             )
         }
     }
-    
+
     if (showLanguageDialog) {
         SelectionDialog(
             title = stringResource(R.string.pref_language_title),
             options = languageEntries.zip(languageValues),
             selectedValue = selectedLanguage,
-            onSelect = { 
+            onSelect = {
                 val languageChanged = selectedLanguage != it
                 selectedLanguage = it
                 prefs.edit().putString("pref_language", it).apply()
                 if (languageChanged) {
-                    SettingsActivity.scheduleLanguageRefresh()
+                    SettingsRefreshScheduler.scheduleLanguageRefresh()
                 }
             },
             onDismiss = { showLanguageDialog = false }
         )
     }
-    
+
     if (showPeriodDialog) {
         SelectionDialog(
             title = stringResource(R.string.pref_auto_refresh_period_title),
             options = periodEntries.zip(periodValues),
             selectedValue = autoRefreshPeriod,
-            onSelect = { 
+            onSelect = {
                 autoRefreshPeriod = it
                 prefs.edit().putString("pref_auto_refresh_period", it).apply()
                 AutoRefreshHelper.getInstance(context).rescheduleAlarm()
@@ -223,7 +225,7 @@ fun SelectionDialog(
                                 onDismiss()
                             }
                             .padding(vertical = 12.dp),
-                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
                             selected = selectedValue == value,

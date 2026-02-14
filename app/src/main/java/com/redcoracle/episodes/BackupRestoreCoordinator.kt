@@ -1,20 +1,19 @@
 package com.redcoracle.episodes
 
-import androidx.appcompat.app.AppCompatActivity
+import android.content.Context
 import com.redcoracle.episodes.services.AsyncTask
 import com.redcoracle.episodes.services.BackupTask
 import com.redcoracle.episodes.services.RestoreTask
 
 class BackupRestoreCoordinator(
-    private val activity: AppCompatActivity? = null,
+    private val context: Context,
     private val showLegacyRestoreDialog: () -> Unit
 ) {
     fun backUp() {
-        val retention = activity?.let {
-            androidx.preference.PreferenceManager.getDefaultSharedPreferences(it)
-                .getInt(AutoBackupHelper.KEY_PREF_AUTO_BACKUP_RETENTION, 10)
-                .coerceIn(1, 100)
-        }
+        val retention = androidx.preference.PreferenceManager
+            .getDefaultSharedPreferences(context)
+            .getInt(AutoBackupHelper.KEY_PREF_AUTO_BACKUP_RETENTION, 10)
+            .coerceIn(1, 100)
 
         AsyncTask().executeAsync(
             BackupTask(

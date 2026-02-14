@@ -9,7 +9,7 @@
   - Current issue: Singleton data can be destroyed by Android when process is killed
 
 ### Navigation
-- [ ] **Migrate to Jetpack Compose Navigation**
+- [x] **Migrate to Jetpack Compose Navigation**
   - Currently using Activity-based navigation with Intents
   - Would enable proper argument passing and back stack management
   - Would simplify typed argument passing and back stack management

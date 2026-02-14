@@ -60,7 +60,11 @@ import com.redcoracle.episodes.ui.theme.EpisodesTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
-data class MainMenuItem(val labelResId: Int, val action: () -> Unit)
+data class MainMenuItem(
+    val labelResId: Int,
+    val closeDrawerBeforeAction: Boolean = true,
+    val action: () -> Unit
+)
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -89,9 +93,11 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-fun refreshAllShows(context: Context) {
+fun refreshAllShows() {
     AsyncTask().executeAsync(RefreshAllShowsTask())
-    Toast.makeText(context, "Refreshing all shows in background...", Toast.LENGTH_LONG).show()
+    MainActivity.getAppContext()?.let { context ->
+        Toast.makeText(context, "Refreshing all shows in background...", Toast.LENGTH_LONG).show()
+    }
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -127,9 +133,20 @@ fun MainScreen(
 
     val mainMenuItems = androidx.compose.runtime.remember(onRefreshAll, onSettings, onAbout) {
         listOf(
-            MainMenuItem(R.string.menu_refresh_all_shows, onRefreshAll),
-            MainMenuItem(R.string.menu_settings, onSettings),
-            MainMenuItem(R.string.menu_about, onAbout)
+            MainMenuItem(
+                labelResId = R.string.menu_refresh_all_shows,
+                action = onRefreshAll
+            ),
+            MainMenuItem(
+                labelResId = R.string.menu_settings,
+                closeDrawerBeforeAction = false,
+                action = onSettings
+            ),
+            MainMenuItem(
+                labelResId = R.string.menu_about,
+                closeDrawerBeforeAction = false,
+                action = onAbout
+            )
         )
     }
 
@@ -218,8 +235,14 @@ fun MainScreen(
                                 },
                                 selected = false,
                                 onClick = {
-                                    scope.launch { drawerState.close() }
-                                    item.action()
+                                    if (item.closeDrawerBeforeAction) {
+                                        scope.launch {
+                                            drawerState.close()
+                                            item.action()
+                                        }
+                                    } else {
+                                        item.action()
+                                    }
                                 },
                                 shape = RoundedCornerShape(10.dp),
                                 modifier = Modifier

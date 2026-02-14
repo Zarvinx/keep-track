@@ -18,20 +18,26 @@
 
 package com.redcoracle.episodes
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -41,21 +47,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.redcoracle.episodes.ui.theme.EpisodesTheme
-
-class AboutActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        
-        setContent {
-            EpisodesTheme {
-                AboutScreen(
-                    onNavigateBack = { finish() }
-                )
-            }
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,7 +54,7 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
     val scrollState = rememberScrollState()
     val uriHandler = LocalUriHandler.current
     val websiteUrl = stringResource(R.string.about_website)
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -85,22 +76,19 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // App name
             Text(
                 text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
-            
-            // Description
+
             Text(
                 text = stringResource(R.string.about_description),
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center
             )
-            
-            // Website (clickable)
+
             val websiteText = buildAnnotatedString {
                 pushStringAnnotation(tag = "URL", annotation = websiteUrl)
                 withStyle(
@@ -113,7 +101,7 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
                 }
                 pop()
             }
-            
+
             ClickableText(
                 text = websiteText,
                 onClick = { offset ->
@@ -124,8 +112,7 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
                 },
                 modifier = Modifier.padding(bottom = 8.dp)
             )
-            
-            // Original source attribution
+
             val sourceUrl = stringResource(R.string.about_website_source)
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -136,7 +123,7 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
+
                 val sourceText = buildAnnotatedString {
                     pushStringAnnotation(tag = "URL", annotation = sourceUrl)
                     withStyle(
@@ -149,7 +136,7 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
                     }
                     pop()
                 }
-                
+
                 ClickableText(
                     text = sourceText,
                     onClick = { offset ->
@@ -160,26 +147,23 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
                     }
                 )
             }
-            
+
             Divider()
-            
-            // License
+
             Text(
                 text = stringResource(R.string.about_license),
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.Start
             )
-            
-            // TMDB attribution
+
             Text(
                 text = stringResource(R.string.about_tmdb),
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.Start
             )
-            
+
             Divider()
-            
-            // Version info
+
             Text(
                 text = stringResource(
                     R.string.version,

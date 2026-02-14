@@ -1,8 +1,5 @@
 package com.redcoracle.episodes
 
-import android.os.Bundle
-import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -30,40 +27,32 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.preference.PreferenceManager
-import com.redcoracle.episodes.ui.theme.EpisodesTheme
 
-class BackupSettingsActivity : AppCompatActivity() {
-    private var showBackupDialog by mutableStateOf(false)
-    private lateinit var backupRestoreCoordinator: BackupRestoreCoordinator
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        supportActionBar?.hide()
-
-        backupRestoreCoordinator = BackupRestoreCoordinator(
-            activity = this,
+@Composable
+fun BackupSettingsRoute(onNavigateBack: () -> Unit) {
+    val context = LocalContext.current
+    var showBackupDialog by remember { mutableStateOf(false) }
+    val backupRestoreCoordinator = remember(context) {
+        BackupRestoreCoordinator(
+            context = context,
             showLegacyRestoreDialog = { showBackupDialog = true }
         )
+    }
 
-        setContent {
-            EpisodesTheme {
-                BackupSettingsScreen(
-                    onNavigateBack = { finish() },
-                    onBackupNow = backupRestoreCoordinator::backUp,
-                    onRestore = backupRestoreCoordinator::restore
-                )
+    BackupSettingsScreen(
+        onNavigateBack = onNavigateBack,
+        onBackupNow = backupRestoreCoordinator::backUp,
+        onRestore = backupRestoreCoordinator::restore
+    )
 
-                if (showBackupDialog) {
-                    SelectBackupDialog(
-                        onBackupSelected = { backupFilename ->
-                            showBackupDialog = false
-                            backupRestoreCoordinator.onBackupSelected(backupFilename)
-                        },
-                        onDismiss = { showBackupDialog = false }
-                    )
-                }
-            }
-        }
+    if (showBackupDialog) {
+        SelectBackupDialog(
+            onBackupSelected = { backupFilename ->
+                showBackupDialog = false
+                backupRestoreCoordinator.onBackupSelected(backupFilename)
+            },
+            onDismiss = { showBackupDialog = false }
+        )
     }
 }
 

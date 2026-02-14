@@ -1,6 +1,8 @@
 package com.redcoracle.episodes.navigation
 
-import android.content.Intent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,20 +13,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.redcoracle.episodes.AboutActivity
 import com.redcoracle.episodes.AddShowPreviewScaffold
 import com.redcoracle.episodes.AddShowSearchScaffold
+import com.redcoracle.episodes.AboutScreen
+import com.redcoracle.episodes.BackupSettingsRoute
 import com.redcoracle.episodes.EpisodeScreen
 import com.redcoracle.episodes.MainScreen
 import com.redcoracle.episodes.SeasonScreen
-import com.redcoracle.episodes.SettingsActivity
+import com.redcoracle.episodes.SettingsScreen
 import com.redcoracle.episodes.refreshAllShows
 import com.redcoracle.episodes.ui.ShowDetailScreen
 import com.redcoracle.episodes.ui.ShowsViewModel
@@ -32,7 +34,6 @@ import com.redcoracle.episodes.ui.ShowsViewModel
 @Composable
 fun AppNavGraph() {
     val navController = rememberNavController()
-    val context = LocalContext.current
 
     NavHost(
         navController = navController,
@@ -40,6 +41,19 @@ fun AppNavGraph() {
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+        ,
+        enterTransition = {
+            fadeIn(animationSpec = tween(durationMillis = 200))
+        },
+        exitTransition = {
+            fadeOut(animationSpec = tween(durationMillis = 150))
+        },
+        popEnterTransition = {
+            fadeIn(animationSpec = tween(durationMillis = 200))
+        },
+        popExitTransition = {
+            fadeOut(animationSpec = tween(durationMillis = 150))
+        }
     ) {
         composable(route = AppDestination.Main.route) {
             val viewModel: ShowsViewModel = hiltViewModel()
@@ -49,17 +63,36 @@ fun AppNavGraph() {
                     navController.navigate(AppDestination.Show.createRoute(showId))
                 },
                 onSettings = {
-                    context.startActivity(Intent(context, SettingsActivity::class.java))
+                    navController.navigate(AppDestination.Settings.route)
                 },
                 onAbout = {
-                    context.startActivity(Intent(context, AboutActivity::class.java))
+                    navController.navigate(AppDestination.About.route)
                 },
                 onRefreshAll = {
-                    refreshAllShows(context)
+                    refreshAllShows()
                 },
                 onAddShow = {
                     navController.navigate(AppDestination.AddShowSearch.createRoute(null))
                 }
+            )
+        }
+
+        composable(route = AppDestination.Settings.route) {
+            SettingsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onBackupSettings = { navController.navigate(AppDestination.BackupSettings.route) }
+            )
+        }
+
+        composable(route = AppDestination.About.route) {
+            AboutScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(route = AppDestination.BackupSettings.route) {
+            BackupSettingsRoute(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 
