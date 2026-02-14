@@ -21,7 +21,7 @@ class RestoreTask(private val filename: String) : Callable<Void?> {
 
     override fun call(): Void? {
         val backupFile = File(filename)
-        val databaseFile = context.getDatabasePath(DatabaseOpenHelper.getDbName())
+        val databaseFile = context.getDatabasePath(DatabaseOpenHelper.getDbName(context))
         
         try {
             // Close active Room connection before replacing the DB file.

@@ -18,7 +18,7 @@ class RefreshAllShowsTask : Callable<Void?> {
         val total = shows.size
 
         val notificationManager = NotificationManagerCompat.from(context)
-        val notificationBuilder = NotificationCompat.Builder(context, "episodes_channel_id")
+        val notificationBuilder = NotificationCompat.Builder(context, "keep_track_channel_id")
         notificationBuilder
             .setContentTitle("Refreshing Shows")
             .setSmallIcon(R.drawable.ic_show_starred)

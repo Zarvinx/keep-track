@@ -75,7 +75,7 @@ class EpisodesApplication : Application(), ImageLoaderFactory {
             val name: CharSequence = getString(R.string.channel_name)
             val description = getString(R.string.channel_description)
             val importance = NotificationManager.IMPORTANCE_LOW
-            val channel = NotificationChannel("episodes_channel_id", name, importance)
+            val channel = NotificationChannel("keep_track_channel_id", name, importance)
             channel.description = description
             val notificationManager = getSystemService(NotificationManager::class.java)
             notificationManager.createNotificationChannel(channel)

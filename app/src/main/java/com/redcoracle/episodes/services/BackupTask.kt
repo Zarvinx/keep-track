@@ -29,7 +29,7 @@ class BackupTask(
         // Ensure Room-flushed pages are in the main DB file before copying.
         AppDatabase.checkpoint(context)
 
-        val databaseFile = context.getDatabasePath(DatabaseOpenHelper.getDbName())
+        val databaseFile = context.getDatabasePath(DatabaseOpenHelper.getDbName(context))
         val destinationDirectory = FileUtilities.get_backup_directory(context)
 
         val destinationFile = File(destinationDirectory, destinationFileName)

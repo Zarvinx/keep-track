@@ -24,11 +24,12 @@ import android.util.Log;
 
 public class DatabaseOpenHelper extends SQLiteOpenHelper {
     private static final String TAG = "DatabaseOpenHelper";
-    private static final String name = "episodes.db";
+    private static final String NAME = "keep_track.db";
+    private static final String LEGACY_NAME = "episodes.db";
     private static final int version = 10;
 
     DatabaseOpenHelper(Context context) {
-        super(context, name, null, version);
+        super(context, getDbName(context), null, version);
     }
 
     @Override
@@ -50,7 +51,10 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
         Log.d(TAG, "opening database.");
     }
 
-    public static String getDbName() {
-        return name;
+    public static String getDbName(Context context) {
+        if (context.getDatabasePath(LEGACY_NAME).exists()) {
+            return LEGACY_NAME;
+        }
+        return NAME;
     }
 }

@@ -30,7 +30,7 @@ object FileUtilities {
     fun get_suggested_filename(): String {
         val today = Date()
         val formatter = SimpleDateFormat("yyyy-MM-dd_HHmm", Locale.getDefault())
-        return "episodes_${formatter.format(today)}.db"
+        return "keep_track_${formatter.format(today)}.db"
     }
 
     fun uri_to_filename(context: Context, uri: Uri): String? {

@@ -42,7 +42,7 @@ abstract class AppDatabase : RoomDatabase() {
                 instance ?: Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    DatabaseOpenHelper.getDbName()
+                    DatabaseOpenHelper.getDbName(context.applicationContext)
                 )
                     .addMigrations(MIGRATION_10_11)
                     .build()
