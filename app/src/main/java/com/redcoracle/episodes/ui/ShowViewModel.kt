@@ -20,13 +20,13 @@ package com.redcoracle.episodes.ui
 
 import android.app.Application
 import android.content.ContentResolver
-import android.content.ContentValues
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.redcoracle.episodes.db.ShowsProvider
 import com.redcoracle.episodes.db.ShowsTable
 import com.redcoracle.episodes.db.room.EpisodeWatchStateWriter
+import com.redcoracle.episodes.db.room.ShowMutationsWriter
 import com.redcoracle.episodes.services.AsyncTask
 import com.redcoracle.episodes.services.DeleteShowTask
 import com.redcoracle.episodes.services.RefreshShowTask
@@ -49,6 +49,7 @@ data class ShowDetails(
 class ShowViewModel(application: Application, private val showId: Int) : AndroidViewModel(application) {
     private val contentResolver: ContentResolver = application.contentResolver
     private val watchStateWriter = EpisodeWatchStateWriter(application.applicationContext)
+    private val showMutationsWriter = ShowMutationsWriter(application.applicationContext)
     
     private val _showDetails = MutableStateFlow<ShowDetails?>(null)
     val showDetails: StateFlow<ShowDetails?> = _showDetails.asStateFlow()
@@ -103,15 +104,7 @@ class ShowViewModel(application: Application, private val showId: Int) : Android
     fun toggleStarred() {
         viewModelScope.launch(Dispatchers.IO) {
             val current = _showDetails.value ?: return@launch
-            val values = ContentValues().apply {
-                put(ShowsTable.COLUMN_STARRED, if (current.starred) 0 else 1)
-            }
-            contentResolver.update(
-                ShowsProvider.CONTENT_URI_SHOWS,
-                values,
-                "${ShowsTable.COLUMN_ID}=?",
-                arrayOf(showId.toString())
-            )
+            showMutationsWriter.setStarred(showId, !current.starred)
             loadShowDetails()
         }
     }
@@ -119,15 +112,7 @@ class ShowViewModel(application: Application, private val showId: Int) : Android
     fun toggleArchived() {
         viewModelScope.launch(Dispatchers.IO) {
             val current = _showDetails.value ?: return@launch
-            val values = ContentValues().apply {
-                put(ShowsTable.COLUMN_ARCHIVED, if (current.archived) 0 else 1)
-            }
-            contentResolver.update(
-                ShowsProvider.CONTENT_URI_SHOWS,
-                values,
-                "${ShowsTable.COLUMN_ID}=?",
-                arrayOf(showId.toString())
-            )
+            showMutationsWriter.setArchived(showId, !current.archived)
             loadShowDetails()
         }
     }

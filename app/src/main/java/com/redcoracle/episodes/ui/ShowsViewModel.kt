@@ -13,6 +13,7 @@ import com.redcoracle.episodes.db.ShowsProvider
 import com.redcoracle.episodes.db.ShowsTable
 import com.redcoracle.episodes.db.observeQuery
 import com.redcoracle.episodes.db.room.EpisodeWatchStateWriter
+import com.redcoracle.episodes.db.room.ShowMutationsWriter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,6 +43,7 @@ data class Show(
 class ShowsViewModel(application: Application) : AndroidViewModel(application) {
     private val contentResolver: ContentResolver = application.contentResolver
     private val watchStateWriter = EpisodeWatchStateWriter(application.applicationContext)
+    private val showMutationsWriter = ShowMutationsWriter(application.applicationContext)
     private val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(application)
     
     private val _shows = MutableStateFlow<List<Show>>(emptyList())
@@ -310,15 +312,7 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
             
             // Then update database in background
             withContext(Dispatchers.IO) {
-                val values = android.content.ContentValues().apply {
-                    put(ShowsTable.COLUMN_STARRED, if (starred) 1 else 0)
-                }
-                contentResolver.update(
-                    ShowsProvider.CONTENT_URI_SHOWS,
-                    values,
-                    "${ShowsTable.COLUMN_ID}=?",
-                    arrayOf(showId.toString())
-                )
+                showMutationsWriter.setStarred(showId, starred)
             }
         }
     }
@@ -332,15 +326,7 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
             
             // Then update database in background
             withContext(Dispatchers.IO) {
-                val values = android.content.ContentValues().apply {
-                    put(ShowsTable.COLUMN_ARCHIVED, if (archived) 1 else 0)
-                }
-                contentResolver.update(
-                    ShowsProvider.CONTENT_URI_SHOWS,
-                    values,
-                    "${ShowsTable.COLUMN_ID}=?",
-                    arrayOf(showId.toString())
-                )
+                showMutationsWriter.setArchived(showId, archived)
             }
         }
     }
