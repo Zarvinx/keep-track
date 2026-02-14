@@ -8,9 +8,8 @@ import androidx.room.PrimaryKey
 /**
  * Room view of legacy `episodes` table.
  *
- * Note: Existing installs may have legacy SQL declarations that differ by declared type
- * names (e.g. VARCHAR/DATE/BOOLEAN). SQLite can store compatible values, but Room schema
- * validation can still reject mismatched declarations until a full migration normalizes them.
+ * Note: SQLite stores values dynamically, but Room still validates declared column affinity.
+ * Keep field types aligned with the live schema used by existing installs.
  */
 data class EpisodeEntity(
     @PrimaryKey
