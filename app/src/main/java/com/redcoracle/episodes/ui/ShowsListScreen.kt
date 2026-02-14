@@ -27,7 +27,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
-import androidx.compose.material.icons.filled.Beenhere
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Unarchive
@@ -336,10 +335,6 @@ fun ShowListItem(
                     }
                 }
             } else {
-                // Show has no next episode - determine status message
-                val isEnded = show.status in listOf("Ended", "Canceled")
-                val statusText = if (isEnded) "This show has ended" else "You are all caught up"
-                
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -348,25 +343,7 @@ fun ShowListItem(
                         .padding(horizontal = 12.dp, vertical = 8.dp),
                     contentAlignment = Alignment.CenterStart
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        if (isEnded) {
-                            Icon(
-                                imageVector = Icons.Filled.Beenhere,
-                                contentDescription = null,
-                                tint = Color(0xFF4CAF50),
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        Text(
-                            text = statusText,
-                            color = Color(0xFFAAAAAA),
-                            fontSize = 14.sp,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
+                    StatusText(status = show.status)
                 }
             }
         }
