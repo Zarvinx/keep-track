@@ -14,8 +14,7 @@ import com.redcoracle.episodes.db.DatabaseOpenHelper
 /**
  * App-wide Room database entrypoint.
  *
- * The singleton normalizes legacy `episodes` table declarations before opening Room so
- * schema validation passes without legacy fallback write paths.
+ * This singleton opens the app's existing SQLite database file through Room.
  */
 abstract class AppDatabase : RoomDatabase() {
     abstract fun episodesDao(): EpisodesRoomDao
@@ -28,7 +27,6 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun getInstance(context: Context): AppDatabase {
             return instance ?: synchronized(this) {
-                LegacySchemaNormalizer.normalizeEpisodesTable(context.applicationContext)
                 instance ?: Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,

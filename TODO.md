@@ -48,10 +48,8 @@ These can stay in Java for now, but should eventually be converted:
   - Type safety
   - Better coroutines support
   - Compile-time query verification
-- [ ] **Remove temporary Room schema normalizer after rollout**
-  - Ship current build to active users first (both installs upgraded at least once)
-  - Remove `LegacySchemaNormalizer` and `AppDatabase.getInstance()` normalization hook
-  - Keep Room-only write paths and re-test watched/add/refresh/backup-restore flows
+- [x] **Remove temporary Room schema normalizer after rollout**
+  - Completed: removed `LegacySchemaNormalizer` and `AppDatabase.getInstance()` normalization hook
 
 ### Image Loading
 - [x] **Audit Coil image loading configuration**

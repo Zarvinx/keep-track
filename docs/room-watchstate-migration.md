@@ -25,8 +25,8 @@ Room expects declarations compatible with:
 - `first_aired INTEGER`
 - `watched INTEGER`
 
-`AppDatabase` now runs a one-time legacy normalization before opening Room.
-This aligns `episodes` table declarations so Room validation succeeds.
+Legacy schema alignment was completed during rollout and the temporary runtime normalizer
+has now been removed.
 
 ## Current Behavior Guarantees
 - Main screen, season screen, next-episode screen watched toggles should not crash on legacy schema.
