@@ -19,19 +19,14 @@
 package com.redcoracle.episodes.ui
 
 import android.app.Application
-import android.content.ContentResolver
-import android.database.Cursor
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.redcoracle.episodes.EpisodesCounter
-import com.redcoracle.episodes.db.EpisodesTable
-import com.redcoracle.episodes.db.ShowsProvider
-import com.redcoracle.episodes.db.observeQuery
+import com.redcoracle.episodes.db.room.AppDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -44,62 +39,58 @@ data class Season(
 )
 
 class SeasonsViewModel(application: Application, private val showId: Int) : AndroidViewModel(application) {
-    private val contentResolver: ContentResolver = application.contentResolver
+    private val appReadDao = AppDatabase.getInstance(application.applicationContext).appReadDao()
     
     private val _seasons = MutableStateFlow<List<Season>>(emptyList())
     val seasons: StateFlow<List<Season>> = _seasons.asStateFlow()
     
     init {
-        // Observe episodes for this show and automatically update seasons list
         viewModelScope.launch {
-            contentResolver.observeQuery(
-                uri = ShowsProvider.CONTENT_URI_EPISODES,
-                projection = arrayOf(
-                    EpisodesTable.COLUMN_SEASON_NUMBER,
-                    EpisodesTable.COLUMN_FIRST_AIRED,
-                    EpisodesTable.COLUMN_WATCHED
-                ),
-                selection = "${EpisodesTable.COLUMN_SHOW_ID}=?",
-                selectionArgs = arrayOf(showId.toString()),
-                sortOrder = "${EpisodesTable.COLUMN_SEASON_NUMBER} ASC, ${EpisodesTable.COLUMN_EPISODE_NUMBER} ASC"
-            ).map { cursor ->
-                withContext(Dispatchers.IO) {
-                    cursor?.let { loadSeasonsFromCursor(it) } ?: emptyList()
+            appReadDao.observeSeasonRows(showId).collectLatest { rows ->
+                val seasonsList = withContext(Dispatchers.Default) {
+                    loadSeasonsFromRows(rows)
                 }
-            }.collect { seasonsList ->
                 _seasons.value = seasonsList
             }
         }
     }
     
-    private fun loadSeasonsFromCursor(cursor: Cursor): List<Season> {
-        val seasonsList = mutableListOf<Season>()
-        
-        cursor.use {
-            val episodesCounter = EpisodesCounter(EpisodesTable.COLUMN_SEASON_NUMBER)
-            episodesCounter.swapCursor(it)
-            
-            val seasonNumbers = episodesCounter.getKeys().toList().sorted()
-            
-            for (seasonNumber in seasonNumbers) {
-                val name = if (seasonNumber == 0) {
-                    getApplication<Application>().getString(com.redcoracle.episodes.R.string.season_name_specials)
-                } else {
-                    getApplication<Application>().getString(com.redcoracle.episodes.R.string.season_name, seasonNumber)
+    private fun loadSeasonsFromRows(rows: List<com.redcoracle.episodes.db.room.SeasonRow>): List<Season> {
+        val app = getApplication<Application>()
+        val nowSeconds = System.currentTimeMillis() / 1000
+        val grouped = rows.groupBy { it.seasonNumber ?: 0 }
+        return grouped.keys.sorted().map { seasonNumber ->
+            val seasonRows = grouped[seasonNumber].orEmpty()
+            var watchedCount = 0
+            var airedCount = 0
+            var upcomingCount = 0
+            for (row in seasonRows) {
+                if ((row.watched ?: 0) > 0) {
+                    watchedCount += 1
                 }
-                
-                seasonsList.add(
-                    Season(
-                        seasonNumber = seasonNumber,
-                        name = name,
-                        watchedCount = episodesCounter.getNumWatchedEpisodes(seasonNumber),
-                        airedCount = episodesCounter.getNumAiredEpisodes(seasonNumber),
-                        upcomingCount = episodesCounter.getNumUpcomingEpisodes(seasonNumber)
-                    )
-                )
+                val firstAired = row.firstAired ?: 0L
+                if (firstAired > 0) {
+                    if (firstAired <= nowSeconds) {
+                        airedCount += 1
+                    } else {
+                        upcomingCount += 1
+                    }
+                }
             }
+
+            val name = if (seasonNumber == 0) {
+                app.getString(com.redcoracle.episodes.R.string.season_name_specials)
+            } else {
+                app.getString(com.redcoracle.episodes.R.string.season_name, seasonNumber)
+            }
+
+            Season(
+                seasonNumber = seasonNumber,
+                name = name,
+                watchedCount = watchedCount,
+                airedCount = airedCount,
+                upcomingCount = upcomingCount
+            )
         }
-        
-        return seasonsList
     }
 }

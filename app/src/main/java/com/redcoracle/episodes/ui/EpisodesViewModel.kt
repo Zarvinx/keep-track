@@ -19,14 +19,12 @@
 package com.redcoracle.episodes.ui
 
 import android.app.Application
-import android.content.ContentResolver
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.redcoracle.episodes.db.EpisodesTable
-import com.redcoracle.episodes.db.ShowsProvider
+import com.redcoracle.episodes.db.room.AppDatabase
 import com.redcoracle.episodes.db.room.EpisodeWatchStateWriter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,7 +49,7 @@ class EpisodesViewModel(
     private val showId: Int,
     private val seasonNumber: Int
 ) : AndroidViewModel(application) {
-    private val contentResolver: ContentResolver = application.contentResolver
+    private val appReadDao = AppDatabase.getInstance(application.applicationContext).appReadDao()
     private val watchStateWriter = EpisodeWatchStateWriter(application.applicationContext)
     
     private val _episodes = MutableStateFlow<List<Episode>>(emptyList())
@@ -71,52 +69,17 @@ class EpisodesViewModel(
     }
     
     private fun loadEpisodesFromDatabase(): List<Episode> {
-        val episodesList = mutableListOf<Episode>()
-        
-        val projection = arrayOf(
-            EpisodesTable.COLUMN_ID,
-            EpisodesTable.COLUMN_SEASON_NUMBER,
-            EpisodesTable.COLUMN_EPISODE_NUMBER,
-            EpisodesTable.COLUMN_NAME,
-            EpisodesTable.COLUMN_OVERVIEW,
-            EpisodesTable.COLUMN_FIRST_AIRED,
-            EpisodesTable.COLUMN_WATCHED
-        )
-        
-        val selection = "${EpisodesTable.COLUMN_SHOW_ID}=? AND ${EpisodesTable.COLUMN_SEASON_NUMBER}=?"
-        val selectionArgs = arrayOf(showId.toString(), seasonNumber.toString())
-        
-        contentResolver.query(
-            ShowsProvider.CONTENT_URI_EPISODES,
-            projection,
-            selection,
-            selectionArgs,
-            "${EpisodesTable.COLUMN_EPISODE_NUMBER} ASC"
-        )?.use { cursor ->
-            val idIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_ID)
-            val seasonNumberIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_SEASON_NUMBER)
-            val episodeNumberIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_EPISODE_NUMBER)
-            val nameIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_NAME)
-            val overviewIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_OVERVIEW)
-            val firstAiredIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_FIRST_AIRED)
-            val watchedIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_WATCHED)
-            
-            while (cursor.moveToNext()) {
-                episodesList.add(
-                    Episode(
-                        id = cursor.getInt(idIndex),
-                        seasonNumber = cursor.getInt(seasonNumberIndex),
-                        episodeNumber = cursor.getInt(episodeNumberIndex),
-                        name = cursor.getString(nameIndex),
-                        overview = if (cursor.isNull(overviewIndex)) null else cursor.getString(overviewIndex),
-                        firstAired = if (cursor.isNull(firstAiredIndex)) null else cursor.getLong(firstAiredIndex),
-                        watched = cursor.getInt(watchedIndex) > 0
-                    )
-                )
-            }
+        return appReadDao.getEpisodesForSeason(showId, seasonNumber).map { row ->
+            Episode(
+                id = row.id,
+                seasonNumber = row.seasonNumber ?: 0,
+                episodeNumber = row.episodeNumber ?: 0,
+                name = row.name.orEmpty(),
+                overview = row.overview,
+                firstAired = row.firstAired,
+                watched = (row.watched ?: 0) > 0
+            )
         }
-        
-        return episodesList
     }
     
     fun toggleEpisodeWatched(episodeId: Int, watched: Boolean) {

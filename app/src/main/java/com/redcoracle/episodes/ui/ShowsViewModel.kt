@@ -1,17 +1,14 @@
 package com.redcoracle.episodes.ui
 
 import android.app.Application
-import android.content.ContentResolver
 import android.content.SharedPreferences
-import android.database.Cursor
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.preference.PreferenceManager
-import com.redcoracle.episodes.db.EpisodesTable
-import com.redcoracle.episodes.db.ShowsProvider
-import com.redcoracle.episodes.db.ShowsTable
-import com.redcoracle.episodes.db.observeQuery
+import com.redcoracle.episodes.db.room.AppDatabase
+import com.redcoracle.episodes.db.room.EpisodeCountRow
+import com.redcoracle.episodes.db.room.ShowListRow
 import com.redcoracle.episodes.db.room.EpisodeWatchStateWriter
 import com.redcoracle.episodes.db.room.ShowMutationsWriter
 import kotlinx.coroutines.Dispatchers
@@ -41,7 +38,7 @@ data class Show(
 )
 
 class ShowsViewModel(application: Application) : AndroidViewModel(application) {
-    private val contentResolver: ContentResolver = application.contentResolver
+    private val appReadDao = AppDatabase.getInstance(application.applicationContext).appReadDao()
     private val watchStateWriter = EpisodeWatchStateWriter(application.applicationContext)
     private val showMutationsWriter = ShowMutationsWriter(application.applicationContext)
     private val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(application)
@@ -74,46 +71,15 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
         prefs.registerOnSharedPreferenceChangeListener(prefsListener)
         _currentFilter.value = prefs.getInt(KEY_PREF_SHOWS_FILTER, SHOWS_FILTER_WATCHING)
         
-        // Observe database changes and automatically update shows list
         viewModelScope.launch {
             combine(
-                contentResolver.observeQuery(
-                    uri = ShowsProvider.CONTENT_URI_SHOWS,
-                    projection = null,
-                    selection = null,
-                    selectionArgs = null,
-                    sortOrder = ShowsTable.COLUMN_NAME + " ASC"
-                ),
-                contentResolver.observeQuery(
-                    uri = ShowsProvider.CONTENT_URI_EPISODES,
-                    projection = null,
-                    selection = null,
-                    selectionArgs = null,
-                    sortOrder = null
-                ),
+                appReadDao.observeShowsForList(),
+                appReadDao.observeEpisodeCounts(),
                 _currentFilter,
                 _searchQuery
-            ) { _, _, filter, searchQuery ->
+            ) { showRows, episodeRows, filter, searchQuery ->
                 withContext(Dispatchers.IO) {
-                    try {
-                        val showsCursor = contentResolver.query(
-                            ShowsProvider.CONTENT_URI_SHOWS,
-                            null,
-                            null,
-                            null,
-                            ShowsTable.COLUMN_NAME + " ASC"
-                        )
-                        
-                        if (showsCursor != null) {
-                            val result = loadShowsFromCursor(showsCursor, filter, searchQuery)
-                            showsCursor.close()
-                            result
-                        } else {
-                            emptyList()
-                        }
-                    } catch (e: Exception) {
-                        emptyList()
-                    }
+                    loadShows(showRows, episodeRows, filter, searchQuery)
                 }
             }.collect { showsList ->
                 _shows.value = showsList
@@ -121,81 +87,58 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     
-    private fun loadShowsFromCursor(cursor: Cursor, filter: Int, searchQuery: String): List<Show> {
+    private fun loadShows(
+        showRows: List<ShowListRow>,
+        episodeRows: List<EpisodeCountRow>,
+        filter: Int,
+        searchQuery: String
+    ): List<Show> {
         val showsList = mutableListOf<Show>()
-        
-        // Load episodes for counting
-        val episodesProjection = arrayOf(
-            EpisodesTable.COLUMN_SHOW_ID,
-            EpisodesTable.COLUMN_SEASON_NUMBER,
-            EpisodesTable.COLUMN_FIRST_AIRED,
-            EpisodesTable.COLUMN_WATCHED
-        )
-        
-        val episodesCursor = contentResolver.query(
-            ShowsProvider.CONTENT_URI_EPISODES,
-            episodesProjection,
-            "${EpisodesTable.COLUMN_SEASON_NUMBER}!=?",
-            arrayOf("0"),
-            null
-        )
-        
-        val episodeCounts = calculateEpisodeCounts(episodesCursor)
-        episodesCursor?.close()
-        
-        cursor.moveToPosition(-1) // Reset cursor position
-        val idIndex = cursor.getColumnIndexOrThrow(ShowsTable.COLUMN_ID)
-        val nameIndex = cursor.getColumnIndexOrThrow(ShowsTable.COLUMN_NAME)
-        val starredIndex = cursor.getColumnIndexOrThrow(ShowsTable.COLUMN_STARRED)
-        val archivedIndex = cursor.getColumnIndexOrThrow(ShowsTable.COLUMN_ARCHIVED)
-        val bannerIndex = cursor.getColumnIndexOrThrow(ShowsTable.COLUMN_BANNER_PATH)
-        val statusIndex = cursor.getColumnIndexOrThrow(ShowsTable.COLUMN_STATUS)
-        
-        while (cursor.moveToNext()) {
-                val id = cursor.getInt(idIndex)
-                val name = cursor.getString(nameIndex)
-                val starred = cursor.getInt(starredIndex) > 0
-                val archived = cursor.getInt(archivedIndex) > 0
-                val bannerPath = cursor.getString(bannerIndex)
-                val status = cursor.getString(statusIndex)
-                
-                val counts = episodeCounts[id] ?: EpisodeCounts(0, 0, 0)
-                
-                // Apply filter
-                val shouldInclude = when (filter) {
-                    SHOWS_FILTER_WATCHING -> !archived
-                    SHOWS_FILTER_STARRED -> starred
-                    SHOWS_FILTER_ARCHIVED -> archived
-                    SHOWS_FILTER_UPCOMING -> counts.upcoming > 0 && counts.watched == counts.aired && !archived
-                    else -> true // SHOWS_FILTER_ALL
-                }
-                
-                val matchesSearch = searchQuery.isBlank() || name.contains(searchQuery, ignoreCase = true)
+        val episodeCounts = calculateEpisodeCounts(episodeRows)
 
-                if (shouldInclude && matchesSearch) {
-                    // Get next unwatched episode
-                    val nextEpisode = getNextEpisode(id)
-                    
-                    showsList.add(
-                        Show(
-                            id = id,
-                            name = name,
-                            bannerPath = bannerPath,
-                            starred = starred,
-                            archived = archived,
-                            watchedCount = counts.watched,
-                            totalCount = counts.aired,
-                            upcomingCount = counts.upcoming,
-                            nextEpisodeId = nextEpisode?.id,
-                            nextEpisodeName = nextEpisode?.name,
-                            nextEpisodeSeasonNumber = nextEpisode?.seasonNumber,
-                            nextEpisodeNumber = nextEpisode?.episodeNumber,
-                            nextEpisodeAirDate = nextEpisode?.airDate,
-                            status = status
-                        )
-                    )
-                }
+        for (row in showRows) {
+            val id = row.id
+            val name = row.name.orEmpty()
+            val starred = (row.starred ?: 0) > 0
+            val archived = (row.archived ?: 0) > 0
+            val bannerPath = row.bannerPath
+            val status = row.status
+
+            val counts = episodeCounts[id] ?: EpisodeCounts(0, 0, 0)
+
+            val shouldInclude = when (filter) {
+                SHOWS_FILTER_WATCHING -> !archived
+                SHOWS_FILTER_STARRED -> starred
+                SHOWS_FILTER_ARCHIVED -> archived
+                SHOWS_FILTER_UPCOMING -> counts.upcoming > 0 && counts.watched == counts.aired && !archived
+                else -> true
             }
+
+            val matchesSearch = searchQuery.isBlank() || name.contains(searchQuery, ignoreCase = true)
+
+            if (shouldInclude && matchesSearch) {
+                val nextEpisode = getNextEpisode(id)
+
+                showsList.add(
+                    Show(
+                        id = id,
+                        name = name,
+                        bannerPath = bannerPath,
+                        starred = starred,
+                        archived = archived,
+                        watchedCount = counts.watched,
+                        totalCount = counts.aired,
+                        upcomingCount = counts.upcoming,
+                        nextEpisodeId = nextEpisode?.id,
+                        nextEpisodeName = nextEpisode?.name,
+                        nextEpisodeSeasonNumber = nextEpisode?.seasonNumber,
+                        nextEpisodeNumber = nextEpisode?.episodeNumber,
+                        nextEpisodeAirDate = nextEpisode?.airDate,
+                        status = status
+                    )
+                )
+            }
+        }
         
         // Sort shows:
         // 1. Starred shows at the top, sorted by name
@@ -231,75 +174,38 @@ class ShowsViewModel(application: Application) : AndroidViewModel(application) {
     )
     
     private fun getNextEpisode(showId: Int): NextEpisodeInfo? {
-        val projection = arrayOf(
-            EpisodesTable.COLUMN_ID,
-            EpisodesTable.COLUMN_NAME,
-            EpisodesTable.COLUMN_SEASON_NUMBER,
-            EpisodesTable.COLUMN_EPISODE_NUMBER,
-            EpisodesTable.COLUMN_FIRST_AIRED
+        val row = appReadDao.getNextEpisodeInfo(showId) ?: return null
+        val airDateSeconds = row.firstAired ?: 0L
+        return NextEpisodeInfo(
+            id = row.id,
+            name = row.name.orEmpty(),
+            seasonNumber = row.seasonNumber ?: 0,
+            episodeNumber = row.episodeNumber ?: 0,
+            airDate = if (airDateSeconds > 0) airDateSeconds * 1000 else null
         )
-        
-        val selection = "${EpisodesTable.COLUMN_SHOW_ID}=? AND ${EpisodesTable.COLUMN_SEASON_NUMBER}!=0 AND (${EpisodesTable.COLUMN_WATCHED}==0 OR ${EpisodesTable.COLUMN_WATCHED} IS NULL)"
-        val selectionArgs = arrayOf(showId.toString())
-        val sortOrder = "${EpisodesTable.COLUMN_SEASON_NUMBER} ASC, ${EpisodesTable.COLUMN_EPISODE_NUMBER} ASC LIMIT 1"
-        
-        contentResolver.query(
-            ShowsProvider.CONTENT_URI_EPISODES,
-            projection,
-            selection,
-            selectionArgs,
-            sortOrder
-        )?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                val idIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_ID)
-                val nameIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_NAME)
-                val seasonIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_SEASON_NUMBER)
-                val episodeIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_EPISODE_NUMBER)
-                val airDateIndex = cursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_FIRST_AIRED)
-                
-                val airDateSeconds = cursor.getLong(airDateIndex)
-                
-                return NextEpisodeInfo(
-                    id = cursor.getInt(idIndex),
-                    name = cursor.getString(nameIndex),
-                    seasonNumber = cursor.getInt(seasonIndex),
-                    episodeNumber = cursor.getInt(episodeIndex),
-                    airDate = if (airDateSeconds > 0) airDateSeconds * 1000 else null
-                )
-            }
-        }
-        
-        return null
     }
     
-    private fun calculateEpisodeCounts(cursor: Cursor?): Map<Int, EpisodeCounts> {
+    private fun calculateEpisodeCounts(rows: List<EpisodeCountRow>): Map<Int, EpisodeCounts> {
         val counts = mutableMapOf<Int, EpisodeCounts>()
-        
-        cursor?.use {
-            val showIdIndex = it.getColumnIndexOrThrow(EpisodesTable.COLUMN_SHOW_ID)
-            val watchedIndex = it.getColumnIndexOrThrow(EpisodesTable.COLUMN_WATCHED)
-            val firstAiredIndex = it.getColumnIndexOrThrow(EpisodesTable.COLUMN_FIRST_AIRED)
-            
-            val now = System.currentTimeMillis()
-            
-            while (it.moveToNext()) {
-                val showId = it.getInt(showIdIndex)
-                val watched = it.getInt(watchedIndex) > 0
-                val firstAired = it.getLong(firstAiredIndex)
-                
-                val current = counts.getOrDefault(showId, EpisodeCounts(0, 0, 0))
-                
-                val isAired = firstAired > 0 && firstAired <= now
-                val isUpcoming = firstAired > now
-                
-                counts[showId] = EpisodeCounts(
-                    watched = current.watched + if (watched) 1 else 0,
-                    aired = current.aired + if (isAired) 1 else 0,
-                    upcoming = current.upcoming + if (isUpcoming) 1 else 0
-                )
-            }
+        val now = System.currentTimeMillis() / 1000
+
+        for (row in rows) {
+            val showId = row.showId ?: continue
+            val watched = (row.watched ?: 0) > 0
+            val firstAired = row.firstAired ?: 0L
+
+            val current = counts.getOrDefault(showId, EpisodeCounts(0, 0, 0))
+
+            val isAired = firstAired > 0 && firstAired <= now
+            val isUpcoming = firstAired > now
+
+            counts[showId] = EpisodeCounts(
+                watched = current.watched + if (watched) 1 else 0,
+                aired = current.aired + if (isAired) 1 else 0,
+                upcoming = current.upcoming + if (isUpcoming) 1 else 0
+            )
         }
-        
+
         return counts
     }
     

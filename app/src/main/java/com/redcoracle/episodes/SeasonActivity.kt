@@ -32,8 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.redcoracle.episodes.db.ShowsProvider
-import com.redcoracle.episodes.db.ShowsTable
+import com.redcoracle.episodes.db.room.AppDatabase
 import com.redcoracle.episodes.ui.EpisodesListScreen
 import com.redcoracle.episodes.ui.EpisodesViewModel
 import com.redcoracle.episodes.ui.EpisodesViewModelFactory
@@ -104,15 +103,9 @@ fun SeasonScreen(
     // Load show name
     LaunchedEffect(showId) {
         showName = withContext(Dispatchers.IO) {
-            val uri = android.net.Uri.withAppendedPath(ShowsProvider.CONTENT_URI_SHOWS, showId.toString())
-            val projection = arrayOf(ShowsTable.COLUMN_NAME)
-            
-            context.contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
-                if (cursor.moveToFirst()) {
-                    val nameIndex = cursor.getColumnIndexOrThrow(ShowsTable.COLUMN_NAME)
-                    cursor.getString(nameIndex)
-                } else null
-            } ?: ""
+            AppDatabase.getInstance(context.applicationContext).showQueriesDao()
+                .getShowNameById(showId)
+                ?: ""
         }
     }
     

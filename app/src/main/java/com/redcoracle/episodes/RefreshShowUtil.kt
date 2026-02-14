@@ -19,10 +19,8 @@
 package com.redcoracle.episodes
 
 import android.content.ContentResolver
-import android.net.Uri
 import android.util.Log
-import com.redcoracle.episodes.db.ShowsProvider
-import com.redcoracle.episodes.db.ShowsTable
+import com.redcoracle.episodes.db.room.AppDatabase
 import com.redcoracle.episodes.db.room.RefreshShowWriter
 import com.redcoracle.episodes.tvdb.Client
 
@@ -37,7 +35,7 @@ object RefreshShowUtil {
         val preferences = Preferences.getSharedPreferences()
 
         val showLanguage = preferences?.getString("pref_language", "en") ?: "en"
-        val showIds = getShowIds(showId, contentResolver)
+        val showIds = getShowIds(showId)
         val show = tmdbClient.getShow(showIds, showLanguage)
 
         if (show != null) {
@@ -56,26 +54,19 @@ object RefreshShowUtil {
         }
     }
 
-    private fun getShowIds(showId: Int, contentResolver: ContentResolver): HashMap<String, String> {
-        val showUri = Uri.withAppendedPath(ShowsProvider.CONTENT_URI_SHOWS, showId.toString())
-        val projection = arrayOf(
-            ShowsTable.COLUMN_TVDB_ID,
-            ShowsTable.COLUMN_TMDB_ID,
-            ShowsTable.COLUMN_IMDB_ID
-        )
-        
+    private fun getShowIds(showId: Int): HashMap<String, String> {
         val showIds = HashMap<String, String>()
-        contentResolver.query(showUri, projection, null, null, null)?.use { cursor ->
-            cursor.moveToFirst()
-            val tvdbIdColumnIndex = cursor.getColumnIndexOrThrow(ShowsTable.COLUMN_TVDB_ID)
-            val tmdbIdColumnIndex = cursor.getColumnIndexOrThrow(ShowsTable.COLUMN_TMDB_ID)
-            val imdbIdColumnIndex = cursor.getColumnIndexOrThrow(ShowsTable.COLUMN_IMDB_ID)
-            
-            showIds["tvdbId"] = cursor.getString(tvdbIdColumnIndex)
-            showIds["tmdbId"] = cursor.getString(tmdbIdColumnIndex)
-            showIds["imdbId"] = cursor.getString(imdbIdColumnIndex)
+        val row = AppDatabase.getInstance(EpisodesApplication.instance.applicationContext)
+            .appReadDao()
+            .getRefreshShowIds(showId)
+
+        row?.tvdbId?.toString()?.let { showIds["tvdbId"] = it }
+        row?.tmdbId?.toString()?.let { showIds["tmdbId"] = it }
+        row?.imdbId?.let { showIds["imdbId"] = it }
+
+        if (showIds.isEmpty()) {
+            Log.w(TAG, "No show IDs found for showId=$showId")
         }
-        
         return showIds
     }
 

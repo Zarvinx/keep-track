@@ -10,6 +10,14 @@ class ShowLibraryWriter(context: Context) {
     private val roomDb: AppDatabase = AppDatabase.getInstance(context.applicationContext)
     private val addShowDao: AddShowRoomDao = roomDb.addShowDao()
 
+    fun isAlreadyAdded(show: Show): Boolean {
+        val tvdbId = show.tvdbId.takeIf { it > 0 }
+        val imdbId = show.imdbId?.takeIf { it.isNotBlank() }
+        return addShowDao.findShowIdByTmdbId(show.tmdbId) != null ||
+            (tvdbId != null && addShowDao.findShowIdByTvdbId(tvdbId) != null) ||
+            (imdbId != null && addShowDao.findShowIdByImdbId(imdbId) != null)
+    }
+
     fun addShowIfMissing(show: Show): Boolean {
         val added = addShowWithRoom(show)
         if (added) {

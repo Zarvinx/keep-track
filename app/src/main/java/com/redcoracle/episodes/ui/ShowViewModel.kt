@@ -19,12 +19,9 @@
 package com.redcoracle.episodes.ui
 
 import android.app.Application
-import android.content.ContentResolver
-import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.redcoracle.episodes.db.ShowsProvider
-import com.redcoracle.episodes.db.ShowsTable
+import com.redcoracle.episodes.db.room.AppDatabase
 import com.redcoracle.episodes.db.room.EpisodeWatchStateWriter
 import com.redcoracle.episodes.db.room.ShowMutationsWriter
 import com.redcoracle.episodes.services.AsyncTask
@@ -47,7 +44,7 @@ data class ShowDetails(
 )
 
 class ShowViewModel(application: Application, private val showId: Int) : AndroidViewModel(application) {
-    private val contentResolver: ContentResolver = application.contentResolver
+    private val showQueriesDao = AppDatabase.getInstance(application.applicationContext).showQueriesDao()
     private val watchStateWriter = EpisodeWatchStateWriter(application.applicationContext)
     private val showMutationsWriter = ShowMutationsWriter(application.applicationContext)
     
@@ -68,37 +65,15 @@ class ShowViewModel(application: Application, private val showId: Int) : Android
     }
     
     private fun loadShowFromDatabase(): ShowDetails? {
-        val uri = Uri.withAppendedPath(ShowsProvider.CONTENT_URI_SHOWS, showId.toString())
-        val projection = arrayOf(
-            ShowsTable.COLUMN_NAME,
-            ShowsTable.COLUMN_STARRED,
-            ShowsTable.COLUMN_ARCHIVED,
-            ShowsTable.COLUMN_POSTER_PATH,
-            ShowsTable.COLUMN_OVERVIEW,
-            ShowsTable.COLUMN_FIRST_AIRED
+        val row = showQueriesDao.getShowDetailsById(showId) ?: return null
+        return ShowDetails(
+            name = row.name,
+            starred = (row.starred ?: 0) > 0,
+            archived = (row.archived ?: 0) > 0,
+            posterPath = row.posterPath,
+            overview = row.overview,
+            firstAired = row.firstAired
         )
-        
-        contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                val nameIndex = cursor.getColumnIndexOrThrow(ShowsTable.COLUMN_NAME)
-                val starredIndex = cursor.getColumnIndexOrThrow(ShowsTable.COLUMN_STARRED)
-                val archivedIndex = cursor.getColumnIndexOrThrow(ShowsTable.COLUMN_ARCHIVED)
-                val posterIndex = cursor.getColumnIndexOrThrow(ShowsTable.COLUMN_POSTER_PATH)
-                val overviewIndex = cursor.getColumnIndexOrThrow(ShowsTable.COLUMN_OVERVIEW)
-                val firstAiredIndex = cursor.getColumnIndexOrThrow(ShowsTable.COLUMN_FIRST_AIRED)
-                
-                return ShowDetails(
-                    name = cursor.getString(nameIndex),
-                    starred = cursor.getInt(starredIndex) > 0,
-                    archived = cursor.getInt(archivedIndex) > 0,
-                    posterPath = cursor.getString(posterIndex),
-                    overview = if (cursor.isNull(overviewIndex)) null else cursor.getString(overviewIndex),
-                    firstAired = if (cursor.isNull(firstAiredIndex)) null else cursor.getLong(firstAiredIndex)
-                )
-            }
-        }
-        
-        return null
     }
     
     fun toggleStarred() {
