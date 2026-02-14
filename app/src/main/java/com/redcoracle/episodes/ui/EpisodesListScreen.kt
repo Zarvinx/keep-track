@@ -24,15 +24,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.redcoracle.episodes.R
 import java.text.DateFormat
 import java.util.Date
@@ -43,15 +43,10 @@ fun EpisodesListScreen(
     seasonNumber: Int,
     onEpisodeClick: (Int) -> Unit
 ) {
-    val context = LocalContext.current
-    val viewModel: EpisodesViewModel = viewModel(
-        factory = EpisodesViewModelFactory(
-            application = context.applicationContext as android.app.Application,
-            showId = showId,
-            seasonNumber = seasonNumber
-        ),
-        key = "episodes_${showId}_$seasonNumber"
-    )
+    val viewModel: EpisodesViewModel = hiltViewModel()
+    LaunchedEffect(showId, seasonNumber) {
+        viewModel.initialize(showId, seasonNumber)
+    }
     
     val episodes by viewModel.episodes.collectAsState()
     

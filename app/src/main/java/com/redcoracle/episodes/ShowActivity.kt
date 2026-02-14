@@ -24,7 +24,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.redcoracle.episodes.ui.ShowDetailScreen
 import com.redcoracle.episodes.ui.theme.EpisodesTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class ShowActivity : ComponentActivity() {
     
     private var showId: Int = -1

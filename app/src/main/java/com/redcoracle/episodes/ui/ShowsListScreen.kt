@@ -48,7 +48,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.redcoracle.episodes.R
 import com.redcoracle.episodes.ui.theme.AppShadows
@@ -57,7 +57,7 @@ import java.util.concurrent.TimeUnit
 
 @Composable
 fun ShowsListScreen(
-    viewModel: ShowsViewModel = viewModel(),
+    viewModel: ShowsViewModel = hiltViewModel(),
     onShowClick: (Int) -> Unit
 ) {
     val shows by viewModel.shows.collectAsState()

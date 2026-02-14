@@ -29,7 +29,9 @@ import coil.disk.DiskCache
 import coil.memory.MemoryCache
 import coil.request.CachePolicy
 import com.uwetrottmann.tmdb2.Tmdb
+import dagger.hilt.android.HiltAndroidApp
 
+@HiltAndroidApp
 class EpisodesApplication : Application(), ImageLoaderFactory {
     
     var tmdbClient: Tmdb? = null

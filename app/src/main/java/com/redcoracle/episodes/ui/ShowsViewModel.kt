@@ -1,16 +1,15 @@
 package com.redcoracle.episodes.ui
 
-import android.app.Application
 import android.content.SharedPreferences
 import androidx.compose.runtime.Stable
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.preference.PreferenceManager
-import com.redcoracle.episodes.db.room.AppDatabase
 import com.redcoracle.episodes.db.room.EpisodeCountRow
 import com.redcoracle.episodes.db.room.ShowListRow
+import com.redcoracle.episodes.db.room.AppReadDao
 import com.redcoracle.episodes.db.room.EpisodeWatchStateWriter
 import com.redcoracle.episodes.db.room.ShowMutationsWriter
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,6 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 @Stable
 data class Show(
@@ -37,11 +37,13 @@ data class Show(
     val status: String?
 )
 
-class ShowsViewModel(application: Application) : AndroidViewModel(application) {
-    private val appReadDao = AppDatabase.getInstance(application.applicationContext).appReadDao()
-    private val watchStateWriter = EpisodeWatchStateWriter(application.applicationContext)
-    private val showMutationsWriter = ShowMutationsWriter(application.applicationContext)
-    private val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(application)
+@HiltViewModel
+class ShowsViewModel @Inject constructor(
+    private val appReadDao: AppReadDao,
+    private val watchStateWriter: EpisodeWatchStateWriter,
+    private val showMutationsWriter: ShowMutationsWriter,
+    private val prefs: SharedPreferences
+) : ViewModel() {
     
     private val _shows = MutableStateFlow<List<Show>>(emptyList())
     val shows: StateFlow<List<Show>> = _shows.asStateFlow()

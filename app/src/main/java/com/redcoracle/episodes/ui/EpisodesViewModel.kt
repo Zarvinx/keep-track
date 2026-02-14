@@ -18,20 +18,19 @@
 
 package com.redcoracle.episodes.ui
 
-import android.app.Application
 import androidx.compose.runtime.Stable
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.redcoracle.episodes.db.room.AppDatabase
+import com.redcoracle.episodes.db.room.AppReadDao
 import com.redcoracle.episodes.db.room.EpisodeWatchStateWriter
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 @Stable
 data class Episode(
@@ -44,18 +43,21 @@ data class Episode(
     val watched: Boolean
 )
 
-class EpisodesViewModel(
-    application: Application,
-    private val showId: Int,
-    private val seasonNumber: Int
-) : AndroidViewModel(application) {
-    private val appReadDao = AppDatabase.getInstance(application.applicationContext).appReadDao()
-    private val watchStateWriter = EpisodeWatchStateWriter(application.applicationContext)
+@HiltViewModel
+class EpisodesViewModel @Inject constructor(
+    private val appReadDao: AppReadDao,
+    private val watchStateWriter: EpisodeWatchStateWriter
+) : ViewModel() {
+    private var showId: Int? = null
+    private var seasonNumber: Int? = null
     
     private val _episodes = MutableStateFlow<List<Episode>>(emptyList())
     val episodes: StateFlow<List<Episode>> = _episodes.asStateFlow()
     
-    init {
+    fun initialize(showId: Int, seasonNumber: Int) {
+        if (this.showId == showId && this.seasonNumber == seasonNumber) return
+        this.showId = showId
+        this.seasonNumber = seasonNumber
         loadEpisodes()
     }
     
@@ -69,7 +71,9 @@ class EpisodesViewModel(
     }
     
     private fun loadEpisodesFromDatabase(): List<Episode> {
-        return appReadDao.getEpisodesForSeason(showId, seasonNumber).map { row ->
+        val targetShowId = showId ?: return emptyList()
+        val targetSeasonNumber = seasonNumber ?: return emptyList()
+        return appReadDao.getEpisodesForSeason(targetShowId, targetSeasonNumber).map { row ->
             Episode(
                 id = row.id,
                 seasonNumber = row.seasonNumber ?: 0,
@@ -98,26 +102,14 @@ class EpisodesViewModel(
     
     fun markAllWatched(watched: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            watchStateWriter.setSeasonWatched(showId, seasonNumber, watched)
+            val targetShowId = showId ?: return@launch
+            val targetSeasonNumber = seasonNumber ?: return@launch
+            watchStateWriter.setSeasonWatched(targetShowId, targetSeasonNumber, watched)
             
             // Reload to reflect changes
             withContext(Dispatchers.Main) {
                 loadEpisodes()
             }
         }
-    }
-}
-
-class EpisodesViewModelFactory(
-    private val application: Application,
-    private val showId: Int,
-    private val seasonNumber: Int
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(EpisodesViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return EpisodesViewModel(application, showId, seasonNumber) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

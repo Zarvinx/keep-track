@@ -28,13 +28,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.redcoracle.episodes.ui.EpisodeDetailsScreen
 import com.redcoracle.episodes.ui.EpisodesViewModel
-import com.redcoracle.episodes.ui.EpisodesViewModelFactory
 import com.redcoracle.episodes.ui.theme.EpisodesTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class EpisodeActivity : ComponentActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,15 +76,10 @@ fun EpisodeScreen(
     episodeId: Int,
     onNavigateBack: () -> Unit
 ) {
-    val context = LocalContext.current
-    val viewModel: EpisodesViewModel = viewModel(
-        factory = EpisodesViewModelFactory(
-            application = context.applicationContext as android.app.Application,
-            showId = showId,
-            seasonNumber = seasonNumber
-        ),
-        key = "episodes_${showId}_$seasonNumber"
-    )
+    val viewModel: EpisodesViewModel = hiltViewModel()
+    LaunchedEffect(showId, seasonNumber) {
+        viewModel.initialize(showId, seasonNumber)
+    }
     
     val episodes by viewModel.episodes.collectAsState()
     val episode = episodes.find { it.id == episodeId }

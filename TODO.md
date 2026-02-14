@@ -15,7 +15,7 @@
   - Would eliminate need for singletons like AddShowSearchResults
 
 ### Dependency Injection
-- [ ] **Add Hilt for proper DI**
+- [x] **Add Hilt for proper DI**
   - Would simplify ViewModel factories
   - Better testability
   - Proper scoping for shared state
@@ -66,7 +66,7 @@ These can stay in Java for now, but should eventually be converted:
 ## Code Quality
 
 ### Component Organization
-- [ ] **Refactor show status text into separate component**
+- [x] **Refactor show status text into separate component**
   - Extract status message display (ended/caught up) from ShowListItem
   - Create reusable StatusText composable
   - Improves maintainability and testability

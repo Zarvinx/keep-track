@@ -23,28 +23,24 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.redcoracle.episodes.R
 import java.text.DateFormat
 import java.util.*
 
 @Composable
 fun ShowOverviewScreen(showId: Int) {
-    val context = LocalContext.current
-    val viewModel: ShowViewModel = viewModel(
-        factory = ShowViewModelFactory(
-            application = context.applicationContext as android.app.Application,
-            showId = showId
-        ),
-        key = "show_$showId"
-    )
+    val viewModel: ShowViewModel = hiltViewModel()
+    LaunchedEffect(showId) {
+        viewModel.initialize(showId)
+    }
     
     val showDetails by viewModel.showDetails.collectAsState()
     val scrollState = rememberScrollState()

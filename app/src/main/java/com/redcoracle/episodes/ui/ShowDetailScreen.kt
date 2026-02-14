@@ -27,11 +27,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.redcoracle.episodes.R
 
@@ -42,14 +41,10 @@ fun ShowDetailScreen(
     onNavigateBack: () -> Unit,
     onSeasonSelected: (Int) -> Unit
 ) {
-    val context = LocalContext.current
-    val viewModel: ShowViewModel = viewModel(
-        factory = ShowViewModelFactory(
-            application = context.applicationContext as android.app.Application,
-            showId = showId
-        ),
-        key = "show_$showId"
-    )
+    val viewModel: ShowViewModel = hiltViewModel()
+    LaunchedEffect(showId) {
+        viewModel.initialize(showId)
+    }
     
     val showDetails by viewModel.showDetails.collectAsState()
     var selectedTab by remember { mutableIntStateOf(0) }

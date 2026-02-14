@@ -41,12 +41,13 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.redcoracle.episodes.ui.AddShowSearchScreen
 import com.redcoracle.episodes.ui.AddShowSearchViewModel
-import com.redcoracle.episodes.ui.AddShowSearchViewModelFactory
 import com.redcoracle.episodes.ui.theme.EpisodesTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class AddShowSearchActivity : ComponentActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -86,16 +87,15 @@ fun AddShowSearchScaffold(
     onNavigateBack: () -> Unit,
     onShowClick: (Int) -> Unit
 ) {
-    val viewModel: AddShowSearchViewModel = viewModel(
-        factory = AddShowSearchViewModelFactory(
-            application = LocalContext.current.applicationContext as android.app.Application,
-            query = query
-        )
-    )
+    val viewModel: AddShowSearchViewModel = hiltViewModel()
     
     val currentQuery by viewModel.query.collectAsState()
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    LaunchedEffect(query) {
+        viewModel.initialize(query)
+    }
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()

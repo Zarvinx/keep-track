@@ -31,15 +31,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.redcoracle.episodes.db.room.AppDatabase
 import com.redcoracle.episodes.ui.EpisodesListScreen
 import com.redcoracle.episodes.ui.EpisodesViewModel
-import com.redcoracle.episodes.ui.EpisodesViewModelFactory
 import com.redcoracle.episodes.ui.theme.EpisodesTheme
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+@AndroidEntryPoint
 class SeasonActivity : ComponentActivity() {
     
     private var showId: Int = -1
@@ -88,14 +89,10 @@ fun SeasonScreen(
     onEpisodeSelected: (Int) -> Unit
 ) {
     val context = LocalContext.current
-    val viewModel: EpisodesViewModel = viewModel(
-        factory = EpisodesViewModelFactory(
-            application = context.applicationContext as android.app.Application,
-            showId = showId,
-            seasonNumber = seasonNumber
-        ),
-        key = "episodes_${showId}_$seasonNumber"
-    )
+    val viewModel: EpisodesViewModel = hiltViewModel()
+    LaunchedEffect(showId, seasonNumber) {
+        viewModel.initialize(showId, seasonNumber)
+    }
     
     var showMenu by remember { mutableStateOf(false) }
     var showName by remember { mutableStateOf("") }

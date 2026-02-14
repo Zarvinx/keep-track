@@ -4,8 +4,14 @@ import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import com.redcoracle.episodes.db.ShowsProvider
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class EpisodeWatchStateWriter(context: Context) {
+@Singleton
+class EpisodeWatchStateWriter @Inject constructor(
+    @ApplicationContext context: Context
+) {
     private val contentResolver: ContentResolver = context.applicationContext.contentResolver
     private val episodesDao: EpisodesRoomDao =
         AppDatabase.getInstance(context.applicationContext).episodesDao()

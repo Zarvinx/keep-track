@@ -28,13 +28,9 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.redcoracle.episodes.services.AddShowTask
 import com.redcoracle.episodes.services.AsyncTask
 import com.redcoracle.episodes.ui.AddShowPreviewScreen
-import com.redcoracle.episodes.ui.AddShowSearchViewModel
-import com.redcoracle.episodes.ui.AddShowSearchViewModelFactory
 import com.redcoracle.episodes.ui.theme.EpisodesTheme
 
 class AddShowPreviewActivity : ComponentActivity() {
@@ -63,10 +59,6 @@ fun AddShowPreviewScaffold(
     onNavigateBack: () -> Unit,
     onAddShow: () -> Unit
 ) {
-    // We need to get the search results from the shared ViewModel
-    // Since we came from AddShowSearchActivity, the results should be cached
-    val context = LocalContext.current
-    
     // Get the show from AddShowSearchResults singleton (legacy approach)
     // TODO: Replace with proper state management when fully migrated
     val show = remember {

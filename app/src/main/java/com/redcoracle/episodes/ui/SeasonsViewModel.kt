@@ -18,10 +18,13 @@
 
 package com.redcoracle.episodes.ui
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import android.content.Context
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.redcoracle.episodes.db.room.AppDatabase
+import com.redcoracle.episodes.R
+import com.redcoracle.episodes.db.room.AppReadDao
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,6 +32,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 data class Season(
     val seasonNumber: Int,
@@ -38,13 +42,19 @@ data class Season(
     val upcomingCount: Int
 )
 
-class SeasonsViewModel(application: Application, private val showId: Int) : AndroidViewModel(application) {
-    private val appReadDao = AppDatabase.getInstance(application.applicationContext).appReadDao()
+@HiltViewModel
+class SeasonsViewModel @Inject constructor(
+    private val appReadDao: AppReadDao,
+    @ApplicationContext private val context: Context
+) : ViewModel() {
+    private var showId: Int? = null
     
     private val _seasons = MutableStateFlow<List<Season>>(emptyList())
     val seasons: StateFlow<List<Season>> = _seasons.asStateFlow()
     
-    init {
+    fun initialize(showId: Int) {
+        if (this.showId == showId) return
+        this.showId = showId
         viewModelScope.launch {
             appReadDao.observeSeasonRows(showId).collectLatest { rows ->
                 val seasonsList = withContext(Dispatchers.Default) {
@@ -56,7 +66,6 @@ class SeasonsViewModel(application: Application, private val showId: Int) : Andr
     }
     
     private fun loadSeasonsFromRows(rows: List<com.redcoracle.episodes.db.room.SeasonRow>): List<Season> {
-        val app = getApplication<Application>()
         val nowSeconds = System.currentTimeMillis() / 1000
         val grouped = rows.groupBy { it.seasonNumber ?: 0 }
         return grouped.keys.sorted().map { seasonNumber ->
@@ -79,9 +88,9 @@ class SeasonsViewModel(application: Application, private val showId: Int) : Andr
             }
 
             val name = if (seasonNumber == 0) {
-                app.getString(com.redcoracle.episodes.R.string.season_name_specials)
+                context.getString(R.string.season_name_specials)
             } else {
-                app.getString(com.redcoracle.episodes.R.string.season_name, seasonNumber)
+                context.getString(R.string.season_name, seasonNumber)
             }
 
             Season(

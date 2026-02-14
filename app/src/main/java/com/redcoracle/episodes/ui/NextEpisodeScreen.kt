@@ -23,14 +23,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.redcoracle.episodes.R
 import java.text.DateFormat
 import java.util.*
@@ -39,14 +39,10 @@ import java.util.*
 fun NextEpisodeScreen(
     showId: Int
 ) {
-    val context = LocalContext.current
-    val viewModel: NextEpisodeViewModel = viewModel(
-        factory = NextEpisodeViewModelFactory(
-            application = context.applicationContext as android.app.Application,
-            showId = showId
-        ),
-        key = "next_$showId"
-    )
+    val viewModel: NextEpisodeViewModel = hiltViewModel()
+    LaunchedEffect(showId) {
+        viewModel.initialize(showId)
+    }
     
     val episode by viewModel.nextEpisode.collectAsState()
     val scrollState = rememberScrollState()

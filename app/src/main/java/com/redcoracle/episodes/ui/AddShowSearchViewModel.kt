@@ -18,22 +18,21 @@
 
 package com.redcoracle.episodes.ui
 
-import android.app.Application
 import androidx.compose.runtime.Stable
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.redcoracle.episodes.AddShowSearchResults
 import com.redcoracle.episodes.Preferences
 import com.redcoracle.episodes.tvdb.Client
 import com.redcoracle.episodes.tvdb.Show
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 sealed class SearchState {
     object Idle : SearchState()
@@ -42,17 +41,23 @@ sealed class SearchState {
     data class Error(val message: String) : SearchState()
 }
 
-class AddShowSearchViewModel(application: Application, initialQuery: String) : AndroidViewModel(application) {
+@HiltViewModel
+class AddShowSearchViewModel @Inject constructor() : ViewModel() {
     private val _searchState = MutableStateFlow<SearchState>(SearchState.Idle)
     val searchState: StateFlow<SearchState> = _searchState.asStateFlow()
     
-    private val _query = MutableStateFlow(initialQuery)
+    private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query.asStateFlow()
     
     private val _selectedShow = MutableStateFlow<Show?>(null)
     val selectedShow: StateFlow<Show?> = _selectedShow.asStateFlow()
     
-    init {
+    private var initialized = false
+
+    fun initialize(initialQuery: String) {
+        if (initialized) return
+        initialized = true
+        _query.value = initialQuery
         searchShows()
     }
     
@@ -110,18 +115,5 @@ class AddShowSearchViewModel(application: Application, initialQuery: String) : A
             is SearchState.Success -> state.results
             else -> emptyList()
         }
-    }
-}
-
-class AddShowSearchViewModelFactory(
-    private val application: Application,
-    private val query: String
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(AddShowSearchViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return AddShowSearchViewModel(application, query) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

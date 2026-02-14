@@ -49,19 +49,21 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.preference.PreferenceManager
 import com.redcoracle.episodes.services.AsyncTask
 import com.redcoracle.episodes.services.RefreshAllShowsTask
 import com.redcoracle.episodes.ui.ShowsListScreen
 import com.redcoracle.episodes.ui.ShowsViewModel
 import com.redcoracle.episodes.ui.theme.EpisodesTheme
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 data class MainMenuItem(val labelResId: Int, val action: () -> Unit)
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity(),
     ActivityCompat.OnRequestPermissionsResultCallback {
 
@@ -83,7 +85,7 @@ class MainActivity : AppCompatActivity(),
 
         setContent {
             EpisodesTheme {
-                val viewModel: ShowsViewModel = viewModel()
+                val viewModel: ShowsViewModel = hiltViewModel()
 
                 MainScreen(
                     viewModel = viewModel,

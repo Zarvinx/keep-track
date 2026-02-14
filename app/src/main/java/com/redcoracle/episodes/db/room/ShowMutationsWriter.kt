@@ -3,8 +3,14 @@ package com.redcoracle.episodes.db.room
 import android.content.ContentResolver
 import android.content.Context
 import com.redcoracle.episodes.db.ShowsProvider
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class ShowMutationsWriter(context: Context) {
+@Singleton
+class ShowMutationsWriter @Inject constructor(
+    @ApplicationContext context: Context
+) {
     private val contentResolver: ContentResolver = context.applicationContext.contentResolver
     private val roomDb: AppDatabase = AppDatabase.getInstance(context.applicationContext)
     private val dao: ShowMutationsDao = roomDb.showMutationsDao()

@@ -18,21 +18,22 @@
 
 package com.redcoracle.episodes.ui
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.redcoracle.episodes.db.room.AppDatabase
+import com.redcoracle.episodes.db.room.ShowQueriesDao
 import com.redcoracle.episodes.db.room.EpisodeWatchStateWriter
 import com.redcoracle.episodes.db.room.ShowMutationsWriter
 import com.redcoracle.episodes.services.AsyncTask
 import com.redcoracle.episodes.services.DeleteShowTask
 import com.redcoracle.episodes.services.RefreshShowTask
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 data class ShowDetails(
     val name: String,
@@ -43,15 +44,20 @@ data class ShowDetails(
     val firstAired: Long?
 )
 
-class ShowViewModel(application: Application, private val showId: Int) : AndroidViewModel(application) {
-    private val showQueriesDao = AppDatabase.getInstance(application.applicationContext).showQueriesDao()
-    private val watchStateWriter = EpisodeWatchStateWriter(application.applicationContext)
-    private val showMutationsWriter = ShowMutationsWriter(application.applicationContext)
+@HiltViewModel
+class ShowViewModel @Inject constructor(
+    private val showQueriesDao: ShowQueriesDao,
+    private val watchStateWriter: EpisodeWatchStateWriter,
+    private val showMutationsWriter: ShowMutationsWriter
+) : ViewModel() {
+    private var showId: Int? = null
     
     private val _showDetails = MutableStateFlow<ShowDetails?>(null)
     val showDetails: StateFlow<ShowDetails?> = _showDetails.asStateFlow()
     
-    init {
+    fun initialize(showId: Int) {
+        if (this.showId == showId) return
+        this.showId = showId
         loadShowDetails()
     }
     
@@ -65,7 +71,8 @@ class ShowViewModel(application: Application, private val showId: Int) : Android
     }
     
     private fun loadShowFromDatabase(): ShowDetails? {
-        val row = showQueriesDao.getShowDetailsById(showId) ?: return null
+        val targetShowId = showId ?: return null
+        val row = showQueriesDao.getShowDetailsById(targetShowId) ?: return null
         return ShowDetails(
             name = row.name,
             starred = (row.starred ?: 0) > 0,
@@ -78,31 +85,36 @@ class ShowViewModel(application: Application, private val showId: Int) : Android
     
     fun toggleStarred() {
         viewModelScope.launch(Dispatchers.IO) {
+            val targetShowId = showId ?: return@launch
             val current = _showDetails.value ?: return@launch
-            showMutationsWriter.setStarred(showId, !current.starred)
+            showMutationsWriter.setStarred(targetShowId, !current.starred)
             loadShowDetails()
         }
     }
     
     fun toggleArchived() {
         viewModelScope.launch(Dispatchers.IO) {
+            val targetShowId = showId ?: return@launch
             val current = _showDetails.value ?: return@launch
-            showMutationsWriter.setArchived(showId, !current.archived)
+            showMutationsWriter.setArchived(targetShowId, !current.archived)
             loadShowDetails()
         }
     }
     
     fun refreshShow() {
-        AsyncTask().executeAsync(RefreshShowTask(showId))
+        val targetShowId = showId ?: return
+        AsyncTask().executeAsync(RefreshShowTask(targetShowId))
     }
     
     fun markShowWatched(watched: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            watchStateWriter.setShowWatched(showId, watched)
+            val targetShowId = showId ?: return@launch
+            watchStateWriter.setShowWatched(targetShowId, watched)
         }
     }
     
     fun deleteShow() {
-        AsyncTask().executeAsync(DeleteShowTask(showId))
+        val targetShowId = showId ?: return
+        AsyncTask().executeAsync(DeleteShowTask(targetShowId))
     }
 }

@@ -18,17 +18,18 @@
 
 package com.redcoracle.episodes.ui
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.redcoracle.episodes.db.room.AppDatabase
+import com.redcoracle.episodes.db.room.AppReadDao
 import com.redcoracle.episodes.db.room.EpisodeWatchStateWriter
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 data class NextEpisode(
     val id: Int,
@@ -40,14 +41,19 @@ data class NextEpisode(
     val watched: Boolean
 )
 
-class NextEpisodeViewModel(application: Application, private val showId: Int) : AndroidViewModel(application) {
-    private val appReadDao = AppDatabase.getInstance(application.applicationContext).appReadDao()
-    private val watchStateWriter = EpisodeWatchStateWriter(application.applicationContext)
+@HiltViewModel
+class NextEpisodeViewModel @Inject constructor(
+    private val appReadDao: AppReadDao,
+    private val watchStateWriter: EpisodeWatchStateWriter
+) : ViewModel() {
+    private var showId: Int? = null
     
     private val _nextEpisode = MutableStateFlow<NextEpisode?>(null)
     val nextEpisode: StateFlow<NextEpisode?> = _nextEpisode.asStateFlow()
     
-    init {
+    fun initialize(showId: Int) {
+        if (this.showId == showId) return
+        this.showId = showId
         loadNextEpisode()
     }
     
@@ -61,7 +67,8 @@ class NextEpisodeViewModel(application: Application, private val showId: Int) : 
     }
     
     private fun loadNextEpisodeFromDatabase(): NextEpisode? {
-        val row = appReadDao.getNextUnwatchedEpisode(showId) ?: return null
+        val targetShowId = showId ?: return null
+        val row = appReadDao.getNextUnwatchedEpisode(targetShowId) ?: return null
         return NextEpisode(
             id = row.id,
             name = row.name.orEmpty(),
