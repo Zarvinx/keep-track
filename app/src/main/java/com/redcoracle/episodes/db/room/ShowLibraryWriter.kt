@@ -20,8 +20,10 @@ class ShowLibraryWriter(context: Context) {
     }
 
     private fun addShowWithRoom(show: Show): Boolean {
+        val showName = show.name ?: return false
         val tvdbId = show.tvdbId.takeIf { it > 0 }
         val imdbId = show.imdbId?.takeIf { it.isNotBlank() }
+        val episodes = show.episodes ?: emptyList()
 
         var added = false
         roomDb.runInTransaction {
@@ -35,7 +37,7 @@ class ShowLibraryWriter(context: Context) {
                     tvdbId = tvdbId,
                     tmdbId = show.tmdbId,
                     imdbId = imdbId,
-                    name = show.name,
+                    name = showName,
                     language = show.language,
                     overview = show.overview,
                     firstAired = show.firstAired?.time?.div(1000),
@@ -44,13 +46,13 @@ class ShowLibraryWriter(context: Context) {
                     posterPath = show.posterPath
                 ).toInt()
 
-                show.episodes.forEach { episode ->
+                episodes.forEach { episode ->
                     addShowDao.insertEpisode(
-                        tvdbId = episode.tvdbId.takeIf { it > 0 },
-                        tmdbId = episode.tmdbId.takeIf { it > 0 },
+                        tvdbId = episode.tvdbId?.takeIf { it > 0 },
+                        tmdbId = episode.tmdbId?.takeIf { it > 0 },
                         imdbId = episode.imdbId?.takeIf { it.isNotBlank() },
                         showId = showId,
-                        name = episode.name,
+                        name = episode.name ?: "",
                         language = episode.language,
                         overview = episode.overview,
                         episodeNumber = episode.episodeNumber,

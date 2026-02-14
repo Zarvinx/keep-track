@@ -54,11 +54,11 @@ public class Episode {
 		this.tvdbId = id;
 	}
 
-	public int getTmdbId() {
+	public Integer getTmdbId() {
 		return this.tmdbId;
 	}
 
-	public void setTmdbId(int id) {
+	public void setTmdbId(Integer id) {
 		this.tmdbId = id;
 	}
 
