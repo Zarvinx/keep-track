@@ -9,7 +9,10 @@ class RefreshShowTask(private val showId: Int) : Callable<Void?> {
     private val context: Context = EpisodesApplication.instance.applicationContext
 
     override fun call(): Void? {
-        RefreshShowUtil.refreshShow(showId, context.contentResolver)
+        val refreshed = RefreshShowUtil.refreshShow(showId, context.contentResolver)
+        if (!refreshed) {
+            throw IllegalStateException("Refresh failed for showId=$showId")
+        }
         return null
     }
 

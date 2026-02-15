@@ -18,6 +18,7 @@
  
 package com.redcoracle.episodes.ui
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -27,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -41,9 +43,19 @@ fun ShowDetailScreen(
     onNavigateBack: () -> Unit,
     onSeasonSelected: (Int) -> Unit
 ) {
+    val context = LocalContext.current
     val viewModel: ShowViewModel = hiltViewModel()
     LaunchedEffect(showId) {
         viewModel.initialize(showId)
+    }
+    LaunchedEffect(viewModel) {
+        viewModel.uiEvents.collect { event ->
+            when (event) {
+                is ShowUiEvent.Error -> {
+                    Toast.makeText(context, context.getString(event.messageResId), Toast.LENGTH_LONG).show()
+                }
+            }
+        }
     }
     
     val showDetails by viewModel.showDetails.collectAsState()
@@ -64,7 +76,7 @@ fun ShowDetailScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.content_desc_back))
                     }
                 },
                 actions = {
@@ -76,7 +88,11 @@ fun ShowDetailScreen(
                             } else {
                                 Icons.Default.StarBorder
                             },
-                            contentDescription = if (showDetails?.starred == true) "Unstar" else "Star",
+                            contentDescription = if (showDetails?.starred == true) {
+                                stringResource(R.string.menu_unstar_show)
+                            } else {
+                                stringResource(R.string.menu_star_show)
+                            },
                             tint = if (showDetails?.starred == true) Color(0xFFFFD700) else LocalContentColor.current
                         )
                     }
@@ -89,13 +105,17 @@ fun ShowDetailScreen(
                             } else {
                                 painterResource(R.drawable.ic_show_unarchived)
                             },
-                            contentDescription = if (showDetails?.archived == true) "Unarchive" else "Archive"
+                            contentDescription = if (showDetails?.archived == true) {
+                                stringResource(R.string.menu_unarchive_show)
+                            } else {
+                                stringResource(R.string.menu_archive_show)
+                            }
                         )
                     }
                     
                     // More menu
                     IconButton(onClick = { showMenu = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "More")
+                        Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.content_desc_more))
                     }
                     
                     DropdownMenu(

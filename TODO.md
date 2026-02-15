@@ -89,8 +89,14 @@ These can stay in Java for now, but should eventually be converted:
   - Show status for ended shows ("This show has ended")
   - Handle missing data ("No information about next episode")
   - Position above the progress bar in show list items
-- [ ] Add Material You dynamic colors support
-- [ ] Improve error messages and user feedback
+- [x] Add Material You dynamic colors support
+- [x] Improve error messages and user feedback
+  - [x] Replace Add Show search raw exception output with user-safe, actionable messaging
+  - [x] Show backup/restore failure toasts with likely cause (file missing, storage unavailable, permission denied)
+  - [x] Avoid swallowing background task failures in AsyncTask; surface failures to UI layer
+  - [x] Add refresh summary feedback for partial failures (e.g., refreshed X/Y shows)
+  - [x] Use dedicated empty-library messaging instead of reusing search-empty text
+  - [x] Move hardcoded user-facing strings to resources for localization consistency
 
 ### Functionality
 - [x] Add search within show list

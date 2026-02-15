@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2013-2014 Jamie Nicol <jamie@thenicols.net>
+ * Copyright (C) 2026 Zarvinx (Kotlin conversion)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,23 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.redcoracle.episodes.services;
+package com.redcoracle.episodes.services
 
-import android.app.IntentService;
-import android.content.Intent;
+import android.app.IntentService
+import android.content.Intent
+import com.redcoracle.episodes.RefreshShowUtil
 
-import com.redcoracle.episodes.RefreshShowUtil;
-
-public class RefreshShowService extends IntentService
-{
-	public RefreshShowService() {
-		super(RefreshShowService.class.getName());
-	}
-
-	@Override
-	protected void onHandleIntent(Intent intent) {
-		final int showId = intent.getIntExtra("showId", 0);
-
-		RefreshShowUtil.refreshShow(showId, getContentResolver());
-	}
+class RefreshShowService : IntentService(RefreshShowService::class.java.name) {
+    override fun onHandleIntent(intent: Intent?) {
+        val showId = intent?.getIntExtra("showId", 0) ?: 0
+        RefreshShowUtil.refreshShow(showId, contentResolver)
+    }
 }

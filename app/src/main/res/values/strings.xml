@@ -9,9 +9,32 @@
   <string name="app_name" translatable="false">Keep Track</string>
   <string name="adding_show">Adding %s to library</string>
   <string name="back_up_error_message">Could not back up library</string>
+  <string name="back_up_error_file_missing">Could not back up library: database file not found.</string>
+  <string name="back_up_error_storage">Could not back up library: storage is unavailable or full.</string>
+  <string name="back_up_error_permission">Could not back up library: permission denied.</string>
   <string name="back_up_success_message">Back-up complete: \'%s\'</string>
   <string name="error_adding_show">Could not add %s to library</string>
   <string name="first_aired">First Aired: %s</string>
+  <string name="content_desc_back">Back</string>
+  <string name="content_desc_more">More options</string>
+  <string name="mark_as_watched">Mark as watched</string>
+  <string name="episode_not_yet_available">Not yet available</string>
+  <string name="refreshing_all_shows_background">Refreshing all shows in background...</string>
+  <string name="no_overview_available">No overview available</string>
+  <string name="next_episode_airs_today">Next episode airs today</string>
+  <string name="next_episode_airs_tomorrow">Next episode airs tomorrow</string>
+  <plurals name="next_episode_airs_in_days">
+    <item quantity="one">Next episode airs in %d day</item>
+    <item quantity="other">Next episode airs in %d days</item>
+  </plurals>
+  <plurals name="next_episode_airs_in_weeks">
+    <item quantity="one">Next episode airs in %d week</item>
+    <item quantity="other">Next episode airs in %d weeks</item>
+  </plurals>
+  <plurals name="next_episode_airs_in_months">
+    <item quantity="one">Next episode airs in %d month</item>
+    <item quantity="other">Next episode airs in %d months</item>
+  </plurals>
   <string name="menu_about">About</string>
   <string name="menu_add_show_search_hint">Show name</string>
   <string name="menu_add_new_show">Add new show to library</string>
@@ -56,6 +79,9 @@
   <string name="restore_dialog_no_backups_message">No backups found in \'%s\' folder.</string>
   <string name="restore_dialog_title">Restore from backup</string>
   <string name="restore_error_message">Could not restore library</string>
+  <string name="restore_error_file_missing">Could not restore library: backup file not found.</string>
+  <string name="restore_error_storage">Could not restore library: storage is unavailable or full.</string>
+  <string name="restore_error_permission">Could not restore library: permission denied.</string>
   <string name="restore_success_message">Library restored</string>
   <string name="season_episode_prefix">"%1$02dx%2$02d - "</string>
   <string name="season_name">Season %d</string>
@@ -63,6 +89,13 @@
   <string name="settings_title">Settings</string>
   <string name="show_added">%s added to library</string>
   <string name="show_already_added">%s already in library</string>
+  <string name="refresh_all_error_message">Could not refresh all shows. Please try again.</string>
+  <string name="refresh_show_error_message">Could not refresh this show. Please try again.</string>
+  <string name="refreshing_shows_title">Refreshing shows</string>
+  <string name="refresh_complete_none">No shows to refresh.</string>
+  <string name="refresh_complete_summary">Refresh complete: %1$d/%2$d shows refreshed.</string>
+  <string name="refresh_partial_failures">%1$d show(s) failed to refresh.</string>
+  <string name="delete_show_error_message">Could not delete this show. Please try again.</string>
   <string name="show_tab_episodes">Episodes</string>
   <string name="show_tab_next">Next</string>
   <string name="show_tab_notes">Notes</string>
@@ -92,8 +125,14 @@
   <string name="pref_auto_backup_retention_hint">Enter a value between 1 and 100.</string>
   <string name="pref_backup_location_title">Backup folder</string>
   <string name="pref_interface_category">Interface</string>
-  <string name="version">Version %s (Commit %s)</string>
+  <string name="version">Version %1$s (Commit %2$s)</string>
   <string name="no_search_results_found">No search results found</string>
+  <string name="empty_library_message">No shows in your library yet. Add one to get started.</string>
+  <string name="search_error_network">Could not reach TMDB. Check your connection and try again.</string>
+  <string name="search_error_rate_limited">TMDB is rate limiting requests right now. Please try again in a moment.</string>
+  <string name="search_error_server">TMDB is temporarily unavailable. Please try again later.</string>
+  <string name="search_error_generic">Something went wrong while searching. Please try again.</string>
+  <string name="search_retry">Retry</string>
   <string name="provider_change_warning_detail">Metadata provider has switched to TMDB. We recommend backing up your database before refreshing all metadata. Press Continue to proceed with refreshing all shows or Cancel to return.</string>
   <string name="provider_change_warning_title">Metadata Provider Change</string>
   <string name="provider_change_warning_confirm">Continue</string>

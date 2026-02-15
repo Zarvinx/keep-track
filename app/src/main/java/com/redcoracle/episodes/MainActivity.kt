@@ -104,9 +104,16 @@ class MainActivity : AppCompatActivity() {
 }
 
 fun refreshAllShows() {
-    AsyncTask().executeAsync(RefreshAllShowsTask())
+    AsyncTask().executeAsync(
+        RefreshAllShowsTask(),
+        onError = {
+            MainActivity.getAppContext()?.let { context ->
+                Toast.makeText(context, context.getString(R.string.refresh_all_error_message), Toast.LENGTH_LONG).show()
+            }
+        }
+    )
     MainActivity.getAppContext()?.let { context ->
-        Toast.makeText(context, "Refreshing all shows in background...", Toast.LENGTH_LONG).show()
+        Toast.makeText(context, context.getString(R.string.refreshing_all_shows_background), Toast.LENGTH_LONG).show()
     }
 }
 

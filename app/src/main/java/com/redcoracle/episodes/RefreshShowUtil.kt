@@ -28,29 +28,47 @@ object RefreshShowUtil {
     private val TAG = RefreshShowUtil::class.java.name
 
     @JvmStatic
-    fun refreshShow(showId: Int, contentResolver: ContentResolver) {
-        Log.i(TAG, "Refreshing show $showId")
+    fun refreshShow(
+        showId: Int,
+        contentResolver: ContentResolver,
+        logFailures: Boolean = true
+    ): Boolean {
+        return try {
+            Log.i(TAG, "Refreshing show $showId")
 
-        val tmdbClient = Client()
-        val preferences = Preferences.getSharedPreferences()
+            val tmdbClient = Client()
+            val preferences = Preferences.getSharedPreferences()
 
-        val showLanguage = preferences?.getString("pref_language", "en") ?: "en"
-        val showIds = getShowIds(showId)
-        val show = tmdbClient.getShow(showIds, showLanguage)
+            val showLanguage = preferences?.getString("pref_language", "en") ?: "en"
+            val showIds = getShowIds(showId)
+            val show = tmdbClient.getShow(showIds, showLanguage)
 
-        if (show != null) {
-            show.episodes?.let { episodes ->
-                val roomEpisodes = episodes.toMutableList()
-                val writer = RefreshShowWriter(
-                    context = EpisodesApplication.instance.applicationContext,
-                    contentResolver = contentResolver
-                )
-                writer.refreshShow(
-                    showId = showId,
-                    show = show,
-                    episodes = roomEpisodes
-                )
+            if (show == null) {
+                Log.w(TAG, "Skipping refresh for showId=$showId because no show details were returned.")
+                return false
             }
+
+            val episodes = show.episodes
+            if (episodes == null) {
+                Log.w(TAG, "Skipping refresh for showId=$showId because no episode list was returned.")
+                return false
+            }
+
+            val writer = RefreshShowWriter(
+                context = EpisodesApplication.instance.applicationContext,
+                contentResolver = contentResolver
+            )
+            writer.refreshShow(
+                showId = showId,
+                show = show,
+                episodes = episodes.toMutableList()
+            )
+            true
+        } catch (e: Exception) {
+            if (logFailures) {
+                Log.e(TAG, "Failed to refresh showId=$showId", e)
+            }
+            false
         }
     }
 

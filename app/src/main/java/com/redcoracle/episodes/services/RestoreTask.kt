@@ -11,9 +11,11 @@ import com.redcoracle.episodes.db.DatabaseOpenHelper
 import com.redcoracle.episodes.db.ShowsProvider
 import com.redcoracle.episodes.db.room.AppDatabase
 import java.io.File
+import java.io.FileNotFoundException
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
+import java.util.Locale
 import java.util.concurrent.Callable
 
 class RestoreTask(private val filename: String) : Callable<Void?> {
@@ -44,8 +46,15 @@ class RestoreTask(private val filename: String) : Callable<Void?> {
             }
             
             Log.i(TAG, "Library restored successfully.")
+        } catch (e: FileNotFoundException) {
+            Log.e(TAG, "Error restoring library: backup file not found.", e)
+            showFailureToast(R.string.restore_error_file_missing)
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Error restoring library: permission denied.", e)
+            showFailureToast(R.string.restore_error_permission)
         } catch (e: IOException) {
-            Log.e(TAG, "Error restoring library: $e")
+            Log.e(TAG, "Error restoring library due to I/O error.", e)
+            showFailureToast(mapIoErrorMessageRes(e))
         } finally {
             // Ensure stale Room handles are cleared after replacement.
             AppDatabase.closeInstance()
@@ -57,5 +66,24 @@ class RestoreTask(private val filename: String) : Callable<Void?> {
 
     companion object {
         private val TAG = RestoreTask::class.java.name
+    }
+
+    private fun showFailureToast(messageResId: Int) {
+        ContextCompat.getMainExecutor(context).execute {
+            Toast.makeText(
+                context,
+                context.getString(messageResId),
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    private fun mapIoErrorMessageRes(error: IOException): Int {
+        val message = error.message?.lowercase(Locale.US).orEmpty()
+        return if (message.contains("no space left") || message.contains("enospc")) {
+            R.string.restore_error_storage
+        } else {
+            R.string.restore_error_message
+        }
     }
 }

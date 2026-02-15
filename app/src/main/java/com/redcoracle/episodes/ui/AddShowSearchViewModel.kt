@@ -22,6 +22,7 @@ import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.redcoracle.episodes.Preferences
+import com.redcoracle.episodes.R
 import com.redcoracle.episodes.tvdb.Client
 import com.redcoracle.episodes.tvdb.Show
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,13 +32,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.IOException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import javax.inject.Inject
 
 sealed class SearchState {
     object Idle : SearchState()
     object Loading : SearchState()
     data class Success(val results: List<Show>) : SearchState()
-    data class Error(val message: String) : SearchState()
+    data class Error(val messageResId: Int) : SearchState()
 }
 
 @HiltViewModel
@@ -94,9 +98,32 @@ class AddShowSearchViewModel @Inject constructor() : ViewModel() {
                 
                 _searchState.value = SearchState.Success(results)
             } catch (e: Exception) {
-                _searchState.value = SearchState.Error(e.message ?: "Unknown error")
+                _searchState.value = SearchState.Error(mapSearchErrorMessage(e))
             }
         }
     }
-    
+
+    private fun mapSearchErrorMessage(error: Throwable): Int {
+        val message = buildString {
+            append(error.message.orEmpty())
+            var cause = error.cause
+            while (cause != null) {
+                append(" ")
+                append(cause.message.orEmpty())
+                cause = cause.cause
+            }
+        }.lowercase()
+
+        return when {
+            error is UnknownHostException || error is SocketTimeoutException ->
+                R.string.search_error_network
+            error is IOException && (message.contains("timeout") || message.contains("unable to resolve host")) ->
+                R.string.search_error_network
+            message.contains("429") || message.contains("rate limit") || message.contains("too many requests") ->
+                R.string.search_error_rate_limited
+            message.contains("500") || message.contains("502") || message.contains("503") || message.contains("504") ->
+                R.string.search_error_server
+            else -> R.string.search_error_generic
+        }
+    }
 }

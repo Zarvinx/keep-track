@@ -45,6 +45,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -81,7 +82,7 @@ fun ShowsListScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = stringResource(R.string.no_search_results_found),
+                    text = stringResource(R.string.empty_library_message),
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.White
                 )
@@ -132,9 +133,7 @@ fun ShowListItem(
             "S%02dE%02d".format(show.nextEpisodeSeasonNumber, show.nextEpisodeNumber)
         } else null
     }
-    val episodeStatus = remember(show.nextEpisodeAirDate) {
-        calculateEpisodeStatus(show)
-    }
+    val episodeStatus = remember(show.nextEpisodeAirDate) { calculateEpisodeStatus(show) }
     
     // Episode is watchable only if it has an air date AND it has already aired
     val isWatchable = remember(show.nextEpisodeAirDate) {
@@ -222,7 +221,11 @@ fun ShowListItem(
                         ) {
                             Icon(
                                 imageVector = if (show.archived) Icons.Filled.Archive else Icons.Filled.Unarchive,
-                                contentDescription = if (show.archived) "Unarchive" else "Archive",
+                                contentDescription = if (show.archived) {
+                                    stringResource(R.string.menu_unarchive_show)
+                                } else {
+                                    stringResource(R.string.menu_archive_show)
+                                },
                                 tint = Color.White,
                                 modifier = Modifier.size(24.dp)
                             )
@@ -235,7 +238,11 @@ fun ShowListItem(
                         ) {
                             Icon(
                                 imageVector = if (show.starred) Icons.Filled.Star else Icons.Outlined.Star,
-                                contentDescription = if (show.starred) "Unstar" else "Star",
+                                contentDescription = if (show.starred) {
+                                    stringResource(R.string.menu_unstar_show)
+                                } else {
+                                    stringResource(R.string.menu_star_show)
+                                },
                                 tint = if (show.starred) Color(0xFFFFD700) else Color.White,
                                 modifier = Modifier.size(24.dp)
                             )
@@ -245,6 +252,25 @@ fun ShowListItem(
                 
                 // Status text overlay at bottom of banner (for upcoming episodes)
                 if (episodeStatus != null) {
+                    val statusText = when (episodeStatus.unit) {
+                        EpisodeTimeUnit.TODAY -> stringResource(R.string.next_episode_airs_today)
+                        EpisodeTimeUnit.TOMORROW -> stringResource(R.string.next_episode_airs_tomorrow)
+                        EpisodeTimeUnit.DAYS -> pluralStringResource(
+                            id = R.plurals.next_episode_airs_in_days,
+                            count = episodeStatus.amount,
+                            episodeStatus.amount
+                        )
+                        EpisodeTimeUnit.WEEKS -> pluralStringResource(
+                            id = R.plurals.next_episode_airs_in_weeks,
+                            count = episodeStatus.amount,
+                            episodeStatus.amount
+                        )
+                        EpisodeTimeUnit.MONTHS -> pluralStringResource(
+                            id = R.plurals.next_episode_airs_in_months,
+                            count = episodeStatus.amount,
+                            episodeStatus.amount
+                        )
+                    }
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -253,7 +279,7 @@ fun ShowListItem(
                             .padding(horizontal = 12.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            text = episodeStatus.text,
+                            text = statusText,
                             color = MaterialTheme.colorScheme.primary,
                             fontSize = 12.sp,
                             style = MaterialTheme.typography.bodySmall
@@ -316,7 +342,11 @@ fun ShowListItem(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.CheckCircle,
-                            contentDescription = if (isWatchable) "Mark as watched" else "Not yet available",
+                            contentDescription = if (isWatchable) {
+                                stringResource(R.string.mark_as_watched)
+                            } else {
+                                stringResource(R.string.episode_not_yet_available)
+                            },
                             tint = if (isWatchable) {
                                 MaterialTheme.colorScheme.primary
                             } else {
@@ -349,8 +379,17 @@ fun ShowListItem(
  * Data class to hold episode status information for upcoming episodes
  */
 private data class EpisodeStatus(
-    val text: String
+    val unit: EpisodeTimeUnit,
+    val amount: Int = 0
 )
+
+private enum class EpisodeTimeUnit {
+    TODAY,
+    TOMORROW,
+    DAYS,
+    WEEKS,
+    MONTHS
+}
 
 /**
  * Calculate status text for upcoming episodes only
@@ -363,28 +402,18 @@ private fun calculateEpisodeStatus(show: Show): EpisodeStatus? {
     // Only show status for episodes that haven't aired yet
     if (diffMillis <= 0) return null
     
-    val daysUntil = TimeUnit.MILLISECONDS.toDays(diffMillis)
+    val daysUntil = TimeUnit.MILLISECONDS.toDays(diffMillis).toInt()
     return when {
-        daysUntil == 0L -> EpisodeStatus(
-            text = "Next episode airs today"
-        )
-        daysUntil == 1L -> EpisodeStatus(
-            text = "Next episode airs tomorrow"
-        )
-        daysUntil < 7 -> EpisodeStatus(
-            text = "Next episode airs in $daysUntil days"
-        )
+        daysUntil == 0 -> EpisodeStatus(unit = EpisodeTimeUnit.TODAY)
+        daysUntil == 1 -> EpisodeStatus(unit = EpisodeTimeUnit.TOMORROW)
+        daysUntil < 7 -> EpisodeStatus(unit = EpisodeTimeUnit.DAYS, amount = daysUntil)
         daysUntil < 30 -> {
             val weeks = daysUntil / 7
-            EpisodeStatus(
-                text = "Next episode airs in ${weeks} week${if (weeks > 1) "s" else ""}"
-            )
+            EpisodeStatus(unit = EpisodeTimeUnit.WEEKS, amount = weeks)
         }
         else -> {
             val months = daysUntil / 30
-            EpisodeStatus(
-                text = "Next episode airs in ${months} month${if (months > 1) "s" else ""}"
-            )
+            EpisodeStatus(unit = EpisodeTimeUnit.MONTHS, amount = months)
         }
     }
 }

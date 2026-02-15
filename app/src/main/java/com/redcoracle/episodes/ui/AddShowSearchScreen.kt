@@ -101,13 +101,13 @@ fun AddShowSearchScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Error: ${state.message}",
+                        text = stringResource(state.messageResId),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.error
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Button(onClick = { viewModel.searchShows() }) {
-                        Text("Retry")
+                        Text(stringResource(R.string.search_retry))
                     }
                 }
             }

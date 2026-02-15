@@ -2,6 +2,7 @@ package com.redcoracle.episodes.services
 
 import android.content.ContentResolver
 import android.content.Context
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.redcoracle.episodes.EpisodesApplication
@@ -20,11 +21,20 @@ class RefreshAllShowsTask : Callable<Void?> {
         val notificationManager = NotificationManagerCompat.from(context)
         val notificationBuilder = NotificationCompat.Builder(context, "keep_track_channel_id")
         notificationBuilder
-            .setContentTitle("Refreshing Shows")
+            .setContentTitle(context.getString(R.string.refreshing_shows_title))
             .setSmallIcon(R.drawable.ic_show_starred)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-        
+
+        if (total == 0) {
+            notificationBuilder
+                .setContentText(context.getString(R.string.refresh_complete_none))
+                .setProgress(0, 0, false)
+            notificationManager.notify(0, notificationBuilder.build())
+            return null
+        }
+
         var current = 0
+        var successCount = 0
         notificationBuilder.setProgress(total, current, false)
         notificationManager.notify(0, notificationBuilder.build())
 
@@ -34,11 +44,30 @@ class RefreshAllShowsTask : Callable<Void?> {
             notificationBuilder.setContentText(showName)
             notificationBuilder.setProgress(total, current, false)
             notificationManager.notify(0, notificationBuilder.build())
-            refreshShow(showId, resolver)
+            val refreshed = refreshShow(showId, resolver, logFailures = false)
+            if (refreshed) {
+                successCount += 1
+            }
             current += 1
         }
 
-        notificationBuilder.setContentText("Refresh complete!").setProgress(0, 0, false)
+        val failureCount = total - successCount
+        if (failureCount > 0) {
+            Log.w(
+                RefreshAllShowsTask::class.java.name,
+                "Refresh completed with failures: $successCount/$total succeeded."
+            )
+        }
+        notificationBuilder
+            .setContentText(context.getString(R.string.refresh_complete_summary, successCount, total))
+            .setSubText(
+                if (failureCount > 0) {
+                    context.getString(R.string.refresh_partial_failures, failureCount)
+                } else {
+                    null
+                }
+            )
+            .setProgress(0, 0, false)
         notificationManager.notify(0, notificationBuilder.build())
 
         return null

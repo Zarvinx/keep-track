@@ -14,6 +14,7 @@ import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
+import java.util.Locale
 import java.util.concurrent.Callable
 
 class BackupTask(
@@ -57,12 +58,36 @@ class BackupTask(
             
             Log.i(TAG, "Library backed up successfully: '${destinationFile.path}'.")
         } catch (e: FileNotFoundException) {
-            e.printStackTrace()
+            Log.e(TAG, "Backup failed: database file not found.", e)
+            showFailureToast(R.string.back_up_error_file_missing)
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Backup failed: permission denied.", e)
+            showFailureToast(R.string.back_up_error_permission)
         } catch (e: IOException) {
-            e.printStackTrace()
+            Log.e(TAG, "Backup failed due to I/O error.", e)
+            showFailureToast(mapIoErrorMessageRes(e))
         }
         
         return null
+    }
+
+    private fun showFailureToast(messageResId: Int) {
+        ContextCompat.getMainExecutor(context).execute {
+            Toast.makeText(
+                context,
+                context.getString(messageResId),
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    private fun mapIoErrorMessageRes(error: IOException): Int {
+        val message = error.message?.lowercase(Locale.US).orEmpty()
+        return if (message.contains("no space left") || message.contains("enospc")) {
+            R.string.back_up_error_storage
+        } else {
+            R.string.back_up_error_message
+        }
     }
 
     companion object {

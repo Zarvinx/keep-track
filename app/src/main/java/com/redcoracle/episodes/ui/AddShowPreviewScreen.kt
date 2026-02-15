@@ -66,7 +66,7 @@ fun AddShowPreviewScreen(
             )
         } else {
             Text(
-                text = "No overview available",
+                text = stringResource(R.string.no_overview_available),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                 modifier = Modifier.padding(bottom = 16.dp)

@@ -20,6 +20,7 @@ package com.redcoracle.episodes.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.redcoracle.episodes.R
 import com.redcoracle.episodes.db.room.ShowQueriesDao
 import com.redcoracle.episodes.db.room.EpisodeWatchStateWriter
 import com.redcoracle.episodes.db.room.ShowMutationsWriter
@@ -28,9 +29,12 @@ import com.redcoracle.episodes.services.DeleteShowTask
 import com.redcoracle.episodes.services.RefreshShowTask
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -44,6 +48,10 @@ data class ShowDetails(
     val firstAired: Long?
 )
 
+sealed class ShowUiEvent {
+    data class Error(val messageResId: Int) : ShowUiEvent()
+}
+
 @HiltViewModel
 class ShowViewModel @Inject constructor(
     private val showQueriesDao: ShowQueriesDao,
@@ -54,6 +62,8 @@ class ShowViewModel @Inject constructor(
     
     private val _showDetails = MutableStateFlow<ShowDetails?>(null)
     val showDetails: StateFlow<ShowDetails?> = _showDetails.asStateFlow()
+    private val _uiEvents = MutableSharedFlow<ShowUiEvent>(extraBufferCapacity = 4)
+    val uiEvents: SharedFlow<ShowUiEvent> = _uiEvents.asSharedFlow()
     
     fun initialize(showId: Int) {
         if (this.showId == showId) return
@@ -103,7 +113,12 @@ class ShowViewModel @Inject constructor(
     
     fun refreshShow() {
         val targetShowId = showId ?: return
-        AsyncTask().executeAsync(RefreshShowTask(targetShowId))
+        AsyncTask().executeAsync(
+            RefreshShowTask(targetShowId),
+            onError = {
+                _uiEvents.tryEmit(ShowUiEvent.Error(R.string.refresh_show_error_message))
+            }
+        )
     }
     
     fun markShowWatched(watched: Boolean) {
@@ -115,6 +130,11 @@ class ShowViewModel @Inject constructor(
     
     fun deleteShow() {
         val targetShowId = showId ?: return
-        AsyncTask().executeAsync(DeleteShowTask(targetShowId))
+        AsyncTask().executeAsync(
+            DeleteShowTask(targetShowId),
+            onError = {
+                _uiEvents.tryEmit(ShowUiEvent.Error(R.string.delete_show_error_message))
+            }
+        )
     }
 }
