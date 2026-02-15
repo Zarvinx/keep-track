@@ -1,8 +1,10 @@
 package com.redcoracle.episodes.ui.theme
 
 import android.content.SharedPreferences
+import android.graphics.Color as AndroidColor
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -15,6 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.preference.PreferenceManager
 import com.redcoracle.episodes.Preferences
@@ -45,13 +48,14 @@ fun EpisodesTheme(
     }
     val useDynamicColors = accentColorsMode == Preferences.ACCENT_COLORS_DYNAMIC
 
-    val colorScheme = when {
+    val baseScheme = when {
         useDynamicColors && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
+    val colorScheme = applyCustomAccentIfSelected(baseScheme, accentColorsMode)
 
     MaterialTheme(
         colorScheme = colorScheme,
@@ -128,5 +132,31 @@ private fun readAccentColorsMode(prefs: SharedPreferences): String {
         Preferences.ACCENT_COLORS_DYNAMIC
     } else {
         Preferences.ACCENT_COLORS_APP
+    }
+}
+
+private fun applyCustomAccentIfSelected(
+    baseScheme: ColorScheme,
+    accentMode: String
+): ColorScheme {
+    val customAccent = parseCustomAccentColor(accentMode) ?: return baseScheme
+    val onAccent = if (customAccent.luminance() > 0.5f) {
+        Color(0xFF1A1A1A)
+    } else {
+        Color(0xFFF2F2F2)
+    }
+    return baseScheme.copy(
+        primary = customAccent,
+        onPrimary = onAccent
+    )
+}
+
+private fun parseCustomAccentColor(accentMode: String): Color? {
+    if (!accentMode.startsWith(Preferences.ACCENT_COLORS_CUSTOM_PREFIX)) return null
+    val colorHex = accentMode.removePrefix(Preferences.ACCENT_COLORS_CUSTOM_PREFIX)
+    return try {
+        Color(AndroidColor.parseColor(colorHex))
+    } catch (_: IllegalArgumentException) {
+        null
     }
 }

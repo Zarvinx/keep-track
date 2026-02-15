@@ -103,9 +103,10 @@ fun SeasonListItem(
             
             // Progress bar
             if (season.airedCount > 0) {
+                val isLightTheme = MaterialTheme.colorScheme.background.luminance() > 0.5f
                 val progress = season.watchedCount.toFloat() / season.airedCount.toFloat()
                 val countTextColor = if (season.watchedCount == 0) {
-                    Color(0xFF1A1A1A)
+                    if (isLightTheme) Color(0xFF1A1A1A) else Color(0xFFF2F2F2)
                 } else if (MaterialTheme.colorScheme.primary.luminance() < 0.5f) {
                     Color(0xFFF2F2F2)
                 } else {

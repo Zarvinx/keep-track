@@ -61,8 +61,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.preference.PreferenceManager
+import com.redcoracle.episodes.settings.AccentColorSelectionDialog
+import com.redcoracle.episodes.settings.BackgroundGradientSelectionDialog
+import com.redcoracle.episodes.settings.accentOptionLabel
+import com.redcoracle.episodes.settings.buildAccentColorOptions
+import com.redcoracle.episodes.settings.readInitialAccentColorsMode
+import com.redcoracle.episodes.settings.readInitialBackgroundGradient
 import com.redcoracle.episodes.services.AsyncTask
 import com.redcoracle.episodes.services.RefreshAllShowsTask
+import com.redcoracle.episodes.ui.theme.backgroundGradientOptions
+import com.redcoracle.episodes.ui.theme.findBackgroundGradientOption
 
 private object SettingsRefreshScheduler {
     private const val LANGUAGE_REFRESH_DEBOUNCE_MS = 5_000L
@@ -104,6 +112,12 @@ fun SettingsScreen(
                 ?: Preferences.THEME_MODE_SYSTEM
         )
     }
+    val backgroundOptions = backgroundGradientOptions()
+    var selectedBackgroundGradient by remember {
+        mutableStateOf(
+            readInitialBackgroundGradient(prefs)
+        )
+    }
     val dynamicColorsSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     var selectedAccentColorsMode by remember {
         mutableStateOf(
@@ -116,18 +130,12 @@ fun SettingsScreen(
         stringResource(R.string.pref_theme_light) to Preferences.THEME_MODE_LIGHT,
         stringResource(R.string.pref_theme_dark) to Preferences.THEME_MODE_DARK
     )
-    val accentColorOptions = if (dynamicColorsSupported) {
-        listOf(
-            stringResource(R.string.pref_accent_colors_dynamic) to Preferences.ACCENT_COLORS_DYNAMIC,
-            stringResource(R.string.pref_accent_colors_app) to Preferences.ACCENT_COLORS_APP
-        )
-    } else {
-        listOf(stringResource(R.string.pref_accent_colors_app) to Preferences.ACCENT_COLORS_APP)
-    }
+    val accentColorOptions = buildAccentColorOptions(dynamicColorsSupported, context::getString)
 
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showPeriodDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showBackgroundGradientDialog by remember { mutableStateOf(false) }
     var showAccentColorsDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -158,17 +166,19 @@ fun SettingsScreen(
 
             SettingsListItem(
                 title = stringResource(R.string.pref_theme_title),
-                summary = selectedThemeMode.labelFor(themeOptions),
+                summary = selectedThemeMode.labelForPairs(themeOptions),
                 onClick = { showThemeDialog = true }
             )
 
             SettingsListItem(
+                title = stringResource(R.string.pref_background_gradient_title),
+                summary = findBackgroundGradientOption(selectedBackgroundGradient).label,
+                onClick = { showBackgroundGradientDialog = true }
+            )
+
+            SettingsListItem(
                 title = stringResource(R.string.pref_accent_colors_title),
-                summary = if (dynamicColorsSupported) {
-                    selectedAccentColorsMode.labelFor(accentColorOptions)
-                } else {
-                    stringResource(R.string.pref_accent_colors_unavailable_summary)
-                },
+                summary = accentOptionLabel(selectedAccentColorsMode, accentColorOptions),
                 onClick = { showAccentColorsDialog = true }
             )
 
@@ -260,8 +270,22 @@ fun SettingsScreen(
         )
     }
 
+    if (showBackgroundGradientDialog) {
+        BackgroundGradientSelectionDialog(
+            title = stringResource(R.string.pref_background_gradient_title),
+            options = backgroundOptions,
+            selectedValue = selectedBackgroundGradient,
+            onSelect = {
+                selectedBackgroundGradient = it
+                prefs.edit().putString(Preferences.KEY_PREF_BACKGROUND_GRADIENT, it).apply()
+                showBackgroundGradientDialog = false
+            },
+            onDismiss = { showBackgroundGradientDialog = false }
+        )
+    }
+
     if (showAccentColorsDialog) {
-        SelectionDialog(
+        AccentColorSelectionDialog(
             title = stringResource(R.string.pref_accent_colors_title),
             options = accentColorOptions,
             selectedValue = selectedAccentColorsMode,
@@ -325,29 +349,8 @@ private fun String.labelFor(entries: Array<String>, values: Array<String>): Stri
     return if (index in entries.indices) entries[index] else entries.firstOrNull() ?: this
 }
 
-private fun String.labelFor(options: List<Pair<String, String>>): String {
+private fun String.labelForPairs(options: List<Pair<String, String>>): String {
     return options.firstOrNull { it.second == this }?.first ?: this
-}
-
-private fun readInitialAccentColorsMode(
-    prefs: android.content.SharedPreferences,
-    dynamicColorsSupported: Boolean
-): String {
-    val mode = if (prefs.contains(Preferences.KEY_PREF_ACCENT_COLORS_MODE)) {
-        prefs.getString(
-            Preferences.KEY_PREF_ACCENT_COLORS_MODE,
-            Preferences.ACCENT_COLORS_DYNAMIC
-        ) ?: Preferences.ACCENT_COLORS_DYNAMIC
-    } else {
-        val legacyDynamicEnabled = prefs.getBoolean(Preferences.KEY_PREF_DYNAMIC_COLORS, true)
-        if (legacyDynamicEnabled) Preferences.ACCENT_COLORS_DYNAMIC else Preferences.ACCENT_COLORS_APP
-    }
-
-    return if (!dynamicColorsSupported && mode == Preferences.ACCENT_COLORS_DYNAMIC) {
-        Preferences.ACCENT_COLORS_APP
-    } else {
-        mode
-    }
 }
 
 @Composable

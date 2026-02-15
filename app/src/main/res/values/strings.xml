@@ -44,6 +44,7 @@
   <string name="pref_auto_refresh_wifi_only_title">Only on unmetered connections</string>
   <string name="pref_language_title">Language</string>
   <string name="pref_theme_title">Theme</string>
+  <string name="pref_background_gradient_title">Background gradient</string>
   <string name="pref_theme_system">System theme</string>
   <string name="pref_theme_light">Light</string>
   <string name="pref_theme_dark">Dark</string>

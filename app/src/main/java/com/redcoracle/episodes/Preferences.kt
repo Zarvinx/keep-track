@@ -24,12 +24,27 @@ import androidx.preference.PreferenceManager
 object Preferences {
     const val KEY_PREF_THEME_MODE = "pref_theme_mode"
     const val KEY_PREF_ACCENT_COLORS_MODE = "pref_accent_colors_mode"
+    const val KEY_PREF_BACKGROUND_GRADIENT = "pref_background_gradient"
     const val KEY_PREF_DYNAMIC_COLORS = "pref_dynamic_colors_enabled"
     const val THEME_MODE_SYSTEM = "system"
     const val THEME_MODE_LIGHT = "light"
     const val THEME_MODE_DARK = "dark"
     const val ACCENT_COLORS_APP = "app"
     const val ACCENT_COLORS_DYNAMIC = "dynamic"
+    const val ACCENT_COLORS_CUSTOM_PREFIX = "custom:"
+    const val BACKGROUND_GRADIENT_MIST_BLUE = "mist_blue"
+    const val BACKGROUND_GRADIENT_SUNSET_AMBER = "sunset_amber"
+    const val BACKGROUND_GRADIENT_CITRUS_LIME = "citrus_lime"
+    const val BACKGROUND_GRADIENT_DEEP_FOREST = "deep_forest"
+    const val BACKGROUND_GRADIENT_AQUA_SKY = "aqua_sky"
+    const val BACKGROUND_GRADIENT_ROYAL_PLUM = "royal_plum"
+    const val BACKGROUND_GRADIENT_NIGHT_BLUE = "night_blue"
+    const val BACKGROUND_GRADIENT_DEEP_OCEAN = "deep_ocean"
+    const val BACKGROUND_GRADIENT_NIGHT_MINT = "night_mint"
+    const val BACKGROUND_GRADIENT_PINE_SHADOW = "pine_shadow"
+    const val BACKGROUND_GRADIENT_BURNT_AMBER = "burnt_amber"
+    const val BACKGROUND_GRADIENT_VIOLET_NIGHT = "violet_night"
+    const val BACKGROUND_GRADIENT_CRIMSON_NIGHT = "crimson_night"
 
     fun getSharedPreferences(): SharedPreferences? {
         val context = MainActivity.getAppContext()
