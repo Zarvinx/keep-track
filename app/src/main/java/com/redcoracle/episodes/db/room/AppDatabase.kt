@@ -19,11 +19,34 @@ import com.redcoracle.episodes.db.DatabaseOpenHelper
  * This singleton opens the app's existing SQLite database file through Room.
  */
 abstract class AppDatabase : RoomDatabase() {
+    /**
+     * DAO for watch-state update statements.
+     */
     abstract fun episodesDao(): EpisodesRoomDao
+
+    /**
+     * DAO for add-show insert and duplicate-lookup statements.
+     */
     abstract fun addShowDao(): AddShowRoomDao
+
+    /**
+     * DAO for bulk refresh reconciliation statements.
+     */
     abstract fun refreshShowDao(): RefreshShowRoomDao
+
+    /**
+     * DAO for show mutation statements.
+     */
     abstract fun showMutationsDao(): ShowMutationsDao
+
+    /**
+     * DAO for focused show detail lookups.
+     */
     abstract fun showQueriesDao(): ShowQueriesDao
+
+    /**
+     * DAO for read models used by list/detail view models.
+     */
     abstract fun appReadDao(): AppReadDao
 
     companion object {
@@ -37,6 +60,9 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var instance: AppDatabase? = null
 
+        /**
+         * Returns a singleton Room database instance bound to the app DB file.
+         */
         fun getInstance(context: Context): AppDatabase {
             return instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(

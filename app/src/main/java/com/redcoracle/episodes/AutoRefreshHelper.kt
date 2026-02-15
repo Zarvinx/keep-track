@@ -34,6 +34,11 @@ import androidx.preference.PreferenceManager
 import com.redcoracle.episodes.services.AsyncTask
 import com.redcoracle.episodes.services.RefreshAllShowsTask
 
+/**
+ * Schedules and executes periodic show metadata refresh.
+ *
+ * Refresh execution is gated by network and backup-confirmation checks.
+ */
 class AutoRefreshHelper private constructor(
     private val context: Context
 ) : SharedPreferences.OnSharedPreferenceChangeListener {
@@ -56,6 +61,9 @@ class AutoRefreshHelper private constructor(
         @Volatile
         private var instance: AutoRefreshHelper? = null
 
+        /**
+         * Returns singleton helper instance scoped to application context.
+         */
         @JvmStatic
         fun getInstance(context: Context): AutoRefreshHelper {
             return instance ?: synchronized(this) {
@@ -64,6 +72,9 @@ class AutoRefreshHelper private constructor(
         }
     }
 
+    /**
+     * Reacts to auto-refresh preference changes by rescheduling alarms.
+     */
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         when (key) {
             KEY_PREF_AUTO_REFRESH_ENABLED,
@@ -117,6 +128,9 @@ class AutoRefreshHelper private constructor(
         return preferences.getBoolean(KEY_PREF_CONFIRMED_BACKUP, false)
     }
 
+    /**
+     * Schedules or cancels the next refresh alarm based on current settings.
+     */
     fun rescheduleAlarm() {
         NetworkStateReceiver.disable(context)
 
@@ -135,6 +149,9 @@ class AutoRefreshHelper private constructor(
         }
     }
 
+    /**
+     * Alarm service entrypoint that runs refresh when environment checks pass.
+     */
     class Service : IntentService(Service::class.java.name) {
         companion object {
             private val TAG = Service::class.java.name
@@ -154,6 +171,9 @@ class AutoRefreshHelper private constructor(
         }
     }
 
+    /**
+     * Boot receiver that restores refresh and backup schedules after reboot.
+     */
     class BootReceiver : BroadcastReceiver() {
         companion object {
             private val TAG = BootReceiver::class.java.name
@@ -172,6 +192,9 @@ class AutoRefreshHelper private constructor(
     // This receiver is disabled by default in the manifest.
     // It should only be enabled when needed, and should be
     // disabled again straight afterwards.
+    /**
+     * One-shot connectivity receiver used when waiting for network availability.
+     */
     class NetworkStateReceiver : BroadcastReceiver() {
         companion object {
             private val TAG = NetworkStateReceiver::class.java.name

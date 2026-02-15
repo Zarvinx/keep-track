@@ -22,7 +22,16 @@ import android.app.IntentService
 import android.content.Intent
 import com.redcoracle.episodes.RefreshShowUtil
 
+/**
+ * Legacy intent service entrypoint for refreshing a single show by id.
+ *
+ * New flows should prefer coroutine-based tasks; this service remains for
+ * compatibility with existing intent callers.
+ */
 class RefreshShowService : IntentService(RefreshShowService::class.java.name) {
+    /**
+     * Reads `showId` from the incoming intent and runs a one-show refresh.
+     */
     override fun onHandleIntent(intent: Intent?) {
         val showId = intent?.getIntExtra("showId", 0) ?: 0
         RefreshShowUtil.refreshShow(showId, contentResolver)

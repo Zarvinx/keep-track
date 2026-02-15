@@ -26,13 +26,22 @@ import java.nio.channels.FileChannel
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * File helper utilities for backup file naming, lookup, copying, and retention.
+ */
 object FileUtilities {
+    /**
+     * Builds a timestamped backup filename in app convention.
+     */
     fun get_suggested_filename(): String {
         val today = Date()
         val formatter = SimpleDateFormat("yyyy-MM-dd_HHmm", Locale.getDefault())
         return "keep_track_${formatter.format(today)}.db"
     }
 
+    /**
+     * Resolves a display filename from a content URI when available.
+     */
     fun uri_to_filename(context: Context, uri: Uri): String? {
         context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
             val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
@@ -42,6 +51,9 @@ object FileUtilities {
         return null
     }
 
+    /**
+     * Copies all bytes from [source] channel to [destination] and closes both channels.
+     */
     fun copy_file(source: FileChannel, destination: FileChannel) {
         try {
             destination.transferFrom(source, 0, source.size())
@@ -52,6 +64,9 @@ object FileUtilities {
         }
     }
 
+    /**
+     * Returns the app-local backup directory, creating it when missing.
+     */
     fun get_backup_directory(context: Context): File {
         val backupDirectory = File(context.filesDir, "backups")
         if (!backupDirectory.exists()) {
@@ -60,11 +75,17 @@ object FileUtilities {
         return backupDirectory
     }
 
+    /**
+     * Returns backup files sorted newest-first.
+     */
     fun get_backup_files(context: Context): List<File> {
         val files = get_backup_directory(context).listFiles()
         return files?.sortedByDescending { it.lastModified() } ?: emptyList()
     }
 
+    /**
+     * Deletes oldest backups so at most [maxBackupCount] files remain.
+     */
     fun prune_old_backups(context: Context, maxBackupCount: Int) {
         val keep = maxBackupCount.coerceIn(1, 100)
         val backups = get_backup_files(context)

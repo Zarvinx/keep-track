@@ -14,6 +14,8 @@ class AsyncTask {
     /**
      * Execute a callable task on the IO dispatcher.
      * @param callable The task to execute
+     * @param onSuccess Optional callback invoked on the main thread after success.
+     * @param onError Optional callback invoked on the main thread if execution fails.
      */
     fun <R> executeAsync(
         callable: java.util.concurrent.Callable<R>,

@@ -77,8 +77,8 @@ These can stay in Java for now, but should eventually be converted:
 - [ ] Test database migrations
 
 ### Documentation
-- [ ] Add KDoc comments to public APIs
-- [ ] Create architecture documentation
+- [x] Add KDoc comments to public APIs
+- [x] Create architecture documentation
 
 ## Feature Improvements
 

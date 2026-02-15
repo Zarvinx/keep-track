@@ -7,6 +7,12 @@ import com.redcoracle.episodes.tvdb.Episode
 import com.redcoracle.episodes.tvdb.Show
 import org.apache.commons.collections4.map.MultiKeyMap
 
+/**
+ * Applies TMDB refresh results to local show and episode rows.
+ *
+ * Writes are performed in a single Room transaction, then content observers are
+ * notified so UI queries and provider clients refresh.
+ */
 class RefreshShowWriter(
     context: Context,
     private val contentResolver: ContentResolver
@@ -14,6 +20,9 @@ class RefreshShowWriter(
     private val roomDb: AppDatabase = AppDatabase.getInstance(context.applicationContext)
     private val refreshDao: RefreshShowRoomDao = roomDb.refreshShowDao()
 
+    /**
+     * Reconciles one show and its episode set against remote data.
+     */
     fun refreshShow(
         showId: Int,
         show: Show,

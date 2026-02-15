@@ -12,6 +12,9 @@ private const val KEY_LANGUAGE = "language"
 private const val KEY_OVERVIEW = "overview"
 private const val KEY_FIRST_AIRED_MILLIS = "firstAiredMillis"
 
+/**
+ * Custom [NavType] for transporting [AddShowPreviewArgs] through navigation routes.
+ */
 object AddShowPreviewArgsNavType : NavType<AddShowPreviewArgs>(isNullableAllowed = false) {
     override fun get(bundle: Bundle, key: String): AddShowPreviewArgs? {
         val raw = bundle.getString(key) ?: return null
@@ -28,10 +31,18 @@ object AddShowPreviewArgsNavType : NavType<AddShowPreviewArgs>(isNullableAllowed
     }
 }
 
+/**
+ * Serializes and URL-encodes preview args for route-safe transport.
+ */
 fun encodePreviewArgs(args: AddShowPreviewArgs): String {
     return Uri.encode(serializePreviewArgs(args))
 }
 
+/**
+ * Decodes preview args from either encoded or raw JSON route value.
+ *
+ * @return parsed args, or null when decoding/parsing fails.
+ */
 fun decodePreviewArgs(value: String): AddShowPreviewArgs? {
     val jsonText = runCatching { Uri.decode(value) }.getOrElse { value }
     return runCatching {

@@ -5,11 +5,20 @@ import android.content.Context
 import com.redcoracle.episodes.db.ShowsProvider
 import com.redcoracle.episodes.tvdb.Show
 
+/**
+ * Writes new shows into the local library using Room transactional inserts.
+ *
+ * This writer is responsible for duplicate detection and emitting provider
+ * change notifications after successful writes.
+ */
 class ShowLibraryWriter(context: Context) {
     private val contentResolver: ContentResolver = context.applicationContext.contentResolver
     private val roomDb: AppDatabase = AppDatabase.getInstance(context.applicationContext)
     private val addShowDao: AddShowRoomDao = roomDb.addShowDao()
 
+    /**
+     * Checks whether the incoming show matches an existing row by TMDB, TVDB, or IMDb ID.
+     */
     fun isAlreadyAdded(show: Show): Boolean {
         val tvdbId = show.tvdbId.takeIf { it > 0 }
         val imdbId = show.imdbId?.takeIf { it.isNotBlank() }
@@ -18,6 +27,11 @@ class ShowLibraryWriter(context: Context) {
             (imdbId != null && addShowDao.findShowIdByImdbId(imdbId) != null)
     }
 
+    /**
+     * Attempts to insert the show and episodes if no duplicate exists.
+     *
+     * @return true if a new show row was inserted; false if skipped.
+     */
     fun addShowIfMissing(show: Show): Boolean {
         val added = addShowWithRoom(show)
         if (added) {

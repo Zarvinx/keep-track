@@ -10,6 +10,11 @@ import com.redcoracle.episodes.db.room.ShowLibraryWriter
 import com.redcoracle.episodes.tvdb.Client
 import java.util.concurrent.Callable
 
+/**
+ * Background task that fetches and inserts a show selected from add-search flow.
+ *
+ * Duplicate detection is delegated to [ShowLibraryWriter].
+ */
 class AddShowTask(
     private val tmdbId: Int,
     private val showName: String,
@@ -18,6 +23,9 @@ class AddShowTask(
     private val context: Context = EpisodesApplication.instance.applicationContext
     private val showLibraryWriter = ShowLibraryWriter(context)
 
+    /**
+     * Fetches show metadata and inserts it when missing.
+     */
     override fun call(): Void? {
         val tmdbClient = Client()
         var show = tmdbClient.getShow(tmdbId, showLanguage, false)

@@ -18,9 +18,17 @@ import java.io.IOException
 import java.util.Locale
 import java.util.concurrent.Callable
 
+/**
+ * Background task that restores the app database from a selected backup file.
+ *
+ * The Room singleton is closed before replacement and reloaded afterwards.
+ */
 class RestoreTask(private val filename: String) : Callable<Void?> {
     private val context: Context = EpisodesApplication.instance.applicationContext
 
+    /**
+     * Executes restore work on a background thread and posts result toasts.
+     */
     override fun call(): Void? {
         val backupFile = File(filename)
         val databaseFile = context.getDatabasePath(DatabaseOpenHelper.getDbName(context))

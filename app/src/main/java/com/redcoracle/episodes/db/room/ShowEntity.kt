@@ -4,6 +4,11 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
+/**
+ * Room mapping of the legacy `shows` table.
+ *
+ * Field affinities intentionally mirror existing on-device schema expectations.
+ */
 @Entity(tableName = "shows")
 data class ShowEntity(
     @PrimaryKey

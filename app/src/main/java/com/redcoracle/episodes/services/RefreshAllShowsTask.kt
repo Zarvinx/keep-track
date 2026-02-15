@@ -11,7 +11,15 @@ import com.redcoracle.episodes.RefreshShowUtil.refreshShow
 import com.redcoracle.episodes.db.room.AppDatabase
 import java.util.concurrent.Callable
 
+/**
+ * Background task that refreshes every show in the library.
+ *
+ * Progress and final summary are reported through notifications.
+ */
 class RefreshAllShowsTask : Callable<Void?> {
+    /**
+     * Runs a full-library refresh and posts a success ratio summary (X/Y).
+     */
     override fun call(): Void? {
         val context: Context = EpisodesApplication.instance.applicationContext
         val resolver: ContentResolver = context.contentResolver

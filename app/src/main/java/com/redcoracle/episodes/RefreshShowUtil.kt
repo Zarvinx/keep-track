@@ -24,9 +24,20 @@ import com.redcoracle.episodes.db.room.AppDatabase
 import com.redcoracle.episodes.db.room.RefreshShowWriter
 import com.redcoracle.episodes.tvdb.Client
 
+/**
+ * Helper for refreshing local show metadata/episodes from TMDB.
+ */
 object RefreshShowUtil {
     private val TAG = RefreshShowUtil::class.java.name
 
+    /**
+     * Refreshes one show from remote metadata and writes results locally.
+     *
+     * @param showId Local show id.
+     * @param contentResolver Resolver used for provider change notifications.
+     * @param logFailures Whether caught exceptions should include error logs.
+     * @return true when refresh data was fetched and written; false otherwise.
+     */
     @JvmStatic
     fun refreshShow(
         showId: Int,

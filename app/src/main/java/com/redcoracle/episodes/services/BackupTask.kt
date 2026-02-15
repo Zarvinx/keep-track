@@ -17,6 +17,12 @@ import java.io.IOException
 import java.util.Locale
 import java.util.concurrent.Callable
 
+/**
+ * Background task that copies the app database to the backup directory.
+ *
+ * The task performs a Room checkpoint before copying and can optionally prune
+ * old backups after a successful write.
+ */
 class BackupTask(
     private val destinationFileName: String,
     private val showToast: Boolean = true,
@@ -24,6 +30,11 @@ class BackupTask(
 ) : Callable<Void?> {
     private val context: Context = EpisodesApplication.instance.applicationContext
 
+    /**
+     * Executes the backup on a background thread.
+     *
+     * Errors are handled internally and surfaced via toast/logging.
+     */
     override fun call(): Void? {
         Log.i(TAG, "Backing up library.")
 

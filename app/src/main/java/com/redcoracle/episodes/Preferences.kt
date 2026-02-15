@@ -21,6 +21,9 @@ package com.redcoracle.episodes
 import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
 
+/**
+ * Central key/constants holder for app preference values.
+ */
 object Preferences {
     const val KEY_PREF_THEME_MODE = "pref_theme_mode"
     const val KEY_PREF_ACCENT_COLORS_MODE = "pref_accent_colors_mode"
@@ -49,6 +52,9 @@ object Preferences {
     const val BACKGROUND_GRADIENT_VIOLET_NIGHT = "violet_night"
     const val BACKGROUND_GRADIENT_CRIMSON_NIGHT = "crimson_night"
 
+    /**
+     * Returns default shared preferences for the current app context.
+     */
     fun getSharedPreferences(): SharedPreferences? {
         val context = MainActivity.getAppContext()
         return context?.let { PreferenceManager.getDefaultSharedPreferences(it) }

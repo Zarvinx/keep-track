@@ -11,6 +11,12 @@ import androidx.preference.PreferenceManager
 import com.redcoracle.episodes.services.AsyncTask
 import com.redcoracle.episodes.services.BackupTask
 
+/**
+ * Schedules and runs periodic local database backups.
+ *
+ * Uses shared preferences for schedule/retention settings and AlarmManager
+ * for deferred execution.
+ */
 class AutoBackupHelper private constructor(
     private val context: Context
 ) : SharedPreferences.OnSharedPreferenceChangeListener {
@@ -37,6 +43,9 @@ class AutoBackupHelper private constructor(
         @Volatile
         private var instance: AutoBackupHelper? = null
 
+        /**
+         * Returns singleton helper instance scoped to application context.
+         */
         @JvmStatic
         fun getInstance(context: Context): AutoBackupHelper {
             return instance ?: synchronized(this) {
@@ -45,6 +54,9 @@ class AutoBackupHelper private constructor(
         }
     }
 
+    /**
+     * Reacts to scheduling-related preference changes.
+     */
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         when (key) {
             KEY_PREF_AUTO_BACKUP_ENABLED,
@@ -75,6 +87,9 @@ class AutoBackupHelper private constructor(
         }
     }
 
+    /**
+     * Recomputes and schedules the next auto-backup alarm.
+     */
     fun rescheduleAlarm() {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val pendingIntent = getPendingIntent()
@@ -99,6 +114,9 @@ class AutoBackupHelper private constructor(
         alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextRun, pendingIntent)
     }
 
+    /**
+     * Runs a backup immediately and updates last-run schedule metadata.
+     */
     fun runBackupNow() {
         val retention = preferences.getInt(KEY_PREF_AUTO_BACKUP_RETENTION, 10).coerceIn(1, 100)
         AsyncTask().executeAsync(
@@ -112,6 +130,9 @@ class AutoBackupHelper private constructor(
         rescheduleAlarm()
     }
 
+    /**
+     * Applies retention policy immediately by deleting oldest backups.
+     */
     fun pruneBackupsNow() {
         val retention = preferences.getInt(KEY_PREF_AUTO_BACKUP_RETENTION, 10).coerceIn(1, 100)
         FileUtilities.prune_old_backups(context, retention)
@@ -131,6 +152,9 @@ class AutoBackupHelper private constructor(
         }
     }
 
+    /**
+     * Broadcast receiver entrypoint triggered by the scheduled backup alarm.
+     */
     class Receiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent?) {
             getInstance(context.applicationContext).runBackupNow()
