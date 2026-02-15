@@ -64,13 +64,17 @@ import androidx.preference.PreferenceManager
 import com.redcoracle.episodes.settings.AccentColorSelectionDialog
 import com.redcoracle.episodes.settings.BackgroundGradientSelectionDialog
 import com.redcoracle.episodes.settings.accentOptionLabel
+import com.redcoracle.episodes.settings.backgroundGradientLabel
 import com.redcoracle.episodes.settings.buildAccentColorOptions
+import com.redcoracle.episodes.settings.buildBackgroundGradientOptions
+import com.redcoracle.episodes.settings.colorToHex
+import com.redcoracle.episodes.settings.CustomGradientColorPickerDialog
 import com.redcoracle.episodes.settings.readInitialAccentColorsMode
 import com.redcoracle.episodes.settings.readInitialBackgroundGradient
+import com.redcoracle.episodes.settings.readInitialCustomBackgroundEndHex
+import com.redcoracle.episodes.settings.readInitialCustomBackgroundStartHex
 import com.redcoracle.episodes.services.AsyncTask
 import com.redcoracle.episodes.services.RefreshAllShowsTask
-import com.redcoracle.episodes.ui.theme.backgroundGradientOptions
-import com.redcoracle.episodes.ui.theme.findBackgroundGradientOption
 
 private object SettingsRefreshScheduler {
     private const val LANGUAGE_REFRESH_DEBOUNCE_MS = 5_000L
@@ -112,7 +116,9 @@ fun SettingsScreen(
                 ?: Preferences.THEME_MODE_SYSTEM
         )
     }
-    val backgroundOptions = backgroundGradientOptions()
+    var customGradientStartHex by remember { mutableStateOf(readInitialCustomBackgroundStartHex(prefs)) }
+    var customGradientEndHex by remember { mutableStateOf(readInitialCustomBackgroundEndHex(prefs)) }
+    val backgroundOptions = buildBackgroundGradientOptions(customGradientStartHex, customGradientEndHex)
     var selectedBackgroundGradient by remember {
         mutableStateOf(
             readInitialBackgroundGradient(prefs)
@@ -136,6 +142,9 @@ fun SettingsScreen(
     var showPeriodDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showBackgroundGradientDialog by remember { mutableStateOf(false) }
+    var showCustomGradientDialog by remember { mutableStateOf(false) }
+    var customDialogStartHex by remember { mutableStateOf(customGradientStartHex) }
+    var customDialogEndHex by remember { mutableStateOf(customGradientEndHex) }
     var showAccentColorsDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -172,7 +181,7 @@ fun SettingsScreen(
 
             SettingsListItem(
                 title = stringResource(R.string.pref_background_gradient_title),
-                summary = findBackgroundGradientOption(selectedBackgroundGradient).label,
+                summary = backgroundGradientLabel(selectedBackgroundGradient, backgroundOptions),
                 onClick = { showBackgroundGradientDialog = true }
             )
 
@@ -280,7 +289,38 @@ fun SettingsScreen(
                 prefs.edit().putString(Preferences.KEY_PREF_BACKGROUND_GRADIENT, it).apply()
                 showBackgroundGradientDialog = false
             },
+            onCustomClick = {
+                val current = backgroundOptions.firstOrNull { it.id == selectedBackgroundGradient }
+                    ?: backgroundOptions.first()
+                customDialogStartHex = colorToHex(current.startColor)
+                customDialogEndHex = colorToHex(current.endColor)
+                showCustomGradientDialog = true
+            },
             onDismiss = { showBackgroundGradientDialog = false }
+        )
+    }
+
+    if (showCustomGradientDialog) {
+        CustomGradientColorPickerDialog(
+            title = stringResource(R.string.pref_background_gradient_custom_title),
+            startColorHex = customDialogStartHex,
+            endColorHex = customDialogEndHex,
+            onSave = { startHex, endHex ->
+                customGradientStartHex = startHex
+                customGradientEndHex = endHex
+                selectedBackgroundGradient = Preferences.BACKGROUND_GRADIENT_CUSTOM
+                prefs.edit()
+                    .putString(Preferences.KEY_PREF_BACKGROUND_GRADIENT_CUSTOM_START, startHex)
+                    .putString(Preferences.KEY_PREF_BACKGROUND_GRADIENT_CUSTOM_END, endHex)
+                    .putString(
+                        Preferences.KEY_PREF_BACKGROUND_GRADIENT,
+                        Preferences.BACKGROUND_GRADIENT_CUSTOM
+                    )
+                    .apply()
+                showCustomGradientDialog = false
+                showBackgroundGradientDialog = false
+            },
+            onDismiss = { showCustomGradientDialog = false }
         )
     }
 

@@ -10,7 +10,17 @@ data class BackgroundGradientOption(
     val endColor: Color
 )
 
-fun backgroundGradientOptions(): List<BackgroundGradientOption> = listOf(
+private val defaultCustomStart = Color(0xFFF5F5F5)
+private val defaultCustomEnd = Color(0xFF2A456F)
+
+fun defaultCustomBackgroundStart(): Color = defaultCustomStart
+
+fun defaultCustomBackgroundEnd(): Color = defaultCustomEnd
+
+fun backgroundGradientOptions(
+    customStartColor: Color = defaultCustomStart,
+    customEndColor: Color = defaultCustomEnd
+): List<BackgroundGradientOption> = listOf(
     BackgroundGradientOption(
         id = Preferences.BACKGROUND_GRADIENT_MIST_BLUE,
         label = "Mist Blue",
@@ -88,10 +98,20 @@ fun backgroundGradientOptions(): List<BackgroundGradientOption> = listOf(
         label = "Crimson Night",
         startColor = Color(0xFFCC2A2A),
         endColor = Color(0xFF2A1013)
+    ),
+    BackgroundGradientOption(
+        id = Preferences.BACKGROUND_GRADIENT_CUSTOM,
+        label = "Custom",
+        startColor = customStartColor,
+        endColor = customEndColor
     )
 )
 
-fun findBackgroundGradientOption(id: String): BackgroundGradientOption {
-    return backgroundGradientOptions().firstOrNull { it.id == id }
-        ?: backgroundGradientOptions().first()
+fun findBackgroundGradientOption(
+    id: String,
+    customStartColor: Color = defaultCustomStart,
+    customEndColor: Color = defaultCustomEnd
+): BackgroundGradientOption {
+    val options = backgroundGradientOptions(customStartColor, customEndColor)
+    return options.firstOrNull { it.id == id } ?: options.first()
 }

@@ -3,7 +3,6 @@ package com.redcoracle.episodes.navigation
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,10 +37,7 @@ fun AppNavGraph() {
     NavHost(
         navController = navController,
         startDestination = AppDestination.Main.route,
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-        ,
+        modifier = Modifier.fillMaxSize(),
         enterTransition = {
             fadeIn(animationSpec = tween(durationMillis = 200))
         },

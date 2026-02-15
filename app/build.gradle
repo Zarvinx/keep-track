@@ -116,6 +116,7 @@ dependencies {
     
     // Coil for image loading in Compose (modern alternative to Glide)
     implementation 'io.coil-kt:coil-compose:2.5.0'
+    implementation 'com.github.skydoves:colorpicker-compose:1.0.7'
     
     // Coroutines
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'

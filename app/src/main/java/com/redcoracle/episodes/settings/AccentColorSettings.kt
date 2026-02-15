@@ -40,15 +40,15 @@ fun buildAccentColorOptions(
     stringResolver: (Int) -> String
 ): List<AccentColorOption> {
     val accentColorHexes = listOf(
-        "#de6f14",
-        "#dec314",
-        "#97de14",
-        "#0e8216",
-        "#14dea1",
-        "#1486de",
-        "#2b1aad",
-        "#861aad",
-        "#ad1a1a"
+        "Ember" to "#de6f14",
+        "Gold" to "#dec314",
+        "Lime" to "#97de14",
+        "Forest" to "#0e8216",
+        "Aqua" to "#14dea1",
+        "Azure" to "#1486de",
+        "Indigo" to "#2b1aad",
+        "Violet" to "#861aad",
+        "Crimson" to "#ad1a1a"
     )
 
     return buildList {
@@ -66,11 +66,11 @@ fun buildAccentColorOptions(
                 label = stringResolver(R.string.pref_accent_colors_app)
             )
         )
-        accentColorHexes.forEach { hex ->
+        accentColorHexes.forEach { (name, hex) ->
             add(
                 AccentColorOption(
                     value = Preferences.ACCENT_COLORS_CUSTOM_PREFIX + hex,
-                    label = hex.uppercase(),
+                    label = name,
                     color = Color(AndroidColor.parseColor(hex))
                 )
             )

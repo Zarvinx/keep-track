@@ -18,7 +18,6 @@
  
 package com.redcoracle.episodes.ui
 
-import android.content.SharedPreferences
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,7 +33,6 @@ import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -43,23 +41,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.preference.PreferenceManager
 import coil.compose.AsyncImage
-import com.redcoracle.episodes.Preferences
 import com.redcoracle.episodes.R
 import com.redcoracle.episodes.ui.theme.AppShadows
-import com.redcoracle.episodes.ui.theme.BackgroundGradientOption
-import com.redcoracle.episodes.ui.theme.findBackgroundGradientOption
 
 import java.util.concurrent.TimeUnit
 
@@ -80,18 +72,8 @@ fun ShowsListScreen(
         previousShowCount = shows.size
     }
     
-    val selectedGradient = rememberSelectedBackgroundGradient()
-
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.linearGradient(
-                    colors = listOf(selectedGradient.startColor, selectedGradient.endColor),
-                    start = androidx.compose.ui.geometry.Offset(0f, 0f),
-                    end = androidx.compose.ui.geometry.Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
-                )
-            )
+        modifier = Modifier.fillMaxSize()
     ) {
         if (shows.isEmpty()) {
             Box(
@@ -125,37 +107,6 @@ fun ShowsListScreen(
             }
         }
     }
-}
-
-@Composable
-private fun rememberSelectedBackgroundGradient(): BackgroundGradientOption {
-    val context = LocalContext.current
-    val prefs = remember(context) { PreferenceManager.getDefaultSharedPreferences(context) }
-    var selectedId by remember {
-        mutableStateOf(
-            prefs.getString(
-                Preferences.KEY_PREF_BACKGROUND_GRADIENT,
-                Preferences.BACKGROUND_GRADIENT_MIST_BLUE
-            ) ?: Preferences.BACKGROUND_GRADIENT_MIST_BLUE
-        )
-    }
-
-    DisposableEffect(prefs) {
-        val listener = SharedPreferences.OnSharedPreferenceChangeListener { sharedPrefs, key ->
-            if (key == Preferences.KEY_PREF_BACKGROUND_GRADIENT) {
-                selectedId = sharedPrefs.getString(
-                    Preferences.KEY_PREF_BACKGROUND_GRADIENT,
-                    Preferences.BACKGROUND_GRADIENT_MIST_BLUE
-                ) ?: Preferences.BACKGROUND_GRADIENT_MIST_BLUE
-            }
-        }
-        prefs.registerOnSharedPreferenceChangeListener(listener)
-        onDispose {
-            prefs.unregisterOnSharedPreferenceChangeListener(listener)
-        }
-    }
-
-    return findBackgroundGradientOption(selectedId)
 }
 
 @Composable

@@ -18,12 +18,14 @@
 
 package com.redcoracle.episodes
 
+import android.content.SharedPreferences
 import android.content.Context
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -38,7 +40,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -46,6 +50,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -56,7 +62,11 @@ import com.redcoracle.episodes.services.AsyncTask
 import com.redcoracle.episodes.services.RefreshAllShowsTask
 import com.redcoracle.episodes.ui.ShowsListScreen
 import com.redcoracle.episodes.ui.ShowsViewModel
+import com.redcoracle.episodes.ui.theme.BackgroundGradientOption
 import com.redcoracle.episodes.ui.theme.EpisodesTheme
+import com.redcoracle.episodes.ui.theme.defaultCustomBackgroundEnd
+import com.redcoracle.episodes.ui.theme.defaultCustomBackgroundStart
+import com.redcoracle.episodes.ui.theme.findBackgroundGradientOption
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -117,6 +127,7 @@ fun MainScreen(
     val scope = rememberCoroutineScope()
     val state = rememberMainScreenState(viewModel)
     val currentFilter by viewModel.currentFilter.collectAsState()
+    val selectedGradient = rememberSelectedBackgroundGradient()
     val drawerState = androidx.compose.material3.rememberDrawerState(
         initialValue = androidx.compose.material3.DrawerValue.Closed
     )
@@ -257,30 +268,124 @@ fun MainScreen(
             }
         }
     ) {
-        androidx.compose.material3.Scaffold(
-            topBar = {
-                MainTopBar(
-                    state = state,
-                    focusRequester = focusRequester,
-                    keyboardController = keyboardController,
-                    onAddShow = onAddShow,
-                    onOpenFiltersDrawer = {
-                        scope.launch { drawerState.open() }
-                    }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(selectedGradient.startColor, selectedGradient.endColor),
+                        start = androidx.compose.ui.geometry.Offset(0f, 0f),
+                        end = androidx.compose.ui.geometry.Offset(
+                            Float.POSITIVE_INFINITY,
+                            Float.POSITIVE_INFINITY
+                        )
+                    )
                 )
-            }
-        ) { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                ShowsListScreen(
-                    viewModel = viewModel,
-                    onShowClick = onShowSelected
-                )
+        ) {
+            androidx.compose.material3.Scaffold(
+                containerColor = Color.Transparent,
+                topBar = {
+                    MainTopBar(
+                        state = state,
+                        focusRequester = focusRequester,
+                        keyboardController = keyboardController,
+                        onAddShow = onAddShow,
+                        onOpenFiltersDrawer = {
+                            scope.launch { drawerState.open() }
+                        }
+                    )
+                }
+            ) { paddingValues ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
+                    ShowsListScreen(
+                        viewModel = viewModel,
+                        onShowClick = onShowSelected
+                    )
+                }
             }
         }
     }
 
+}
+
+@Composable
+private fun rememberSelectedBackgroundGradient(): BackgroundGradientOption {
+    val context = LocalContext.current
+    val prefs = remember(context) { PreferenceManager.getDefaultSharedPreferences(context) }
+    var selectedId by remember {
+        mutableStateOf(
+            prefs.getString(
+                Preferences.KEY_PREF_BACKGROUND_GRADIENT,
+                Preferences.BACKGROUND_GRADIENT_MIST_BLUE
+            ) ?: Preferences.BACKGROUND_GRADIENT_MIST_BLUE
+        )
+    }
+    var customStartHex by remember {
+        mutableStateOf(
+            prefs.getString(
+                Preferences.KEY_PREF_BACKGROUND_GRADIENT_CUSTOM_START,
+                "#F5F5F5"
+            ) ?: "#F5F5F5"
+        )
+    }
+    var customEndHex by remember {
+        mutableStateOf(
+            prefs.getString(
+                Preferences.KEY_PREF_BACKGROUND_GRADIENT_CUSTOM_END,
+                "#2A456F"
+            ) ?: "#2A456F"
+        )
+    }
+
+    DisposableEffect(prefs) {
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { sharedPrefs, key ->
+            when (key) {
+                Preferences.KEY_PREF_BACKGROUND_GRADIENT -> {
+                    selectedId = sharedPrefs.getString(
+                        Preferences.KEY_PREF_BACKGROUND_GRADIENT,
+                        Preferences.BACKGROUND_GRADIENT_MIST_BLUE
+                    ) ?: Preferences.BACKGROUND_GRADIENT_MIST_BLUE
+                }
+                Preferences.KEY_PREF_BACKGROUND_GRADIENT_CUSTOM_START -> {
+                    customStartHex = sharedPrefs.getString(
+                        Preferences.KEY_PREF_BACKGROUND_GRADIENT_CUSTOM_START,
+                        customStartHex
+                    ) ?: customStartHex
+                }
+                Preferences.KEY_PREF_BACKGROUND_GRADIENT_CUSTOM_END -> {
+                    customEndHex = sharedPrefs.getString(
+                        Preferences.KEY_PREF_BACKGROUND_GRADIENT_CUSTOM_END,
+                        customEndHex
+                    ) ?: customEndHex
+                }
+            }
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        onDispose {
+            prefs.unregisterOnSharedPreferenceChangeListener(listener)
+        }
+    }
+
+    val customStart = parseColorHexOrDefault(customStartHex, defaultCustomBackgroundStart())
+    val customEnd = parseColorHexOrDefault(customEndHex, defaultCustomBackgroundEnd())
+    return findBackgroundGradientOption(selectedId, customStart, customEnd)
+}
+
+private fun parseColorHexOrDefault(hex: String, defaultColor: Color): Color {
+    val normalized = hex.removePrefix("#")
+    if (normalized.length != 6) return defaultColor
+    return try {
+        val intValue = normalized.toLong(16).toInt()
+        Color(
+            red = ((intValue shr 16) and 0xFF) / 255f,
+            green = ((intValue shr 8) and 0xFF) / 255f,
+            blue = (intValue and 0xFF) / 255f
+        )
+    } catch (_: NumberFormatException) {
+        defaultColor
+    }
 }
