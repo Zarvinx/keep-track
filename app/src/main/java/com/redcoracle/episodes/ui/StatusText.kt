@@ -25,7 +25,8 @@ private data class ShowStatusMessage(
 @Composable
 fun StatusText(
     status: String?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    textColor: Color = Color(0xFFAAAAAA)
 ) {
     val statusMessage = getShowStatusMessage(status)
 
@@ -44,7 +45,7 @@ fun StatusText(
         }
         Text(
             text = statusMessage.text,
-            color = Color(0xFFAAAAAA),
+            color = textColor,
             fontSize = 14.sp,
             style = MaterialTheme.typography.bodyMedium
         )

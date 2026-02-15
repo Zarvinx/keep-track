@@ -78,7 +78,6 @@ These can stay in Java for now, but should eventually be converted:
 
 ### Documentation
 - [ ] Add KDoc comments to public APIs
-- [ ] Document migration decisions
 - [ ] Create architecture documentation
 
 ## Feature Improvements
@@ -92,11 +91,9 @@ These can stay in Java for now, but should eventually be converted:
   - Position above the progress bar in show list items
 - [ ] Add Material You dynamic colors support
 - [ ] Improve error messages and user feedback
-- [ ] Add loading skeletons instead of just spinners
-- [ ] Add pull-to-refresh in lists
 
 ### Functionality
-- [ ] Add search within show list
+- [x] Add search within show list
 - [ ] Add sorting options (by name, date added, watch progress)
 - [ ] Export/Import improvements (JSON format option)
 

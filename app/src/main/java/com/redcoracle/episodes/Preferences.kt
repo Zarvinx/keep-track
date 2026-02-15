@@ -22,6 +22,15 @@ import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
 
 object Preferences {
+    const val KEY_PREF_THEME_MODE = "pref_theme_mode"
+    const val KEY_PREF_ACCENT_COLORS_MODE = "pref_accent_colors_mode"
+    const val KEY_PREF_DYNAMIC_COLORS = "pref_dynamic_colors_enabled"
+    const val THEME_MODE_SYSTEM = "system"
+    const val THEME_MODE_LIGHT = "light"
+    const val THEME_MODE_DARK = "dark"
+    const val ACCENT_COLORS_APP = "app"
+    const val ACCENT_COLORS_DYNAMIC = "dynamic"
+
     fun getSharedPreferences(): SharedPreferences? {
         val context = MainActivity.getAppContext()
         return context?.let { PreferenceManager.getDefaultSharedPreferences(it) }

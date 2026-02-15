@@ -18,6 +18,7 @@
 
 package com.redcoracle.episodes
 
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import androidx.compose.foundation.clickable
@@ -97,9 +98,37 @@ fun SettingsScreen(
     var autoRefreshEnabled by remember { mutableStateOf(prefs.getBoolean("pref_auto_refresh_enabled", false)) }
     var autoRefreshPeriod by remember { mutableStateOf(prefs.getString("pref_auto_refresh_period", "168") ?: "168") }
     var autoRefreshWifiOnly by remember { mutableStateOf(prefs.getBoolean("pref_auto_refresh_wifi_only", true)) }
+    var selectedThemeMode by remember {
+        mutableStateOf(
+            prefs.getString(Preferences.KEY_PREF_THEME_MODE, Preferences.THEME_MODE_SYSTEM)
+                ?: Preferences.THEME_MODE_SYSTEM
+        )
+    }
+    val dynamicColorsSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    var selectedAccentColorsMode by remember {
+        mutableStateOf(
+            readInitialAccentColorsMode(prefs, dynamicColorsSupported)
+        )
+    }
+
+    val themeOptions = listOf(
+        stringResource(R.string.pref_theme_system) to Preferences.THEME_MODE_SYSTEM,
+        stringResource(R.string.pref_theme_light) to Preferences.THEME_MODE_LIGHT,
+        stringResource(R.string.pref_theme_dark) to Preferences.THEME_MODE_DARK
+    )
+    val accentColorOptions = if (dynamicColorsSupported) {
+        listOf(
+            stringResource(R.string.pref_accent_colors_dynamic) to Preferences.ACCENT_COLORS_DYNAMIC,
+            stringResource(R.string.pref_accent_colors_app) to Preferences.ACCENT_COLORS_APP
+        )
+    } else {
+        listOf(stringResource(R.string.pref_accent_colors_app) to Preferences.ACCENT_COLORS_APP)
+    }
 
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showPeriodDialog by remember { mutableStateOf(false) }
+    var showThemeDialog by remember { mutableStateOf(false) }
+    var showAccentColorsDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -125,6 +154,22 @@ fun SettingsScreen(
                 title = stringResource(R.string.pref_language_title),
                 summary = selectedLanguage.labelFor(languageEntries, languageValues),
                 onClick = { showLanguageDialog = true }
+            )
+
+            SettingsListItem(
+                title = stringResource(R.string.pref_theme_title),
+                summary = selectedThemeMode.labelFor(themeOptions),
+                onClick = { showThemeDialog = true }
+            )
+
+            SettingsListItem(
+                title = stringResource(R.string.pref_accent_colors_title),
+                summary = if (dynamicColorsSupported) {
+                    selectedAccentColorsMode.labelFor(accentColorOptions)
+                } else {
+                    stringResource(R.string.pref_accent_colors_unavailable_summary)
+                },
+                onClick = { showAccentColorsDialog = true }
             )
 
             Divider(modifier = Modifier.padding(vertical = 8.dp))
@@ -201,6 +246,38 @@ fun SettingsScreen(
             onDismiss = { showPeriodDialog = false }
         )
     }
+
+    if (showThemeDialog) {
+        SelectionDialog(
+            title = stringResource(R.string.pref_theme_title),
+            options = themeOptions,
+            selectedValue = selectedThemeMode,
+            onSelect = {
+                selectedThemeMode = it
+                prefs.edit().putString(Preferences.KEY_PREF_THEME_MODE, it).apply()
+            },
+            onDismiss = { showThemeDialog = false }
+        )
+    }
+
+    if (showAccentColorsDialog) {
+        SelectionDialog(
+            title = stringResource(R.string.pref_accent_colors_title),
+            options = accentColorOptions,
+            selectedValue = selectedAccentColorsMode,
+            onSelect = {
+                selectedAccentColorsMode = it
+                prefs.edit()
+                    .putString(Preferences.KEY_PREF_ACCENT_COLORS_MODE, it)
+                    .putBoolean(
+                        Preferences.KEY_PREF_DYNAMIC_COLORS,
+                        it == Preferences.ACCENT_COLORS_DYNAMIC
+                    )
+                    .apply()
+            },
+            onDismiss = { showAccentColorsDialog = false }
+        )
+    }
 }
 
 @Composable
@@ -246,6 +323,31 @@ fun SelectionDialog(
 private fun String.labelFor(entries: Array<String>, values: Array<String>): String {
     val index = values.indexOf(this)
     return if (index in entries.indices) entries[index] else entries.firstOrNull() ?: this
+}
+
+private fun String.labelFor(options: List<Pair<String, String>>): String {
+    return options.firstOrNull { it.second == this }?.first ?: this
+}
+
+private fun readInitialAccentColorsMode(
+    prefs: android.content.SharedPreferences,
+    dynamicColorsSupported: Boolean
+): String {
+    val mode = if (prefs.contains(Preferences.KEY_PREF_ACCENT_COLORS_MODE)) {
+        prefs.getString(
+            Preferences.KEY_PREF_ACCENT_COLORS_MODE,
+            Preferences.ACCENT_COLORS_DYNAMIC
+        ) ?: Preferences.ACCENT_COLORS_DYNAMIC
+    } else {
+        val legacyDynamicEnabled = prefs.getBoolean(Preferences.KEY_PREF_DYNAMIC_COLORS, true)
+        if (legacyDynamicEnabled) Preferences.ACCENT_COLORS_DYNAMIC else Preferences.ACCENT_COLORS_APP
+    }
+
+    return if (!dynamicColorsSupported && mode == Preferences.ACCENT_COLORS_DYNAMIC) {
+        Preferences.ACCENT_COLORS_APP
+    } else {
+        mode
+    }
 }
 
 @Composable

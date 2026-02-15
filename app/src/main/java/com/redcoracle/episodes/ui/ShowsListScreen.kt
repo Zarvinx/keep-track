@@ -43,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -72,16 +73,25 @@ fun ShowsListScreen(
         previousShowCount = shows.size
     }
     
+    val isLightTheme = MaterialTheme.colorScheme.background.luminance() > 0.5f
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 brush = Brush.linearGradient(
-                    colors = listOf(
-                        Color(0xFF1A1A1A), // Very dark grey (top-left)
-                        Color(0xFF2D1B4E), // Deep purple (middle)
-                        Color(0xFF2A456F)  // Medium blue (bottom-right)
-                    ),
+                    colors = if (isLightTheme) {
+                        listOf(
+                            Color(0xFFF1F1F1),
+                            Color(0xFF2A456F)
+                        )
+                    } else {
+                        listOf(
+                            Color(0xFF1A1A1A),
+                            Color(0xFF2D1B4E),
+                            Color(0xFF2A456F)
+                        )
+                    },
                     start = androidx.compose.ui.geometry.Offset(0f, 0f),
                     end = androidx.compose.ui.geometry.Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
                 )
@@ -129,6 +139,10 @@ fun ShowListItem(
     onArchiveClick: (Int) -> Unit,
     onWatchNextClick: (Int) -> Unit
 ) {
+    val isLightTheme = MaterialTheme.colorScheme.background.luminance() > 0.5f
+    val episodeBarBackgroundColor = if (isLightTheme) Color(0xFFE6E6E6) else Color(0xFF2A2A2A)
+    val episodeBarTextColor = if (isLightTheme) Color(0xFF1E1E1E) else Color(0xFFF5F5F5)
+
     val imageUrl = remember(show.bannerPath) {
         show.bannerPath?.takeIf { it.isNotEmpty() }?.let { "https://image.tmdb.org/t/p/w500/$it" }
     }
@@ -288,7 +302,7 @@ fun ShowListItem(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp)
-                        .background(Color(0xFF2A2A2A))
+                        .background(episodeBarBackgroundColor)
                         .padding(horizontal = 12.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
@@ -299,7 +313,7 @@ fun ShowListItem(
                     ) {
                         Text(
                             text = episodeCode,
-                            color = Color(0xFFF5F5F5),
+                            color = episodeBarTextColor,
                             fontSize = 16.sp,
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
@@ -309,7 +323,7 @@ fun ShowListItem(
                         MarqueeText(
                             text = show.nextEpisodeName,
                             modifier = Modifier.weight(1f),
-                            color = Color(0xFFF5F5F5),
+                            color = episodeBarTextColor,
                             fontSize = 16.sp,
                             style = MaterialTheme.typography.bodyMedium,
                             maxLines = 1
@@ -339,11 +353,14 @@ fun ShowListItem(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp)
-                        .background(Color(0xFF2A2A2A))
+                        .background(episodeBarBackgroundColor)
                         .padding(horizontal = 12.dp, vertical = 8.dp),
                     contentAlignment = Alignment.CenterStart
                 ) {
-                    StatusText(status = show.status)
+                    StatusText(
+                        status = show.status,
+                        textColor = episodeBarTextColor
+                    )
                 }
             }
         }

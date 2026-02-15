@@ -29,6 +29,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -100,6 +104,18 @@ fun SeasonListItem(
             // Progress bar
             if (season.airedCount > 0) {
                 val progress = season.watchedCount.toFloat() / season.airedCount.toFloat()
+                val countTextColor = if (season.watchedCount == 0) {
+                    Color(0xFF1A1A1A)
+                } else if (MaterialTheme.colorScheme.primary.luminance() < 0.5f) {
+                    Color(0xFFF2F2F2)
+                } else {
+                    Color(0xFF1A1A1A)
+                }
+                val countTextShadowColor = if (countTextColor.luminance() > 0.5f) {
+                    Color.Black.copy(alpha = 0.75f)
+                } else {
+                    Color.White.copy(alpha = 0.45f)
+                }
                 
                 Box(
                     modifier = Modifier.fillMaxWidth()
@@ -124,13 +140,13 @@ fun SeasonListItem(
                     Text(
                         text = countText,
                         style = MaterialTheme.typography.bodySmall.copy(
-                            shadow = androidx.compose.ui.graphics.Shadow(
-                                color = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.75f),
-                                offset = androidx.compose.ui.geometry.Offset(1f, 1f),
+                            shadow = Shadow(
+                                color = countTextShadowColor,
+                                offset = Offset(1f, 1f),
                                 blurRadius = 3f
                             )
                         ),
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = countTextColor,
                         modifier = Modifier
                             .align(Alignment.CenterStart)
                             .padding(start = 4.dp)
