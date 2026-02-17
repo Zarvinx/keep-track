@@ -18,7 +18,6 @@
 
 package com.zarvinx.keep_track
 
-import android.content.ContentResolver
 import android.util.Log
 import com.zarvinx.keep_track.db.room.AppDatabase
 import com.zarvinx.keep_track.db.room.RefreshShowWriter
@@ -34,14 +33,12 @@ object RefreshShowUtil {
      * Refreshes one show from remote metadata and writes results locally.
      *
      * @param showId Local show id.
-     * @param contentResolver Resolver used for provider change notifications.
      * @param logFailures Whether caught exceptions should include error logs.
      * @return true when refresh data was fetched and written; false otherwise.
      */
     @JvmStatic
     fun refreshShow(
         showId: Int,
-        contentResolver: ContentResolver,
         logFailures: Boolean = true
     ): Boolean {
         return try {
@@ -66,8 +63,7 @@ object RefreshShowUtil {
             }
 
             val writer = RefreshShowWriter(
-                context = KeepTrackApplication.instance.applicationContext,
-                contentResolver = contentResolver
+                context = KeepTrackApplication.instance.applicationContext
             )
             writer.refreshShow(
                 showId = showId,

@@ -52,11 +52,5 @@
         android:name=".AutoBackupHelper$Receiver"
         android:exported="false" />
 
-    <provider
-        android:name=".db.ShowsProvider"
-        android:authorities="${applicationId}.db.ShowsProvider"
-        android:exported="false" >
-    </provider>
-
   </application>
 </manifest>

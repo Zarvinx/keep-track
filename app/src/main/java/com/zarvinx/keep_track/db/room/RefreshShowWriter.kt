@@ -1,8 +1,6 @@
 package com.zarvinx.keep_track.db.room
 
 import android.content.Context
-import android.content.ContentResolver
-import com.zarvinx.keep_track.db.ShowsProvider
 import com.zarvinx.keep_track.tvdb.Episode
 import com.zarvinx.keep_track.tvdb.Show
 import org.apache.commons.collections4.map.MultiKeyMap
@@ -10,12 +8,10 @@ import org.apache.commons.collections4.map.MultiKeyMap
 /**
  * Applies TMDB refresh results to local show and episode rows.
  *
- * Writes are performed in a single Room transaction, then content observers are
- * notified so UI queries and provider clients refresh.
+ * Writes are performed in a single Room transaction.
  */
 class RefreshShowWriter(
-    context: Context,
-    private val contentResolver: ContentResolver
+    context: Context
 ) {
     private val roomDb: AppDatabase = AppDatabase.getInstance(context.applicationContext)
     private val refreshDao: RefreshShowRoomDao = roomDb.refreshShowDao()
@@ -29,8 +25,6 @@ class RefreshShowWriter(
         episodes: MutableList<Episode>
     ) {
         refreshWithRoom(showId, show, episodes)
-        contentResolver.notifyChange(ShowsProvider.CONTENT_URI_SHOWS, null)
-        contentResolver.notifyChange(ShowsProvider.CONTENT_URI_EPISODES, null)
     }
 
     private fun refreshWithRoom(showId: Int, show: Show, episodes: MutableList<Episode>) {
@@ -91,8 +85,8 @@ class RefreshShowWriter(
                     refreshDao.updateEpisode(
                         episodeId = row.id,
                         showId = showId,
-                        tvdbId = matched.tvdbId.takeIf { it > 0 },
-                        tmdbId = matched.tmdbId.takeIf { it > 0 },
+                        tvdbId = matched.tvdbId?.takeIf { it > 0 },
+                        tmdbId = matched.tmdbId?.takeIf { it > 0 },
                         imdbId = matched.imdbId,
                         name = matched.name,
                         language = matched.language,
@@ -108,8 +102,8 @@ class RefreshShowWriter(
             episodes.forEach { episode ->
                 refreshDao.insertEpisode(
                     showId = showId,
-                    tvdbId = episode.tvdbId.takeIf { it > 0 },
-                    tmdbId = episode.tmdbId.takeIf { it > 0 },
+                    tvdbId = episode.tvdbId?.takeIf { it > 0 },
+                    tmdbId = episode.tmdbId?.takeIf { it > 0 },
                     imdbId = episode.imdbId,
                     name = episode.name,
                     language = episode.language,

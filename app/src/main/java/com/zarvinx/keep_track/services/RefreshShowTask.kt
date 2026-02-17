@@ -1,7 +1,5 @@
 package com.zarvinx.keep_track.services
 
-import android.content.Context
-import com.zarvinx.keep_track.KeepTrackApplication
 import com.zarvinx.keep_track.RefreshShowUtil
 import java.util.concurrent.Callable
 
@@ -11,13 +9,11 @@ import java.util.concurrent.Callable
  * Throws when refresh fails so callers using [AsyncTask] can surface a UI error.
  */
 class RefreshShowTask(private val showId: Int) : Callable<Void?> {
-    private val context: Context = KeepTrackApplication.instance.applicationContext
-
     /**
      * Performs the refresh and signals failure via exception.
      */
     override fun call(): Void? {
-        val refreshed = RefreshShowUtil.refreshShow(showId, context.contentResolver)
+        val refreshed = RefreshShowUtil.refreshShow(showId)
         if (!refreshed) {
             throw IllegalStateException("Refresh failed for showId=$showId")
         }

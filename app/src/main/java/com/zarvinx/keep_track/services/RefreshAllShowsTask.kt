@@ -1,6 +1,5 @@
 package com.zarvinx.keep_track.services
 
-import android.content.ContentResolver
 import android.content.Context
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -22,7 +21,6 @@ class RefreshAllShowsTask : Callable<Void?> {
      */
     override fun call(): Void? {
         val context: Context = KeepTrackApplication.instance.applicationContext
-        val resolver: ContentResolver = context.contentResolver
         val shows = AppDatabase.getInstance(context).appReadDao().getAllShowsForRefresh()
         val total = shows.size
 
@@ -52,7 +50,7 @@ class RefreshAllShowsTask : Callable<Void?> {
             notificationBuilder.setContentText(showName)
             notificationBuilder.setProgress(total, current, false)
             notificationManager.notify(0, notificationBuilder.build())
-            val refreshed = refreshShow(showId, resolver, logFailures = false)
+            val refreshed = refreshShow(showId, logFailures = false)
             if (refreshed) {
                 successCount += 1
             }

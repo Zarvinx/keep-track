@@ -8,7 +8,6 @@ import com.bumptech.glide.Glide
 import com.zarvinx.keep_track.KeepTrackApplication
 import com.zarvinx.keep_track.R
 import com.zarvinx.keep_track.db.DatabaseOpenHelper
-import com.zarvinx.keep_track.db.ShowsProvider
 import com.zarvinx.keep_track.db.room.AppDatabase
 import java.io.File
 import java.io.FileNotFoundException
@@ -66,7 +65,6 @@ class RestoreTask(private val filename: String) : Callable<Void?> {
         } finally {
             // Ensure stale Room handles are cleared after replacement.
             AppDatabase.closeInstance()
-            ShowsProvider.reloadDatabase(context)
         }
         
         return null

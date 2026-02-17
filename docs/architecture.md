@@ -26,7 +26,6 @@ flowchart LR
     UI["Compose UI + ViewModels"] --> NAV["Navigation (AppNavGraph/AppDestination)"]
     UI --> WR["Writers/Tasks"]
     WR --> DB["Room (AppDatabase + DAOs)"]
-    DB --> CP["ContentResolver notifications"]
     WR --> TMDB["TMDB Client"]
     SCH["AlarmManager + Receivers"] --> WR
 ```
@@ -49,7 +48,7 @@ Primary read path:
 Primary write path:
 1. User action invokes a writer (`EpisodeWatchStateWriter`, `ShowMutationsWriter`, `ShowLibraryWriter`) or a background task.
 2. Writer/task updates Room in a transaction where needed.
-3. Writers notify `ShowsProvider` URIs so observers requery.
+3. Room invalidation updates subscribed `Flow` queries.
 4. ViewModel flows emit updated rows and UI re-renders.
 
 ## Background Work Model
@@ -130,4 +129,4 @@ sequenceDiagram
 - `AutoRefreshHelper.Service` and `RefreshShowService` still rely on deprecated `IntentService`.
 - Connectivity checks in `AutoRefreshHelper` use deprecated network APIs.
 - Some utility method names are legacy snake_case (`FileUtilities`) and could be normalized in a future refactor.
-- Room currently wraps a legacy schema and still depends on ContentResolver notifications for observer compatibility.
+- Room currently wraps a legacy schema, and `ShowsProvider` remains in the app for legacy compatibility paths.

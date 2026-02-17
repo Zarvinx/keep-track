@@ -1,20 +1,17 @@
 package com.zarvinx.keep_track.db.room
 
-import android.content.ContentResolver
 import android.content.Context
-import com.zarvinx.keep_track.db.ShowsProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Encapsulates show-level mutation writes (star/archive/delete) plus change notifications.
+ * Encapsulates show-level mutation writes (star/archive/delete).
  */
 @Singleton
 class ShowMutationsWriter @Inject constructor(
     @ApplicationContext context: Context
 ) {
-    private val contentResolver: ContentResolver = context.applicationContext.contentResolver
     private val roomDb: AppDatabase = AppDatabase.getInstance(context.applicationContext)
     private val dao: ShowMutationsDao = roomDb.showMutationsDao()
 
@@ -23,7 +20,6 @@ class ShowMutationsWriter @Inject constructor(
      */
     fun setStarred(showId: Int, starred: Boolean) {
         dao.updateStarred(showId, if (starred) 1 else 0)
-        notifyShowsChanged()
     }
 
     /**
@@ -31,7 +27,6 @@ class ShowMutationsWriter @Inject constructor(
      */
     fun setArchived(showId: Int, archived: Boolean) {
         dao.updateArchived(showId, if (archived) 1 else 0)
-        notifyShowsChanged()
     }
 
     /**
@@ -45,16 +40,6 @@ class ShowMutationsWriter @Inject constructor(
             dao.deleteShowById(showId)
             episodes
         }
-        notifyShowsAndEpisodesChanged()
         return deletedEpisodesAndShow
-    }
-
-    private fun notifyShowsChanged() {
-        contentResolver.notifyChange(ShowsProvider.CONTENT_URI_SHOWS, null)
-    }
-
-    private fun notifyShowsAndEpisodesChanged() {
-        contentResolver.notifyChange(ShowsProvider.CONTENT_URI_SHOWS, null)
-        contentResolver.notifyChange(ShowsProvider.CONTENT_URI_EPISODES, null)
     }
 }

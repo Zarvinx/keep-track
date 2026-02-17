@@ -1,18 +1,14 @@
 package com.zarvinx.keep_track.db.room
 
-import android.content.ContentResolver
 import android.content.Context
-import com.zarvinx.keep_track.db.ShowsProvider
 import com.zarvinx.keep_track.tvdb.Show
 
 /**
  * Writes new shows into the local library using Room transactional inserts.
  *
- * This writer is responsible for duplicate detection and emitting provider
- * change notifications after successful writes.
+ * This writer is responsible for duplicate detection and transactional inserts.
  */
 class ShowLibraryWriter(context: Context) {
-    private val contentResolver: ContentResolver = context.applicationContext.contentResolver
     private val roomDb: AppDatabase = AppDatabase.getInstance(context.applicationContext)
     private val addShowDao: AddShowRoomDao = roomDb.addShowDao()
 
@@ -33,12 +29,7 @@ class ShowLibraryWriter(context: Context) {
      * @return true if a new show row was inserted; false if skipped.
      */
     fun addShowIfMissing(show: Show): Boolean {
-        val added = addShowWithRoom(show)
-        if (added) {
-            contentResolver.notifyChange(ShowsProvider.CONTENT_URI_SHOWS, null)
-            contentResolver.notifyChange(ShowsProvider.CONTENT_URI_EPISODES, null)
-        }
-        return added
+        return addShowWithRoom(show)
     }
 
     private fun addShowWithRoom(show: Show): Boolean {

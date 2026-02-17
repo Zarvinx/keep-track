@@ -34,6 +34,6 @@ class RefreshShowService : IntentService(RefreshShowService::class.java.name) {
      */
     override fun onHandleIntent(intent: Intent?) {
         val showId = intent?.getIntExtra("showId", 0) ?: 0
-        RefreshShowUtil.refreshShow(showId, contentResolver)
+        RefreshShowUtil.refreshShow(showId)
     }
 }
