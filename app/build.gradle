@@ -14,7 +14,7 @@ def getCommitId = { ->
 }
 
 android {
-    namespace 'com.redcoracle.keep_track'
+    namespace 'com.zarvinx.keep_track'
     compileSdkVersion 34
     buildFeatures {
         buildConfig true
