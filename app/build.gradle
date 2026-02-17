@@ -14,7 +14,7 @@ def getCommitId = { ->
 }
 
 android {
-    namespace 'com.redcoracle.episodes'
+    namespace 'com.redcoracle.keep_track'
     compileSdkVersion 34
     buildFeatures {
         buildConfig true
@@ -35,7 +35,7 @@ android {
     productFlavors {
         standard {
             dimension "flavor"
-            applicationId = "com.redcoracle.episodes"
+            applicationId = "com.redcoracle.keep_track"
         }
     }
     buildTypes {

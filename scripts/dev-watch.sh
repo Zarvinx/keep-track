@@ -1,5 +1,5 @@
 #!/bin/bash
-# Development watch script for Episodes app
+# Development watch script for Keep Track app
 # Watches for changes and auto-rebuilds/reinstalls
 
 printf "🔍 Starting development watch mode...\n"

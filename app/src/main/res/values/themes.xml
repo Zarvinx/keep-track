@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <style
-      name="Theme.Episodes"
+      name="Theme.KeepTrack"
       parent="@style/Theme.AppCompat.DayNight.DarkActionBar">
     <item name="colorPrimary">@color/primary</item>
     <item name="colorPrimaryDark">@color/primary_dark</item>
@@ -10,8 +10,8 @@
   </style>
 
   <style
-      name="Theme.Episodes.NoActionBar"
-      parent="@style/Theme.Episodes">
+      name="Theme.KeepTrack.NoActionBar"
+      parent="@style/Theme.KeepTrack">
     <item name="windowActionBar">false</item>
     <item name="windowNoTitle">true</item>
   </style>
