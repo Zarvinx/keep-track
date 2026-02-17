@@ -1,30 +1,50 @@
 package com.zarvinx.keep_track.db.room
 
 import androidx.room.Dao
+import androidx.room.ColumnInfo
+import androidx.room.Delete
 import androidx.room.Query
-import androidx.room.SkipQueryVerification
+import androidx.room.Update
+
+data class ShowStarredUpdate(
+    @ColumnInfo(name = "_id")
+    val id: Int,
+    @ColumnInfo(name = "starred")
+    val starred: Int
+)
+
+data class ShowArchivedUpdate(
+    @ColumnInfo(name = "_id")
+    val id: Int,
+    @ColumnInfo(name = "archived")
+    val archived: Int
+)
+
+data class ShowDeleteRef(
+    @ColumnInfo(name = "_id")
+    val id: Int
+)
 
 /**
  * DAO for show mutation statements used by writer classes.
  */
 @Dao
-@SkipQueryVerification
 interface ShowMutationsDao {
     /**
      * Sets the starred flag for one show.
      *
      * @return number of updated rows.
      */
-    @Query("UPDATE shows SET starred = :starred WHERE _id = :showId")
-    fun updateStarred(showId: Int, starred: Int): Int
+    @Update(entity = ShowEntity::class)
+    fun updateStarred(update: ShowStarredUpdate): Int
 
     /**
      * Sets the archived flag for one show.
      *
      * @return number of updated rows.
      */
-    @Query("UPDATE shows SET archived = :archived WHERE _id = :showId")
-    fun updateArchived(showId: Int, archived: Int): Int
+    @Update(entity = ShowEntity::class)
+    fun updateArchived(update: ShowArchivedUpdate): Int
 
     /**
      * Deletes all episodes for a show.
@@ -39,6 +59,6 @@ interface ShowMutationsDao {
      *
      * @return number of deleted show rows.
      */
-    @Query("DELETE FROM shows WHERE _id = :showId")
-    fun deleteShowById(showId: Int): Int
+    @Delete(entity = ShowEntity::class)
+    fun deleteShowById(show: ShowDeleteRef): Int
 }

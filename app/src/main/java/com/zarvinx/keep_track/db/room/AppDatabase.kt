@@ -4,14 +4,11 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
-import com.zarvinx.keep_track.db.DatabaseOpenHelper
 
 @Database(
     entities = [EpisodeEntity::class, ShowEntity::class],
-    version = 11,
-    exportSchema = false
+    version = 14,
+    exportSchema = true
 )
 /**
  * App-wide Room database entrypoint.
@@ -50,13 +47,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun appReadDao(): AppReadDao
 
     companion object {
-        private val MIGRATION_10_11 = object : Migration(10, 11) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                // No physical table change is required. This migration exists to
-                // advance Room's identity hash after registering ShowEntity.
-            }
-        }
-
         @Volatile
         private var instance: AppDatabase? = null
 
@@ -68,9 +58,8 @@ abstract class AppDatabase : RoomDatabase() {
                 instance ?: Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    DatabaseOpenHelper.getDbName(context.applicationContext)
+                    AppDatabaseFile.resolveDbName()
                 )
-                    .addMigrations(MIGRATION_10_11)
                     .build()
                     .also { instance = it }
             }

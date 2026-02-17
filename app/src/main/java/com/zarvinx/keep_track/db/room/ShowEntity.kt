@@ -2,6 +2,7 @@ package com.zarvinx.keep_track.db.room
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /**
@@ -9,7 +10,12 @@ import androidx.room.PrimaryKey
  *
  * Field affinities intentionally mirror existing on-device schema expectations.
  */
-@Entity(tableName = "shows")
+@Entity(
+    tableName = "shows",
+    indices = [
+        Index(value = ["name"])
+    ]
+)
 data class ShowEntity(
     @PrimaryKey
     @ColumnInfo(name = "_id")

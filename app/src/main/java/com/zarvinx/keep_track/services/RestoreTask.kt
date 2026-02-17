@@ -7,8 +7,8 @@ import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
 import com.zarvinx.keep_track.KeepTrackApplication
 import com.zarvinx.keep_track.R
-import com.zarvinx.keep_track.db.DatabaseOpenHelper
 import com.zarvinx.keep_track.db.room.AppDatabase
+import com.zarvinx.keep_track.db.room.AppDatabaseFile
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileInputStream
@@ -30,7 +30,7 @@ class RestoreTask(private val filename: String) : Callable<Void?> {
      */
     override fun call(): Void? {
         val backupFile = File(filename)
-        val databaseFile = context.getDatabasePath(DatabaseOpenHelper.getDbName(context))
+        val databaseFile = AppDatabaseFile.resolveDbPath(context)
         
         try {
             // Close active Room connection before replacing the DB file.

@@ -19,14 +19,14 @@ class ShowMutationsWriter @Inject constructor(
      * Updates the starred flag for one show.
      */
     fun setStarred(showId: Int, starred: Boolean) {
-        dao.updateStarred(showId, if (starred) 1 else 0)
+        dao.updateStarred(ShowStarredUpdate(showId, if (starred) 1 else 0))
     }
 
     /**
      * Updates the archived flag for one show.
      */
     fun setArchived(showId: Int, archived: Boolean) {
-        dao.updateArchived(showId, if (archived) 1 else 0)
+        dao.updateArchived(ShowArchivedUpdate(showId, if (archived) 1 else 0))
     }
 
     /**
@@ -37,7 +37,7 @@ class ShowMutationsWriter @Inject constructor(
     fun deleteShow(showId: Int): Int {
         val deletedEpisodesAndShow = roomDb.runInTransaction<Int> {
             val episodes = dao.deleteEpisodesByShowId(showId)
-            dao.deleteShowById(showId)
+            dao.deleteShowById(ShowDeleteRef(showId))
             episodes
         }
         return deletedEpisodesAndShow

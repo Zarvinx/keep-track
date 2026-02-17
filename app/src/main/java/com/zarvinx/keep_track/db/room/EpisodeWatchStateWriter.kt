@@ -21,7 +21,7 @@ class EpisodeWatchStateWriter @Inject constructor(
      * Sets watched state for a single episode row.
      */
     suspend fun setEpisodeWatched(episodeId: Int, watched: Boolean) {
-        episodesDao.updateEpisodeWatched(episodeId, watched.toDbInt())
+        episodesDao.updateEpisodeWatched(EpisodeWatchedUpdate(episodeId, watched.toDbInt()))
     }
 
     /**

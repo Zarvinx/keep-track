@@ -29,20 +29,7 @@ class RefreshShowWriter(
 
     private fun refreshWithRoom(showId: Int, show: Show, episodes: MutableList<Episode>) {
         roomDb.runInTransaction {
-            refreshDao.updateShow(
-                showId = showId,
-                tvdbId = show.tvdbId.takeIf { it > 0 },
-                tmdbId = show.tmdbId,
-                imdbId = show.imdbId,
-                name = show.name,
-                language = show.language,
-                overview = show.overview,
-                firstAired = show.firstAired?.time?.div(1000),
-                bannerPath = show.bannerPath,
-                fanartPath = show.fanartPath,
-                posterPath = show.posterPath,
-                status = show.status
-            )
+            refreshDao.updateShow(show.toRefreshShowUpdate(showId))
 
             val seasonPairMap = MultiKeyMap<Any, Episode>()
             val seen = HashSet<String>()
@@ -82,36 +69,13 @@ class RefreshShowWriter(
                 if (matched == null) {
                     refreshDao.deleteEpisodeById(row.id)
                 } else {
-                    refreshDao.updateEpisode(
-                        episodeId = row.id,
-                        showId = showId,
-                        tvdbId = matched.tvdbId?.takeIf { it > 0 },
-                        tmdbId = matched.tmdbId?.takeIf { it > 0 },
-                        imdbId = matched.imdbId,
-                        name = matched.name,
-                        language = matched.language,
-                        overview = matched.overview,
-                        episodeNumber = matched.episodeNumber,
-                        seasonNumber = matched.seasonNumber,
-                        firstAired = matched.firstAired?.time?.div(1000)
-                    )
+                    refreshDao.updateEpisode(matched.toRefreshEpisodeUpdate(row.id, showId))
                     episodes.remove(matched)
                 }
             }
 
             episodes.forEach { episode ->
-                refreshDao.insertEpisode(
-                    showId = showId,
-                    tvdbId = episode.tvdbId?.takeIf { it > 0 },
-                    tmdbId = episode.tmdbId?.takeIf { it > 0 },
-                    imdbId = episode.imdbId,
-                    name = episode.name,
-                    language = episode.language,
-                    overview = episode.overview,
-                    episodeNumber = episode.episodeNumber,
-                    seasonNumber = episode.seasonNumber,
-                    firstAired = episode.firstAired?.time?.div(1000)
-                )
+                refreshDao.insertEpisode(episode.toEpisodeInsertEntity(showId))
             }
         }
     }

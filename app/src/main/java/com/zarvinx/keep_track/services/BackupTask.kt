@@ -7,8 +7,8 @@ import androidx.core.content.ContextCompat
 import com.zarvinx.keep_track.KeepTrackApplication
 import com.zarvinx.keep_track.FileUtilities
 import com.zarvinx.keep_track.R
-import com.zarvinx.keep_track.db.DatabaseOpenHelper
 import com.zarvinx.keep_track.db.room.AppDatabase
+import com.zarvinx.keep_track.db.room.AppDatabaseFile
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
@@ -41,7 +41,7 @@ class BackupTask(
         // Ensure Room-flushed pages are in the main DB file before copying.
         AppDatabase.checkpoint(context)
 
-        val databaseFile = context.getDatabasePath(DatabaseOpenHelper.getDbName(context))
+        val databaseFile = AppDatabaseFile.resolveDbPath(context)
         val destinationDirectory = FileUtilities.get_backup_directory(context)
 
         val destinationFile = File(destinationDirectory, destinationFileName)

@@ -20,10 +20,15 @@ package com.zarvinx.keep_track
 
 import android.database.Cursor
 import android.util.SparseIntArray
-import com.zarvinx.keep_track.db.EpisodesTable
 import java.util.*
 
 class EpisodesCounter(private val keyColumn: String) {
+    companion object {
+        private const val COLUMN_SEASON_NUMBER = "season_number"
+        private const val COLUMN_FIRST_AIRED = "first_aired"
+        private const val COLUMN_WATCHED = "watched"
+    }
+
     private val keys: MutableSet<Int>
     private val numAiredEpisodesMap = SparseIntArray()
     private val numWatchedEpisodesMap = SparseIntArray()
@@ -48,17 +53,17 @@ class EpisodesCounter(private val keyColumn: String) {
             val key = episodesCursor.getInt(keyColumnIndex)
 
             // Check if episode is aired, watched, or upcoming
-            val seasonNumberColumnIndex = episodesCursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_SEASON_NUMBER)
+            val seasonNumberColumnIndex = episodesCursor.getColumnIndexOrThrow(COLUMN_SEASON_NUMBER)
             val seasonNumber = episodesCursor.getInt(seasonNumberColumnIndex)
 
-            val firstAiredColumnIndex = episodesCursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_FIRST_AIRED)
+            val firstAiredColumnIndex = episodesCursor.getColumnIndexOrThrow(COLUMN_FIRST_AIRED)
             val firstAired = if (!episodesCursor.isNull(firstAiredColumnIndex)) {
                 Date(episodesCursor.getLong(firstAiredColumnIndex) * 1000)
             } else {
                 null
             }
 
-            val watchedColumnIndex = episodesCursor.getColumnIndexOrThrow(EpisodesTable.COLUMN_WATCHED)
+            val watchedColumnIndex = episodesCursor.getColumnIndexOrThrow(COLUMN_WATCHED)
             val watched = episodesCursor.getInt(watchedColumnIndex) > 0
 
             keys.add(key)

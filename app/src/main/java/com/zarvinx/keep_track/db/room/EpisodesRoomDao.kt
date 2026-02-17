@@ -1,7 +1,16 @@
 package com.zarvinx.keep_track.db.room
 
 import androidx.room.Dao
+import androidx.room.ColumnInfo
 import androidx.room.Query
+import androidx.room.Update
+
+data class EpisodeWatchedUpdate(
+    @ColumnInfo(name = "_id")
+    val id: Int,
+    @ColumnInfo(name = "watched")
+    val watched: Int
+)
 
 /**
  * DAO for episode watch-state update statements.
@@ -13,8 +22,8 @@ interface EpisodesRoomDao {
      *
      * @return number of updated rows.
      */
-    @Query("UPDATE episodes SET watched = :watched WHERE _id = :episodeId")
-    suspend fun updateEpisodeWatched(episodeId: Int, watched: Int): Int
+    @Update(entity = EpisodeEntity::class)
+    suspend fun updateEpisodeWatched(update: EpisodeWatchedUpdate): Int
 
     /**
      * Updates watched state for every episode in one season.

@@ -1,8 +1,10 @@
 package com.zarvinx.keep_track.db.room
 
 import androidx.room.Dao
+import androidx.room.ColumnInfo
+import androidx.room.Insert
 import androidx.room.Query
-import androidx.room.SkipQueryVerification
+import androidx.room.Update
 
 /**
  * Lightweight projection of an episode row used while reconciling refresh results.
@@ -14,40 +16,72 @@ data class ExistingEpisodeRow(
     val episodeNumber: Int?
 )
 
+data class RefreshShowUpdate(
+    @ColumnInfo(name = "_id")
+    val id: Int,
+    @ColumnInfo(name = "tvdb_id")
+    val tvdbId: Int?,
+    @ColumnInfo(name = "tmdb_id")
+    val tmdbId: Int,
+    @ColumnInfo(name = "imdb_id")
+    val imdbId: String?,
+    @ColumnInfo(name = "name")
+    val name: String,
+    @ColumnInfo(name = "language")
+    val language: String?,
+    @ColumnInfo(name = "overview")
+    val overview: String?,
+    @ColumnInfo(name = "first_aired")
+    val firstAired: Long?,
+    @ColumnInfo(name = "banner_path")
+    val bannerPath: String?,
+    @ColumnInfo(name = "fanart_path")
+    val fanartPath: String?,
+    @ColumnInfo(name = "poster_path")
+    val posterPath: String?,
+    @ColumnInfo(name = "status")
+    val status: String?
+)
+
+data class RefreshEpisodeUpdate(
+    @ColumnInfo(name = "_id")
+    val id: Int,
+    @ColumnInfo(name = "show_id")
+    val showId: Int,
+    @ColumnInfo(name = "tvdb_id")
+    val tvdbId: Int?,
+    @ColumnInfo(name = "tmdb_id")
+    val tmdbId: Int?,
+    @ColumnInfo(name = "imdb_id")
+    val imdbId: String?,
+    @ColumnInfo(name = "name")
+    val name: String,
+    @ColumnInfo(name = "language")
+    val language: String?,
+    @ColumnInfo(name = "overview")
+    val overview: String?,
+    @ColumnInfo(name = "episode_number")
+    val episodeNumber: Int?,
+    @ColumnInfo(name = "season_number")
+    val seasonNumber: Int?,
+    @ColumnInfo(name = "first_aired")
+    val firstAired: Long?
+)
+
 /**
  * Room DAO for updating a show and reconciling its episode list during refresh.
  *
  * All methods are synchronous and are expected to be called from background threads.
  */
 @Dao
-@SkipQueryVerification
 interface RefreshShowRoomDao {
     /**
      * Updates core metadata fields for an existing show row.
      *
      * @return number of updated rows.
      */
-    @Query(
-        "UPDATE shows SET " +
-            "tvdb_id = :tvdbId, tmdb_id = :tmdbId, imdb_id = :imdbId, name = :name, language = :language, " +
-            "overview = :overview, first_aired = :firstAired, banner_path = :bannerPath, fanart_path = :fanartPath, " +
-            "poster_path = :posterPath, status = :status " +
-            "WHERE _id = :showId"
-    )
-    fun updateShow(
-        showId: Int,
-        tvdbId: Int?,
-        tmdbId: Int,
-        imdbId: String?,
-        name: String,
-        language: String?,
-        overview: String?,
-        firstAired: Long?,
-        bannerPath: String?,
-        fanartPath: String?,
-        posterPath: String?,
-        status: String?
-    ): Int
+    @Update(entity = ShowEntity::class)
+    fun updateShow(update: RefreshShowUpdate): Int
 
     /**
      * Returns the current persisted episodes for a show so callers can diff remote results.
@@ -63,51 +97,16 @@ interface RefreshShowRoomDao {
      *
      * @return number of updated rows.
      */
-    @Query(
-        "UPDATE episodes SET " +
-            "show_id = :showId, tvdb_id = :tvdbId, tmdb_id = :tmdbId, imdb_id = :imdbId, name = :name, " +
-            "language = :language, overview = :overview, episode_number = :episodeNumber, " +
-            "season_number = :seasonNumber, first_aired = :firstAired " +
-            "WHERE _id = :episodeId"
-    )
-    fun updateEpisode(
-        episodeId: Int,
-        showId: Int,
-        tvdbId: Int?,
-        tmdbId: Int?,
-        imdbId: String?,
-        name: String,
-        language: String?,
-        overview: String?,
-        episodeNumber: Int?,
-        seasonNumber: Int?,
-        firstAired: Long?
-    ): Int
+    @Update(entity = EpisodeEntity::class)
+    fun updateEpisode(update: RefreshEpisodeUpdate): Int
 
     /**
      * Inserts a new episode row for the given show.
      *
      * @return inserted row id.
      */
-    @Query(
-        "INSERT INTO episodes (" +
-            "show_id, tvdb_id, tmdb_id, imdb_id, name, language, overview, episode_number, season_number, first_aired" +
-            ") VALUES (" +
-            ":showId, :tvdbId, :tmdbId, :imdbId, :name, :language, :overview, :episodeNumber, :seasonNumber, :firstAired" +
-            ")"
-    )
-    fun insertEpisode(
-        showId: Int,
-        tvdbId: Int?,
-        tmdbId: Int?,
-        imdbId: String?,
-        name: String,
-        language: String?,
-        overview: String?,
-        episodeNumber: Int?,
-        seasonNumber: Int?,
-        firstAired: Long?
-    ): Long
+    @Insert
+    fun insertEpisode(episode: EpisodeEntity): Long
 
     /**
      * Deletes one episode by primary key.

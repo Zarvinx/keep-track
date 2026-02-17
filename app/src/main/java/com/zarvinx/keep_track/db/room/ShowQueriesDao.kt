@@ -2,7 +2,6 @@ package com.zarvinx.keep_track.db.room
 
 import androidx.room.Dao
 import androidx.room.Query
-import androidx.room.SkipQueryVerification
 
 /**
  * Projection for show details used by the show detail screen.
@@ -20,7 +19,6 @@ data class ShowDetailsRow(
  * DAO exposing focused show-level lookups.
  */
 @Dao
-@SkipQueryVerification
 interface ShowQueriesDao {
     /**
      * Returns the show name for one id, or null when missing.

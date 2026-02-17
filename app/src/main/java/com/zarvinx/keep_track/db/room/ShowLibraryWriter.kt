@@ -16,8 +16,8 @@ class ShowLibraryWriter(context: Context) {
      * Checks whether the incoming show matches an existing row by TMDB, TVDB, or IMDb ID.
      */
     fun isAlreadyAdded(show: Show): Boolean {
-        val tvdbId = show.tvdbId.takeIf { it > 0 }
-        val imdbId = show.imdbId?.takeIf { it.isNotBlank() }
+        val tvdbId = show.normalizedTvdbId()
+        val imdbId = show.normalizedImdbId()
         return addShowDao.findShowIdByTmdbId(show.tmdbId) != null ||
             (tvdbId != null && addShowDao.findShowIdByTvdbId(tvdbId) != null) ||
             (imdbId != null && addShowDao.findShowIdByImdbId(imdbId) != null)
@@ -33,9 +33,9 @@ class ShowLibraryWriter(context: Context) {
     }
 
     private fun addShowWithRoom(show: Show): Boolean {
-        val showName = show.name ?: return false
-        val tvdbId = show.tvdbId.takeIf { it > 0 }
-        val imdbId = show.imdbId?.takeIf { it.isNotBlank() }
+        val showEntity = show.toShowInsertEntityOrNull() ?: return false
+        val tvdbId = show.normalizedTvdbId()
+        val imdbId = show.normalizedImdbId()
         val episodes = show.episodes ?: emptyList()
 
         var added = false
@@ -46,32 +46,10 @@ class ShowLibraryWriter(context: Context) {
                     (imdbId != null && addShowDao.findShowIdByImdbId(imdbId) != null)
 
             if (!duplicateFound) {
-                val showId = addShowDao.insertShow(
-                    tvdbId = tvdbId,
-                    tmdbId = show.tmdbId,
-                    imdbId = imdbId,
-                    name = showName,
-                    language = show.language,
-                    overview = show.overview,
-                    firstAired = show.firstAired?.time?.div(1000),
-                    bannerPath = show.bannerPath,
-                    fanartPath = show.fanartPath,
-                    posterPath = show.posterPath
-                ).toInt()
+                val showId = addShowDao.insertShow(showEntity).toInt()
 
                 episodes.forEach { episode ->
-                    addShowDao.insertEpisode(
-                        tvdbId = episode.tvdbId?.takeIf { it > 0 },
-                        tmdbId = episode.tmdbId?.takeIf { it > 0 },
-                        imdbId = episode.imdbId?.takeIf { it.isNotBlank() },
-                        showId = showId,
-                        name = episode.name ?: "",
-                        language = episode.language,
-                        overview = episode.overview,
-                        episodeNumber = episode.episodeNumber,
-                        seasonNumber = episode.seasonNumber,
-                        firstAired = episode.firstAired?.time?.div(1000)
-                    )
+                    addShowDao.insertEpisode(episode.toEpisodeInsertEntity(showId))
                 }
                 added = true
             }

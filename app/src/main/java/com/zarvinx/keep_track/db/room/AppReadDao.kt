@@ -2,7 +2,6 @@ package com.zarvinx.keep_track.db.room
 
 import androidx.room.Dao
 import androidx.room.Query
-import androidx.room.SkipQueryVerification
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -97,7 +96,6 @@ data class NextEpisodeInfoRow(
  * run synchronous calls off the main thread.
  */
 @Dao
-@SkipQueryVerification
 interface AppReadDao {
     /**
      * Returns external IDs for a show, or null if the show does not exist.

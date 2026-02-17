@@ -2,9 +2,15 @@ package com.zarvinx.keep_track.db.room
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "episodes")
+@Entity(
+    tableName = "episodes",
+    indices = [
+        Index(value = ["show_id", "season_number", "episode_number"])
+    ]
+)
 /**
  * Room view of legacy `episodes` table.
  *
@@ -12,7 +18,7 @@ import androidx.room.PrimaryKey
  * Keep field types aligned with the live schema used by existing installs.
  */
 data class EpisodeEntity(
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "_id")
     val id: Int,
     @ColumnInfo(name = "tvdb_id")
