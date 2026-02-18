@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Check Dependabot alerts and dependency PRs
         id: audit
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const owner = context.repo.owner;
