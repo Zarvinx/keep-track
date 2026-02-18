@@ -11,17 +11,12 @@ This product uses the [TMDB](https://www.themoviedb.org) API but is not endorsed
 
 Contributions are very welcome. Please file bugs, fork the repository, [translate](https://hosted.weblate.org/projects/episodes/) and send pull requests.
 
-## Dependency and Security Audit
+## Dependency Audit
 
-Run dependency freshness and vulnerability checks with:
-
-```bash
-./gradlew dependencyAudit
-```
-
-This runs:
-- `:app:dependencyUpdates` (outdated dependency report)
-- `dependencyCheckAnalyze` (known CVE scan)
+Dependency and vulnerability auditing is handled with GitHub-native features only:
+- Dependabot updates (`.github/dependabot.yml`)
+- Weekly dependency audit workflow (`.github/workflows/dependency-audit.yml`)
+- Dependabot alerts (GitHub Security tab)
 
 ## License
 
