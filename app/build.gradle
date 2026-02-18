@@ -101,7 +101,7 @@ dependencies {
     implementation 'com.github.bumptech.glide:glide:4.14.1'
     implementation 'com.uwetrottmann.tmdb2:tmdb-java:2.8.1'
     implementation 'com.squareup.retrofit2:adapter-rxjava2:2.9.0'
-    implementation 'org.apache.commons:commons-collections4:4.4'
+    implementation 'org.apache.commons:commons-collections4:4.5.0'
     debugImplementation 'com.android.support:multidex:2.0.1'
     kapt 'com.github.bumptech.glide:compiler:4.14.1'
     
