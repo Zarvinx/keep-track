@@ -72,7 +72,8 @@ android {
     if (project.hasProperty('signingStoreLocation') &&
             project.hasProperty('signingStorePassword') &&
             project.hasProperty('signingKeyAlias') &&
-            project.hasProperty('signingKeyPassword')) {
+            project.hasProperty('signingKeyPassword') &&
+            file(signingStoreLocation).exists()) {
         println "Found sign properties in gradle.properties! Signing build…"
 
         signingConfigs {
@@ -144,9 +145,9 @@ dependencies {
     testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2'
 
     // Instrumentation tests
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation ' '
-    androidTestImplementation 'androidx.test:rules:1.5.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation 'androidx.test.ext:junit:1.3.0'
+    androidTestImplementation 'androidx.test:runner:1.7.0'
+    androidTestImplementation 'androidx.test:rules:1.7.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
     androidTestImplementation 'androidx.room:room-testing:2.6.1'
 }
