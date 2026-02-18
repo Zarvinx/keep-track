@@ -128,7 +128,7 @@ dependencies {
     implementation 'com.github.skydoves:colorpicker-compose:1.0.7'
     
     // Coroutines
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
 
     // Room
     implementation 'androidx.room:room-runtime:2.6.1'
