@@ -7,7 +7,22 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "UTC"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 4
+    groups:
+      room:
+        patterns:
+          - "androidx.room:*"
+      kotlin:
+        patterns:
+          - "org.jetbrains.kotlin:*"
+          - "org.jetbrains.kotlinx:*"
+      android-gradle-plugin:
+        patterns:
+          - "com.android.tools.build:gradle"
+    ignore:
+      - dependency-name: "org.jetbrains.kotlin:kotlin-gradle-plugin"
+        update-types:
+          - "version-update:semver-major"
     labels:
       - "dependencies"
       - "security"
@@ -19,6 +34,10 @@ updates:
       day: "monday"
       time: "09:15"
       timezone: "UTC"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 4
+    groups:
+      github-actions:
+        patterns:
+          - "*"
     labels:
       - "dependencies"
