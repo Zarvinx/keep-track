@@ -29,6 +29,7 @@ jobs:
       - name: Run unit tests and assemble debug APK
         run: ./gradlew --no-daemon --stacktrace test assembleStandardDebug
       - name: Upload APK
+        if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
