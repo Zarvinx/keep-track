@@ -17,22 +17,10 @@ def getCommitId = { ->
     return "unknown"
 }
 
-def signingProps = new Properties()
-def signingPropsFile = rootProject.file("signing.properties")
-if (signingPropsFile.exists()) {
-    signingPropsFile.withInputStream { stream ->
-        signingProps.load(stream)
-    }
-}
-
 def signingValue = { gradleKey, envKey ->
     def fromGradle = project.findProperty(gradleKey)
     if (fromGradle != null && fromGradle.toString().trim()) {
         return fromGradle.toString().trim()
-    }
-    def fromFile = signingProps.getProperty(gradleKey)
-    if (fromFile != null && fromFile.trim()) {
-        return fromFile.trim()
     }
     def fromEnv = System.getenv(envKey)
     if (fromEnv != null && fromEnv.trim()) {
@@ -41,10 +29,10 @@ def signingValue = { gradleKey, envKey ->
     return null
 }
 
-def signingStoreLocationValue = signingValue("signingStoreLocation", "SIGNING_STORE_LOCATION")
-def signingStorePasswordValue = signingValue("signingStorePassword", "SIGNING_STORE_PASSWORD")
-def signingKeyAliasValue = signingValue("signingKeyAlias", "SIGNING_KEY_ALIAS")
-def signingKeyPasswordValue = signingValue("signingKeyPassword", "SIGNING_KEY_PASSWORD")
+def signingStoreLocationValue = signingValue("keepTrackSigningStoreLocation", "KEEP_TRACK_SIGNING_STORE_LOCATION")
+def signingStorePasswordValue = signingValue("keepTrackSigningStorePassword", "KEEP_TRACK_SIGNING_STORE_PASSWORD")
+def signingKeyAliasValue = signingValue("keepTrackSigningKeyAlias", "KEEP_TRACK_SIGNING_KEY_ALIAS")
+def signingKeyPasswordValue = signingValue("keepTrackSigningKeyPassword", "KEEP_TRACK_SIGNING_KEY_PASSWORD")
 
 android {
     namespace 'com.zarvinx.keep_track'
