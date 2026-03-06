@@ -8,7 +8,7 @@
     <string name="first_aired">Emitida por primera vez: %s</string>
     <string name="about_license">Episodes es software libre copyleft bajo licencia GPLv3+. ¡Por favor registra bugs, escribe código, traduce o haz cualquier cosa que puedas para ayudar!</string>
     <string name="about_description">Mantén un registro de qué episodios de tus series favoritas has visto</string>
-    <string name="version">Versión %s (Commit %s)</string>
+    <string name="version">Versión %1$s (Commit %2$s)</string>
     <string name="pref_interface_category">Interfaz</string>
     <string name="pref_auto_refresh_category">Actualizar series automáticamente</string>
     <string name="channel_description">Notificación cuando se sincronizan series</string>

@@ -4,7 +4,7 @@
     <string name="about_title">Informazioni</string>
     <string name="about_license">Episodes è un software libero con copyleft di licenza GPLv3+. Per favore, segnalate errori, scrivete codice, traducete o fate qualsiasi altra cosa per aiutare!</string>
     <string name="about_description">Tieni traccia di quali episodi hai guardato dei tuoi programmi preferiti</string>
-    <string name="version">Versione %s (Commit %s)</string>
+    <string name="version">Versione %1$s (Commit %2$s)</string>
     <string name="pref_interface_category">Interfaccia</string>
     <string name="pref_auto_refresh_category">Aggiornamento automatico serie</string>
     <string name="channel_description">Notifica quando le serie si sincronizzano</string>

@@ -39,7 +39,7 @@
     <string name="adding_show">Aldonante %s al biblioteko</string>
     <string name="about_title">Pri</string>
     <string name="menu_filter_shows_list">Filtri spektaĵojn</string>
-    <string name="version">Versio %s (Enmeto %s)</string>
+    <string name="version">Versio %1$s (Enmeto %2$s)</string>
     <string name="season_name_specials">Specialaĵoj</string>
     <string name="season_episode_prefix">"%1$02d×%2$02d - "</string>
     <string name="pref_auto_refresh_period_title">Intervalo</string>

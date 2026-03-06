@@ -23,6 +23,14 @@ updates:
       - dependency-name: "org.jetbrains.kotlin:kotlin-gradle-plugin"
         update-types:
           - "version-update:semver-major"
+      - dependency-name: "org.jetbrains.kotlinx:kotlinx-coroutines-android"
+        update-types:
+          - "version-update:semver-minor"
+          - "version-update:semver-major"
+      - dependency-name: "org.jetbrains.kotlinx:kotlinx-coroutines-test"
+        update-types:
+          - "version-update:semver-minor"
+          - "version-update:semver-major"
     labels:
       - "dependencies"
       - "security"
