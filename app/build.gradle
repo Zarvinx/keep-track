@@ -1,39 +1,61 @@
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
-apply plugin: 'kotlin-parcelize'
-apply plugin: 'dagger.hilt.android.plugin'
-
-kapt {
-    arguments {
-        arg("room.schemaLocation", "$projectDir/schemas")
-        arg("room.incremental", "true")
-        arg("room.expandProjection", "true")
-    }
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.plugin.compose'
+    id 'com.google.devtools.ksp'
+    id 'com.google.dagger.hilt.android'
 }
 
 def getCommitId = { ->
-    def gitOutput = new ByteArrayOutputStream()
-    exec {
-        commandLine 'git', 'rev-parse', '--short', 'HEAD'
-        standardOutput = gitOutput
+    try {
+        def process = ['git', 'rev-parse', '--short', 'HEAD'].execute(null, rootDir)
+        process.waitFor()
+        if (process.exitValue() == 0) {
+            return process.text.trim()
+        }
+    } catch (Exception ignored) {
     }
-    return gitOutput.toString().trim()
+    return "unknown"
 }
+
+def signingProps = new Properties()
+def signingPropsFile = rootProject.file("signing.properties")
+if (signingPropsFile.exists()) {
+    signingPropsFile.withInputStream { stream ->
+        signingProps.load(stream)
+    }
+}
+
+def signingValue = { gradleKey, envKey ->
+    def fromGradle = project.findProperty(gradleKey)
+    if (fromGradle != null && fromGradle.toString().trim()) {
+        return fromGradle.toString().trim()
+    }
+    def fromFile = signingProps.getProperty(gradleKey)
+    if (fromFile != null && fromFile.trim()) {
+        return fromFile.trim()
+    }
+    def fromEnv = System.getenv(envKey)
+    if (fromEnv != null && fromEnv.trim()) {
+        return fromEnv.trim()
+    }
+    return null
+}
+
+def signingStoreLocationValue = signingValue("signingStoreLocation", "SIGNING_STORE_LOCATION")
+def signingStorePasswordValue = signingValue("signingStorePassword", "SIGNING_STORE_PASSWORD")
+def signingKeyAliasValue = signingValue("signingKeyAlias", "SIGNING_KEY_ALIAS")
+def signingKeyPasswordValue = signingValue("signingKeyPassword", "SIGNING_KEY_PASSWORD")
 
 android {
     namespace 'com.zarvinx.keep_track'
-    compileSdkVersion 34
+    compileSdk = 34
     buildFeatures {
         buildConfig true
         compose true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = '1.5.4'
-    }
     defaultConfig {
-        minSdkVersion 23
-        targetSdkVersion 34
+        minSdk = 23
+        targetSdk = 34
         versionCode 25
         versionName "0.5.6"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -63,25 +85,22 @@ android {
         abortOnError false
     }
     compileOptions {
-        sourceCompatibility = 1.8
-        targetCompatibility = 1.8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = '1.8'
-    }
-    if (project.hasProperty('signingStoreLocation') &&
-            project.hasProperty('signingStorePassword') &&
-            project.hasProperty('signingKeyAlias') &&
-            project.hasProperty('signingKeyPassword') &&
-            file(signingStoreLocation).exists()) {
-        println "Found sign properties in gradle.properties! Signing build…"
+    if (signingStoreLocationValue &&
+            signingStorePasswordValue &&
+            signingKeyAliasValue &&
+            signingKeyPasswordValue &&
+            file(signingStoreLocationValue).exists()) {
+        println "Found local signing configuration. Signing release build…"
 
         signingConfigs {
             release {
-                storeFile file(signingStoreLocation)
-                storePassword signingStorePassword
-                keyAlias signingKeyAlias
-                keyPassword signingKeyPassword
+                storeFile file(signingStoreLocationValue)
+                storePassword signingStorePasswordValue
+                keyAlias signingKeyAliasValue
+                keyPassword signingKeyPasswordValue
             }
         }
 
@@ -89,6 +108,18 @@ android {
     } else {
         buildTypes.release.signingConfig = null
     }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+    }
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+    arg("room.incremental", "true")
+    arg("room.expandProjection", "true")
 }
 
 dependencies {
@@ -102,11 +133,7 @@ dependencies {
     implementation 'com.uwetrottmann.tmdb2:tmdb-java:2.8.1'
     implementation 'com.squareup.retrofit2:adapter-rxjava2:2.9.0'
     implementation 'org.apache.commons:commons-collections4:4.4'
-    debugImplementation 'com.android.support:multidex:2.0.1'
-    kapt 'com.github.bumptech.glide:compiler:4.14.1'
-    
-    // Kotlin
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    ksp 'com.github.bumptech.glide:compiler:4.14.1'
     
     // Jetpack Compose
     implementation platform('androidx.compose:compose-bom:2023.10.01')
@@ -129,25 +156,25 @@ dependencies {
     implementation 'com.github.skydoves:colorpicker-compose:1.0.7'
     
     // Coroutines
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
 
     // Room
-    implementation 'androidx.room:room-runtime:2.6.1'
-    implementation 'androidx.room:room-ktx:2.6.1'
-    kapt 'androidx.room:room-compiler:2.6.1'
+    implementation 'androidx.room:room-runtime:2.8.4'
+    implementation 'androidx.room:room-ktx:2.8.4'
+    ksp 'androidx.room:room-compiler:2.8.4'
 
     // Hilt
-    implementation 'com.google.dagger:hilt-android:2.51.1'
-    kapt 'com.google.dagger:hilt-android-compiler:2.51.1'
+    implementation 'com.google.dagger:hilt-android:2.59.2'
+    ksp 'com.google.dagger:hilt-android-compiler:2.59.2'
 
     // Unit tests
     testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3'
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2'
 
     // Instrumentation tests
     androidTestImplementation 'androidx.test.ext:junit:1.3.0'
     androidTestImplementation 'androidx.test:runner:1.7.0'
     androidTestImplementation 'androidx.test:rules:1.7.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
-    androidTestImplementation 'androidx.room:room-testing:2.6.1'
+    androidTestImplementation 'androidx.room:room-testing:2.8.4'
 }

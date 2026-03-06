@@ -1,0 +1,6 @@
+# Copy to signing.properties (local only, ignored by git)
+# and fill with your real values.
+signingStoreLocation=/absolute/path/to/your-new-release.keystore
+signingStorePassword=REPLACE_ME
+signingKeyAlias=REPLACE_ME
+signingKeyPassword=REPLACE_ME
