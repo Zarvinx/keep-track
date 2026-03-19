@@ -35,6 +35,8 @@ class AutoBackupHelper private constructor(
         const val KEY_PREF_AUTO_BACKUP_PERIOD = "pref_auto_backup_period"
         const val KEY_PREF_AUTO_BACKUP_RETENTION = "pref_auto_backup_retention"
         private const val KEY_LAST_AUTO_BACKUP_TIME = "last_auto_backup_time"
+        // Defined here for reference; the authoritative constant is in FileUtilities
+        val KEY_PREF_BACKUP_DIR_URI get() = FileUtilities.KEY_PREF_BACKUP_DIR_URI
 
         const val PERIOD_DAILY = "daily"
         const val PERIOD_WEEKLY = "weekly"
@@ -118,6 +120,10 @@ class AutoBackupHelper private constructor(
      * Runs a backup immediately and updates last-run schedule metadata.
      */
     fun runBackupNow() {
+        if (FileUtilities.get_backup_dir_uri(context) == null) {
+            Log.i(TAG, "Skipping auto backup: no backup folder configured.")
+            return
+        }
         val retention = preferences.getInt(KEY_PREF_AUTO_BACKUP_RETENTION, 10).coerceIn(1, 100)
         AsyncTask().executeAsync(
             BackupTask(
@@ -135,7 +141,7 @@ class AutoBackupHelper private constructor(
      */
     fun pruneBackupsNow() {
         val retention = preferences.getInt(KEY_PREF_AUTO_BACKUP_RETENTION, 10).coerceIn(1, 100)
-        FileUtilities.prune_old_backups(context, retention)
+        FileUtilities.prune_old_backups(context, retention)  // no-op if no backup dir set
     }
 
     private fun getPendingIntent(): PendingIntent {

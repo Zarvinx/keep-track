@@ -1,5 +1,9 @@
 package com.zarvinx.keep_track
 
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -32,6 +36,22 @@ import androidx.preference.PreferenceManager
 fun BackupSettingsRoute(onNavigateBack: () -> Unit) {
     val context = LocalContext.current
     var showBackupDialog by remember { mutableStateOf(false) }
+    var backupDirDisplayName by remember { mutableStateOf(FileUtilities.get_backup_dir_display_name(context)) }
+
+    val pickBackupDir = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri: Uri? ->
+        if (uri != null) {
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+            PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putString(FileUtilities.KEY_PREF_BACKUP_DIR_URI, uri.toString())
+                .apply()
+            backupDirDisplayName = uri.lastPathSegment?.substringAfter(':')
+        }
+    }
+
     val backupRestoreCoordinator = remember(context) {
         BackupRestoreCoordinator(
             context = context,
@@ -42,14 +62,16 @@ fun BackupSettingsRoute(onNavigateBack: () -> Unit) {
     BackupSettingsScreen(
         onNavigateBack = onNavigateBack,
         onBackupNow = backupRestoreCoordinator::backUp,
-        onRestore = backupRestoreCoordinator::restore
+        onRestore = backupRestoreCoordinator::restore,
+        onChooseBackupFolder = { pickBackupDir.launch(null) },
+        backupDirDisplayName = backupDirDisplayName
     )
 
     if (showBackupDialog) {
         SelectBackupDialog(
-            onBackupSelected = { backupFilename ->
+            onBackupSelected = { backupUriString ->
                 showBackupDialog = false
-                backupRestoreCoordinator.onBackupSelected(backupFilename)
+                backupRestoreCoordinator.onBackupSelected(backupUriString)
             },
             onDismiss = { showBackupDialog = false }
         )
@@ -61,7 +83,9 @@ fun BackupSettingsRoute(onNavigateBack: () -> Unit) {
 fun BackupSettingsScreen(
     onNavigateBack: () -> Unit,
     onBackupNow: () -> Unit,
-    onRestore: () -> Unit
+    onRestore: () -> Unit,
+    onChooseBackupFolder: () -> Unit,
+    backupDirDisplayName: String?
 ) {
     val context = LocalContext.current
     val prefs = remember { PreferenceManager.getDefaultSharedPreferences(context) }
@@ -92,6 +116,9 @@ fun BackupSettingsScreen(
     var showFrequencyDialog by remember { mutableStateOf(false) }
     var showRetentionDialog by remember { mutableStateOf(false) }
 
+    val folderSummary = backupDirDisplayName
+        ?: context.getString(R.string.pref_backup_folder_not_set)
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -111,6 +138,11 @@ fun BackupSettingsScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             SettingsCategoryHeader(stringResource(R.string.pref_backup_manual_category))
+            SettingsListItem(
+                title = stringResource(R.string.pref_backup_location_title),
+                summary = folderSummary,
+                onClick = onChooseBackupFolder
+            )
             SettingsListItem(
                 title = stringResource(R.string.pref_backup_now_title),
                 summary = stringResource(R.string.pref_backup_now_summary),
@@ -144,12 +176,6 @@ fun BackupSettingsScreen(
                 title = stringResource(R.string.pref_auto_backup_retention_title),
                 summary = context.getString(R.string.pref_auto_backup_retention_summary, backupRetention),
                 onClick = { showRetentionDialog = true }
-            )
-            SettingsListItem(
-                title = stringResource(R.string.pref_backup_location_title),
-                summary = FileUtilities.get_backup_directory(context).absolutePath,
-                enabled = false,
-                onClick = {}
             )
         }
     }

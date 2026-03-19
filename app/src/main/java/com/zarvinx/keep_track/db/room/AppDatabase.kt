@@ -46,6 +46,11 @@ abstract class AppDatabase : RoomDatabase() {
      */
     abstract fun appReadDao(): AppReadDao
 
+    /**
+     * DAO for backup and restore operations.
+     */
+    abstract fun backupDao(): BackupDao
+
     companion object {
         @Volatile
         private var instance: AppDatabase? = null

@@ -18,7 +18,6 @@
 
 package com.zarvinx.keep_track
 
-import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -29,7 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import java.io.File
+import androidx.documentfile.provider.DocumentFile
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -40,81 +39,59 @@ fun SelectBackupDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    val backups = remember { getBackupFiles(context) }
-    
+    val backups = remember { FileUtilities.get_backup_document_files(context) }
+
     if (backups.isNotEmpty()) {
-        BackupsListDialog(
-            backups = backups,
-            onBackupSelected = onBackupSelected,
-            onDismiss = onDismiss
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text(stringResource(R.string.restore_dialog_title)) },
+            text = {
+                LazyColumn {
+                    items(backups) { backup ->
+                        Text(
+                            text = formatBackupDisplayDate(backup),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    onBackupSelected(backup.uri.toString())
+                                    onDismiss()
+                                }
+                                .padding(vertical = 12.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            }
         )
     } else {
-        NoBackupsDialog(
-            context = context,
-            onDismiss = onDismiss
+        val dirName = FileUtilities.get_backup_dir_display_name(context)
+        val message = if (dirName != null) {
+            stringResource(R.string.restore_dialog_no_backups_message, dirName)
+        } else {
+            stringResource(R.string.restore_dialog_no_folder_set)
+        }
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text(stringResource(R.string.restore_dialog_title)) },
+            text = { Text(message) },
+            confirmButton = {
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(android.R.string.ok))
+                }
+            }
         )
     }
 }
 
-@Composable
-private fun BackupsListDialog(
-    backups: List<File>,
-    onBackupSelected: (String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.restore_dialog_title)) },
-        text = {
-            LazyColumn {
-                items(backups) { backup ->
-                    Text(
-                        text = formatBackupDisplayDate(backup),
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                onBackupSelected(backup.path)
-                                onDismiss()
-                            }
-                            .padding(vertical = 12.dp)
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(android.R.string.cancel))
-            }
-        }
-    )
-}
-
-@Composable
-private fun NoBackupsDialog(
-    context: Context,
-    onDismiss: () -> Unit
-) {
-    val directory = FileUtilities.get_backup_directory(context)
-    val message = stringResource(R.string.restore_dialog_no_backups_message, directory)
-    
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.restore_dialog_title)) },
-        text = { Text(message) },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(android.R.string.ok))
-            }
-        }
-    )
-}
-
-private fun getBackupFiles(context: Context): List<File> {
-    return FileUtilities.get_backup_files(context)
-}
-
-private fun formatBackupDisplayDate(file: File): String {
+private fun formatBackupDisplayDate(file: DocumentFile): String {
     val date = Date(file.lastModified())
-    return "${SimpleDateFormat("MMM d, yyyy HH:mm", Locale.getDefault()).format(date)}"
+    val name = file.name ?: return SimpleDateFormat("MMM d, yyyy HH:mm", Locale.getDefault()).format(date)
+    // Show the filename (without extension) as primary label alongside the date
+    val displayName = name.removeSuffix(".json")
+    return displayName
 }

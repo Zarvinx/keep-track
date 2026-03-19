@@ -21,27 +21,20 @@ package com.zarvinx.keep_track
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
-import java.io.File
-import java.nio.channels.FileChannel
+import androidx.documentfile.provider.DocumentFile
+import androidx.preference.PreferenceManager
 import java.text.SimpleDateFormat
 import java.util.*
 
-/**
- * File helper utilities for backup file naming, lookup, copying, and retention.
- */
 object FileUtilities {
-    /**
-     * Builds a timestamped backup filename in app convention.
-     */
+    const val KEY_PREF_BACKUP_DIR_URI = "pref_backup_dir_uri"
+
     fun get_suggested_filename(): String {
         val today = Date()
         val formatter = SimpleDateFormat("yyyy-MM-dd_HHmm", Locale.getDefault())
-        return "keep_track_${formatter.format(today)}.db"
+        return "keep_track_${formatter.format(today)}.json"
     }
 
-    /**
-     * Resolves a display filename from a content URI when available.
-     */
     fun uri_to_filename(context: Context, uri: Uri): String? {
         context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
             val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
@@ -51,52 +44,30 @@ object FileUtilities {
         return null
     }
 
-    /**
-     * Copies all bytes from [source] channel to [destination] and closes both channels.
-     */
-    fun copy_file(source: FileChannel, destination: FileChannel) {
-        try {
-            destination.transferFrom(source, 0, source.size())
-            source.close()
-            destination.close()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+    fun get_backup_dir_uri(context: Context): Uri? {
+        val uriString = PreferenceManager.getDefaultSharedPreferences(context)
+            .getString(KEY_PREF_BACKUP_DIR_URI, null) ?: return null
+        return Uri.parse(uriString)
     }
 
-    /**
-     * Returns the app-local backup directory, creating it when missing.
-     */
-    fun get_backup_directory(context: Context): File {
-        val backupDirectory = File(context.filesDir, "backups")
-        if (!backupDirectory.exists()) {
-            backupDirectory.mkdirs()
-        }
-        return backupDirectory
+    fun get_backup_dir_display_name(context: Context): String? {
+        val uri = get_backup_dir_uri(context) ?: return null
+        val lastSegment = uri.lastPathSegment ?: return uri.toString()
+        return lastSegment.substringAfter(':')
     }
 
-    /**
-     * Returns backup files sorted newest-first.
-     */
-    fun get_backup_files(context: Context): List<File> {
-        val files = get_backup_directory(context).listFiles()
-        return files?.sortedByDescending { it.lastModified() } ?: emptyList()
+    fun get_backup_document_files(context: Context): List<DocumentFile> {
+        val dirUri = get_backup_dir_uri(context) ?: return emptyList()
+        val dir = DocumentFile.fromTreeUri(context, dirUri) ?: return emptyList()
+        return dir.listFiles()
+            .filter { it.name?.endsWith(".json") == true }
+            .sortedByDescending { it.lastModified() }
     }
 
-    /**
-     * Deletes oldest backups so at most [maxBackupCount] files remain.
-     */
     fun prune_old_backups(context: Context, maxBackupCount: Int) {
         val keep = maxBackupCount.coerceIn(1, 100)
-        val backups = get_backup_files(context)
-        if (backups.size <= keep) {
-            return
-        }
-
-        backups.drop(keep).forEach { file ->
-            if (file.exists()) {
-                file.delete()
-            }
-        }
+        val backups = get_backup_document_files(context)
+        if (backups.size <= keep) return
+        backups.drop(keep).forEach { it.delete() }
     }
 }

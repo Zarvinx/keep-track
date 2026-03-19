@@ -77,6 +77,7 @@
   <string name="pref_accent_colors_app">App default</string>
   <string name="pref_accent_colors_unavailable_summary">App default (dynamic colors require Android 12+).</string>
   <string name="restore_dialog_no_backups_message">No backups found in \'%s\' folder.</string>
+  <string name="restore_dialog_no_folder_set">No backup folder selected. Choose a folder in Backup settings first.</string>
   <string name="restore_dialog_title">Restore from backup</string>
   <string name="restore_error_message">Could not restore library</string>
   <string name="restore_error_file_missing">Could not restore library: backup file not found.</string>
@@ -111,8 +112,9 @@
   <string name="pref_backup_restore_summary">Configure backup options and restore from saved backups.</string>
   <string name="pref_backup_manual_category">Manual backup</string>
   <string name="pref_backup_now_title">Back up now</string>
-  <string name="pref_backup_now_summary">Create a backup immediately in app local storage.</string>
-  <string name="pref_restore_summary">Restore your library from a backup in app local storage.</string>
+  <string name="pref_backup_now_summary">Create a backup immediately in the chosen folder.</string>
+  <string name="pref_restore_summary">Restore your library from a backup in the chosen folder.</string>
+  <string name="pref_backup_folder_not_set">Tap to choose a backup folder</string>
   <string name="pref_backup_auto_category">Automatic backup</string>
   <string name="pref_auto_backup_enabled_title">Automatic backup</string>
   <string name="pref_auto_backup_enabled_summary">Create backups automatically on a schedule.</string>
