@@ -1,10 +1,4 @@
 build/
 .gradle/
-.gradle-local
-signing.properties
-*.keystore
-*.jks
+.gradle-local/
 local.properties
-.idea/
-*.iml
-app/fdroid/
