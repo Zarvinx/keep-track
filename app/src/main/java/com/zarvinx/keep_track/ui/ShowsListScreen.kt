@@ -18,8 +18,14 @@
  
 package com.zarvinx.keep_track.ui
 
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
+import dev.chrisbanes.haze.materials.HazeMaterials
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -41,6 +47,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
@@ -59,6 +69,8 @@ import java.util.concurrent.TimeUnit
 @Composable
 fun ShowsListScreen(
     viewModel: ShowsViewModel = hiltViewModel(),
+    hazeState: HazeState,
+    contentPadding: androidx.compose.foundation.layout.PaddingValues = androidx.compose.foundation.layout.PaddingValues(),
     onShowClick: (Int) -> Unit
 ) {
     val shows by viewModel.shows.collectAsState()
@@ -90,7 +102,8 @@ fun ShowsListScreen(
         } else {
             LazyColumn(
                 state = listState,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = contentPadding
             ) {
                 items(
                     items = shows, 
@@ -99,6 +112,7 @@ fun ShowsListScreen(
                 ) { show ->
                     ShowListItem(
                         show = show,
+                        hazeState = hazeState,
                         onShowClick = onShowClick,
                         onStarClick = remember { { id -> viewModel.toggleStarred(id, !show.starred) } },
                         onArchiveClick = remember { { id -> viewModel.toggleArchived(id, !show.archived) } },
@@ -113,14 +127,22 @@ fun ShowsListScreen(
 @Composable
 fun ShowListItem(
     show: Show,
+    hazeState: HazeState,
     onShowClick: (Int) -> Unit,
     onStarClick: (Int) -> Unit,
     onArchiveClick: (Int) -> Unit,
     onWatchNextClick: (Int) -> Unit
 ) {
     val isLightTheme = MaterialTheme.colorScheme.background.luminance() > 0.5f
-    val episodeBarBackgroundColor = if (isLightTheme) Color(0xFFE6E6E6) else Color(0xFF2A2A2A)
-    val episodeBarTextColor = if (isLightTheme) Color(0xFF1E1E1E) else Color(0xFFF5F5F5)
+    val cardHazeState = rememberHazeState()
+
+    val glassBorderTop     = if (isLightTheme) Color.Black.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.40f)
+    val glassBorderBottom  = if (isLightTheme) Color.Black.copy(alpha = 0.04f) else Color.White.copy(alpha = 0.08f)
+    val glassPillShape  = androidx.compose.foundation.shape.RoundedCornerShape(
+        topStart = 0.dp, topEnd = 20.dp, bottomStart = 14.dp, bottomEnd = 0.dp
+    )
+    val glassBarSeparator  = if (isLightTheme) Color.Black.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.22f)
+    val episodeBarTextColor = if (isLightTheme) Color(0xFF1A1A1A) else Color.White
 
     val imageUrl = remember(show.bannerPath) {
         show.bannerPath?.takeIf { it.isNotEmpty() }?.let { "https://image.tmdb.org/t/p/w500/$it" }
@@ -140,14 +162,20 @@ fun ShowListItem(
         show.nextEpisodeAirDate?.let { it <= System.currentTimeMillis() } ?: false
     }
     
-    Surface(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp)
-            .clickable { onShowClick(show.id) },
-        tonalElevation = 1.dp,
-        shadowElevation = 4.dp,
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .border(
+                width = 1.dp,
+                brush = Brush.verticalGradient(
+                    colors = listOf(glassBorderTop, glassBorderBottom)
+                ),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp)
+            )
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(20.dp))
+            .background(if (isLightTheme) Color(0xAAFFFFFF) else Color(0x99000D1A))
+            .clickable { onShowClick(show.id) }
     ) {
         Column {
             // Banner image with fixed height
@@ -156,12 +184,12 @@ fun ShowListItem(
                     .fillMaxWidth()
                     .height(130.dp)
             ) {
-                // Banner image
+                // Banner image — also serves as haze source for the pill blur
                 if (imageUrl != null) {
                     AsyncImage(
                         model = imageUrl,
                         contentDescription = show.name,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize().hazeSource(state = cardHazeState),
                         contentScale = ContentScale.Crop,
                         placeholder = painterResource(R.drawable.blank_show_banner),
                         error = painterResource(R.drawable.blank_show_banner)
@@ -170,11 +198,27 @@ fun ShowListItem(
                     Image(
                         painter = painterResource(R.drawable.blank_show_banner),
                         contentDescription = show.name,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize().hazeSource(state = cardHazeState),
                         contentScale = ContentScale.Crop
                     )
                 }
-                
+
+                // Glass specular highlight — light catching the top edge of the card
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(36.dp)
+                        .align(Alignment.TopStart)
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.White.copy(alpha = 0.16f),
+                                    Color.Transparent
+                                )
+                            )
+                        )
+                )
+
                 // Gradient overlay for text readability
                 Box(
                     modifier = Modifier
@@ -196,22 +240,16 @@ fun ShowListItem(
                     )
                 }
                 
-                // Star and Archive toggles on dark background in corner
+                // Star and Archive toggles — frosted glass pill in corner
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .background(
-                            color = Color.DarkGray.copy(alpha = 0.7f),
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(
-                                topStart = 0.dp,
-                                topEnd = 8.dp,
-                                bottomStart = 8.dp,
-                                bottomEnd = 0.dp
-                            )
-                        )
-                        .padding(4.dp)
+                        .clip(glassPillShape)
+                        .hazeEffect(state = cardHazeState, style = HazeMaterials.thin(containerColor = Color(0xFF0D0817)))
+                        .border(0.5.dp, Color.White.copy(alpha = 0.35f), glassPillShape)
                 ) {
                     Row(
+                        modifier = Modifier.padding(4.dp),
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         // Archive toggle
@@ -230,7 +268,7 @@ fun ShowListItem(
                                 modifier = Modifier.size(24.dp)
                             )
                         }
-                        
+
                         // Star toggle
                         IconButton(
                             onClick = { onStarClick(show.id) },
@@ -275,8 +313,12 @@ fun ShowListItem(
                         modifier = Modifier
                             .fillMaxWidth()
                             .align(Alignment.BottomStart)
-                            .background(Color(0xFF000000).copy(alpha = 0.75f))
-                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(Color.Transparent, Color(0xCC000818))
+                                )
+                            )
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
                     ) {
                         Text(
                             text = statusText,
@@ -288,25 +330,33 @@ fun ShowListItem(
                 }
             }
             
-            // Progress bar (thin line)
+            // Progress bar (glass thin line)
             if (show.totalCount > 0) {
                 LinearProgressIndicator(
                     progress = progress,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(4.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                        .height(2.dp),
+                    color = if (isLightTheme) Color.Black.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.60f),
+                    trackColor = if (isLightTheme) Color.Black.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.10f)
                 )
             }
-            
-            // Next episode info on dark background
+
+            // Next episode info — frosted glass panel
             if (show.nextEpisodeName != null && episodeCode != null) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp)
-                        .background(episodeBarBackgroundColor)
+                        .hazeEffect(state = hazeState, style = HazeMaterials.thin())
+                        .drawBehind {
+                            drawLine(
+                                color = glassBarSeparator,
+                                start = Offset(0f, 0f),
+                                end = Offset(size.width, 0f),
+                                strokeWidth = 0.5.dp.toPx()
+                            )
+                        }
                         .padding(horizontal = 12.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
@@ -361,7 +411,15 @@ fun ShowListItem(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp)
-                        .background(episodeBarBackgroundColor)
+                        .hazeEffect(state = hazeState, style = HazeMaterials.thin())
+                        .drawBehind {
+                            drawLine(
+                                color = glassBarSeparator,
+                                start = Offset(0f, 0f),
+                                end = Offset(size.width, 0f),
+                                strokeWidth = 0.5.dp.toPx()
+                            )
+                        }
                         .padding(horizontal = 12.dp, vertical = 8.dp),
                     contentAlignment = Alignment.CenterStart
                 ) {
