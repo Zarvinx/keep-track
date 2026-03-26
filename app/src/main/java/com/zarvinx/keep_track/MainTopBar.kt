@@ -10,6 +10,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.text.KeyboardActions
@@ -41,6 +42,9 @@ import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.materials.HazeMaterials
 
 data class FilterMenuItem(val labelResId: Int, val filterValue: Int)
 
@@ -50,17 +54,21 @@ fun MainTopBar(
     state: MainScreenState,
     focusRequester: FocusRequester,
     keyboardController: SoftwareKeyboardController?,
+    hazeState: HazeState,
     onAddShow: () -> Unit,
     onOpenFiltersDrawer: () -> Unit
 ) {
     val barShape = RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp)
+    val isLightTheme = MaterialTheme.colorScheme.background.luminance() > 0.5f
 
     Box {
         Surface(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .hazeEffect(state = hazeState, style = HazeMaterials.thin()),
             shape = barShape,
-            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-            tonalElevation = 2.dp,
+            color = Color.Transparent,
+            tonalElevation = 0.dp,
             shadowElevation = 12.dp
         ) {
             TopAppBar(
@@ -95,8 +103,14 @@ fun MainTopBar(
                                 onSearch = { keyboardController?.hide() }
                             ),
                             colors = TextFieldDefaults.colors(
-                                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                                focusedContainerColor = if (isLightTheme) Color.Black.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.12f),
+                                unfocusedContainerColor = if (isLightTheme) Color.Black.copy(alpha = 0.04f) else Color.White.copy(alpha = 0.08f),
+                                focusedTextColor = if (isLightTheme) Color(0xFF1A1A1A) else Color.White,
+                                unfocusedTextColor = if (isLightTheme) Color(0xFF1A1A1A) else Color.White,
+                                focusedPlaceholderColor = if (isLightTheme) Color(0xFF1A1A1A).copy(alpha = 0.45f) else Color.White.copy(alpha = 0.50f),
+                                cursorColor = if (isLightTheme) Color(0xFF1A1A1A) else Color.White,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent
                             )
                         )
                     } else {

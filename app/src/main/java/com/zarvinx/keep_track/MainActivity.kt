@@ -26,6 +26,8 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -52,6 +54,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -68,6 +71,10 @@ import com.zarvinx.keep_track.ui.theme.defaultCustomBackgroundEnd
 import com.zarvinx.keep_track.ui.theme.defaultCustomBackgroundStart
 import com.zarvinx.keep_track.ui.theme.findBackgroundGradientOption
 import dagger.hilt.android.AndroidEntryPoint
+import dev.chrisbanes.haze.rememberHazeState
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.launch
 
 data class MainMenuItem(
@@ -196,24 +203,49 @@ fun MainScreen(
         }
     }
 
+    val hazeState = rememberHazeState()
+
     androidx.compose.material3.ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
+            val isLightTheme = androidx.compose.material3.MaterialTheme.colorScheme.background.luminance() > 0.5f
+            val drawerContentColor = if (isLightTheme) Color(0xFF1A1A1A) else Color.White
+
             androidx.compose.material3.ModalDrawerSheet(
-                modifier = Modifier.fillMaxWidth(0.8f)
+                modifier = Modifier.fillMaxWidth(0.8f),
+                drawerContainerColor = Color.Transparent,
+                drawerContentColor = drawerContentColor
             ) {
                 Column(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .hazeEffect(
+                            state = hazeState,
+                            style = HazeMaterials.thick(
+                                containerColor = if (isLightTheme) Color(0xFFF2F2F7) else Color(0xFF0D0817)
+                            )
+                        ),
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column {
-                        androidx.compose.material3.Surface(
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant,
-                            modifier = Modifier.fillMaxWidth()
+                        // Glass header
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(drawerContentColor.copy(alpha = 0.08f))
+                                .drawBehind {
+                                    drawLine(
+                                        color = drawerContentColor.copy(alpha = 0.15f),
+                                        start = Offset(0f, size.height),
+                                        end = Offset(size.width, size.height),
+                                        strokeWidth = 0.5.dp.toPx()
+                                    )
+                                }
                         ) {
                             androidx.compose.material3.Text(
                                 text = context.getString(R.string.menu_filter_shows_list),
                                 style = androidx.compose.material3.MaterialTheme.typography.titleMedium,
+                                color = drawerContentColor,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)
                             )
                         }
@@ -222,7 +254,8 @@ fun MainScreen(
                                 label = {
                                     androidx.compose.material3.Text(
                                         text = context.getString(item.labelResId),
-                                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
+                                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+                                        color = drawerContentColor.copy(alpha = if (currentFilter == item.filterValue) 1f else 0.72f)
                                     )
                                 },
                                 selected = currentFilter == item.filterValue,
@@ -231,6 +264,10 @@ fun MainScreen(
                                     scope.launch { drawerState.close() }
                                 },
                                 shape = RoundedCornerShape(10.dp),
+                                colors = androidx.compose.material3.NavigationDrawerItemDefaults.colors(
+                                    selectedContainerColor = drawerContentColor.copy(alpha = 0.12f),
+                                    unselectedContainerColor = Color.Transparent
+                                ),
                                 modifier = Modifier
                                     .padding(horizontal = 10.dp, vertical = 3.dp)
                                     .height(42.dp)
@@ -240,6 +277,7 @@ fun MainScreen(
 
                     Column {
                         androidx.compose.material3.Divider(
+                            color = drawerContentColor.copy(alpha = 0.15f),
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                         )
 
@@ -248,10 +286,15 @@ fun MainScreen(
                                 label = {
                                     androidx.compose.material3.Text(
                                         text = context.getString(item.labelResId),
-                                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
+                                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+                                        color = drawerContentColor.copy(alpha = 0.72f)
                                     )
                                 },
                                 selected = false,
+                                colors = androidx.compose.material3.NavigationDrawerItemDefaults.colors(
+                                    selectedContainerColor = drawerContentColor.copy(alpha = 0.12f),
+                                    unselectedContainerColor = Color.Transparent
+                                ),
                                 onClick = {
                                     if (item.closeDrawerBeforeAction) {
                                         scope.launch {
@@ -296,6 +339,7 @@ fun MainScreen(
                         state = state,
                         focusRequester = focusRequester,
                         keyboardController = keyboardController,
+                        hazeState = hazeState,
                         onAddShow = onAddShow,
                         onOpenFiltersDrawer = {
                             scope.launch { drawerState.open() }
@@ -306,10 +350,12 @@ fun MainScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues)
+                        .hazeSource(state = hazeState)
                 ) {
                     ShowsListScreen(
                         viewModel = viewModel,
+                        hazeState = hazeState,
+                        contentPadding = paddingValues,
                         onShowClick = onShowSelected
                     )
                 }
