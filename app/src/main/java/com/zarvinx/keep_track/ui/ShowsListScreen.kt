@@ -28,9 +28,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.CheckCircle
@@ -74,7 +75,7 @@ fun ShowsListScreen(
     onShowClick: (Int) -> Unit
 ) {
     val shows by viewModel.shows.collectAsState()
-    val listState = rememberLazyListState()
+    val listState = rememberLazyGridState()
     var previousShowCount by remember { mutableStateOf(shows.size) }
     
     // Scroll to top when a new show is added
@@ -100,13 +101,14 @@ fun ShowsListScreen(
                 )
             }
         } else {
-            LazyColumn(
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 300.dp),
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = contentPadding
             ) {
                 items(
-                    items = shows, 
+                    items = shows,
                     key = { it.id },
                     contentType = { "show_item" }
                 ) { show ->

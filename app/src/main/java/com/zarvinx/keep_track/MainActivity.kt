@@ -29,6 +29,8 @@ import androidx.compose.foundation.background
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Arrangement
@@ -212,7 +214,7 @@ fun MainScreen(
             val drawerContentColor = if (isLightTheme) Color(0xFF1A1A1A) else Color.White
 
             androidx.compose.material3.ModalDrawerSheet(
-                modifier = Modifier.fillMaxWidth(0.8f),
+                modifier = Modifier.widthIn(max = 310.dp).offset(x = (-10).dp),
                 drawerContainerColor = Color.Transparent,
                 drawerContentColor = drawerContentColor
             ) {
