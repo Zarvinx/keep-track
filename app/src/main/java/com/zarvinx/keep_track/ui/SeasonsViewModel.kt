@@ -78,12 +78,10 @@ class SeasonsViewModel @Inject constructor(
                     watchedCount += 1
                 }
                 val firstAired = row.firstAired ?: 0L
-                if (firstAired > 0) {
-                    if (firstAired <= nowSeconds) {
-                        airedCount += 1
-                    } else {
-                        upcomingCount += 1
-                    }
+                if (firstAired > 0 && firstAired <= nowSeconds) {
+                    airedCount += 1
+                } else {
+                    upcomingCount += 1
                 }
             }
 

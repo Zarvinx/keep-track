@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -59,7 +60,7 @@ fun ShowDetailScreen(
     }
     
     val showDetails by viewModel.showDetails.collectAsState()
-    var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     var showMenu by remember { mutableStateOf(false) }
     
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()

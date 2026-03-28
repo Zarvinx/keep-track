@@ -103,64 +103,69 @@ fun SeasonListItem(
             
             // Progress bar
             if (season.airedCount > 0) {
-                val isLightTheme = MaterialTheme.colorScheme.background.luminance() > 0.5f
-                val progress = season.watchedCount.toFloat() / season.airedCount.toFloat()
-                val countTextColor = if (season.watchedCount == 0) {
-                    if (isLightTheme) Color(0xFF1A1A1A) else Color(0xFFF2F2F2)
-                } else if (MaterialTheme.colorScheme.primary.luminance() < 0.5f) {
-                    Color(0xFFF2F2F2)
+                val countText = if (season.upcomingCount > 0) {
+                    stringResource(R.string.watched_count, season.watchedCount, season.airedCount) +
+                            " " + stringResource(R.string.upcoming_count, season.upcomingCount)
                 } else {
-                    Color(0xFF1A1A1A)
+                    stringResource(R.string.watched_count, season.watchedCount, season.airedCount)
                 }
-                val countTextShadowColor = if (countTextColor.luminance() > 0.5f) {
-                    Color.Black.copy(alpha = 0.75f)
-                } else {
-                    Color.White.copy(alpha = 0.45f)
-                }
-                
-                Box(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    LinearProgressIndicator(
-                        progress = progress,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(20.dp),
-                        color = MaterialTheme.colorScheme.primary,
-                        trackColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                    
-                    // Watched count text overlay
-                    val countText = if (season.upcomingCount > 0) {
-                        stringResource(R.string.watched_count, season.watchedCount, season.airedCount) +
-                                " " + stringResource(R.string.upcoming_count, season.upcomingCount)
-                    } else {
-                        stringResource(R.string.watched_count, season.watchedCount, season.airedCount)
-                    }
-                    
-                    Text(
-                        text = countText,
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            shadow = Shadow(
-                                color = countTextShadowColor,
-                                offset = Offset(1f, 1f),
-                                blurRadius = 3f
-                            )
-                        ),
-                        color = countTextColor,
-                        modifier = Modifier
-                            .align(Alignment.CenterStart)
-                            .padding(start = 4.dp)
-                    )
-                }
+                SeasonProgressBar(
+                    progress = season.watchedCount.toFloat() / season.airedCount.toFloat(),
+                    label = countText,
+                    hasProgress = season.watchedCount > 0
+                )
             } else if (season.upcomingCount > 0) {
-                // Show episode count for seasons with no aired episodes yet
-                Text(
-                    text = stringResource(R.string.upcoming_episodes_count, season.upcomingCount),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                SeasonProgressBar(
+                    progress = 0f,
+                    label = stringResource(R.string.upcoming_episodes_count, season.upcomingCount),
+                    hasProgress = false
                 )
             }
         }
+    }
+}
+
+@Composable
+fun SeasonProgressBar(
+    progress: Float,
+    label: String,
+    hasProgress: Boolean
+) {
+    val isLightTheme = MaterialTheme.colorScheme.background.luminance() > 0.5f
+    val textColor = if (!hasProgress) {
+        if (isLightTheme) Color(0xFF1A1A1A) else Color(0xFFF2F2F2)
+    } else if (MaterialTheme.colorScheme.primary.luminance() < 0.5f) {
+        Color(0xFFF2F2F2)
+    } else {
+        Color(0xFF1A1A1A)
+    }
+    val shadowColor = if (textColor.luminance() > 0.5f) {
+        Color.Black.copy(alpha = 0.75f)
+    } else {
+        Color.White.copy(alpha = 0.45f)
+    }
+    Box(modifier = Modifier.fillMaxWidth()) {
+        LinearProgressIndicator(
+            progress = progress,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(20.dp),
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall.copy(
+                shadow = Shadow(
+                    color = shadowColor,
+                    offset = Offset(1f, 1f),
+                    blurRadius = 3f
+                )
+            ),
+            color = textColor,
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(start = 8.dp)
+        )
     }
 }
