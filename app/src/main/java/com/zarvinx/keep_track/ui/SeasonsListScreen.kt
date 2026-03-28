@@ -154,9 +154,9 @@ fun SeasonListItem(
                     )
                 }
             } else if (season.upcomingCount > 0) {
-                // Show upcoming count for seasons with no aired episodes yet
+                // Show episode count for seasons with no aired episodes yet
                 Text(
-                    text = stringResource(R.string.upcoming_count, season.upcomingCount),
+                    text = stringResource(R.string.upcoming_episodes_count, season.upcomingCount),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

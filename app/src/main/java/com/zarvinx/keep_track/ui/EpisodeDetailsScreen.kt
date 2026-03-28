@@ -61,6 +61,8 @@ fun EpisodeDetailsScreen(
             modifier = Modifier.padding(bottom = 16.dp)
         )
         
+        val isWatchable = episode.firstAired?.let { Date(it * 1000).before(Date()) } ?: false
+
         // Air date and watched checkbox row
         Row(
             modifier = Modifier
@@ -79,20 +81,22 @@ fun EpisodeDetailsScreen(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             } ?: Spacer(modifier = Modifier.width(1.dp))
-            
-            // Watched checkbox
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.watched_check_box),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Checkbox(
-                    checked = episode.watched,
-                    onCheckedChange = onWatchedChange
-                )
+
+            // Watched checkbox — only shown for aired episodes
+            if (isWatchable) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.watched_check_box),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Checkbox(
+                        checked = episode.watched,
+                        onCheckedChange = onWatchedChange
+                    )
+                }
             }
         }
         
