@@ -141,12 +141,13 @@ fun EpisodeListItem(
                 }
             }
             
-            // Watched checkbox
-            Checkbox(
-                checked = episode.watched,
-                onCheckedChange = if (isWatchable) onWatchedChange else null,
-                enabled = isWatchable
-            )
+            // Watched checkbox — only shown for aired episodes
+            if (isWatchable) {
+                Checkbox(
+                    checked = episode.watched,
+                    onCheckedChange = onWatchedChange
+                )
+            }
         }
     }
 }

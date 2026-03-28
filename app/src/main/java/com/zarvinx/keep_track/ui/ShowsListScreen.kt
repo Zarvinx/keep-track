@@ -384,26 +384,19 @@ fun ShowListItem(
                         )
                     }
                     
-                    // Watch button (disabled if episode hasn't aired yet or has no air date)
-                    IconButton(
-                        onClick = { show.nextEpisodeId?.let(onWatchNextClick) },
-                        modifier = Modifier.size(36.dp),
-                        enabled = isWatchable
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.CheckCircle,
-                            contentDescription = if (isWatchable) {
-                                stringResource(R.string.mark_as_watched)
-                            } else {
-                                stringResource(R.string.episode_not_yet_available)
-                            },
-                            tint = if (isWatchable) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                Color(0xFF555555)
-                            },
-                            modifier = Modifier.size(28.dp)
-                        )
+                    // Watch button — only shown for aired episodes
+                    if (isWatchable) {
+                        IconButton(
+                            onClick = { show.nextEpisodeId?.let(onWatchNextClick) },
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.CheckCircle,
+                                contentDescription = stringResource(R.string.mark_as_watched),
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
                     }
                 }
             } else {
