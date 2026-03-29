@@ -2,6 +2,7 @@ package com.zarvinx.keep_track.db.room
 
 import androidx.room.Dao
 import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Projection for show details used by the show detail screen.
@@ -35,4 +36,11 @@ interface ShowQueriesDao {
             "FROM shows WHERE _id = :showId LIMIT 1"
     )
     fun getShowDetailsById(showId: Int): ShowDetailsRow?
+
+    @Query(
+        "SELECT name AS name, starred AS starred, archived AS archived, poster_path AS posterPath, " +
+            "overview AS overview, first_aired AS firstAired " +
+            "FROM shows WHERE _id = :showId LIMIT 1"
+    )
+    fun observeShowDetailsById(showId: Int): Flow<ShowDetailsRow?>
 }

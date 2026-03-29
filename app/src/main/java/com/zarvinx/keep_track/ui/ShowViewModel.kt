@@ -36,7 +36,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 data class ShowDetails(
@@ -68,46 +67,35 @@ class ShowViewModel @Inject constructor(
     fun initialize(showId: Int) {
         if (this.showId == showId) return
         this.showId = showId
-        loadShowDetails()
-    }
-    
-    fun loadShowDetails() {
         viewModelScope.launch {
-            val details = withContext(Dispatchers.IO) {
-                loadShowFromDatabase()
+            showQueriesDao.observeShowDetailsById(showId).collect { row ->
+                _showDetails.value = row?.let {
+                    ShowDetails(
+                        name = it.name,
+                        starred = (it.starred ?: 0) > 0,
+                        archived = (it.archived ?: 0) > 0,
+                        posterPath = it.posterPath,
+                        overview = it.overview,
+                        firstAired = it.firstAired
+                    )
+                }
             }
-            _showDetails.value = details
         }
     }
-    
-    private fun loadShowFromDatabase(): ShowDetails? {
-        val targetShowId = showId ?: return null
-        val row = showQueriesDao.getShowDetailsById(targetShowId) ?: return null
-        return ShowDetails(
-            name = row.name,
-            starred = (row.starred ?: 0) > 0,
-            archived = (row.archived ?: 0) > 0,
-            posterPath = row.posterPath,
-            overview = row.overview,
-            firstAired = row.firstAired
-        )
-    }
-    
+
     fun toggleStarred() {
         viewModelScope.launch(Dispatchers.IO) {
             val targetShowId = showId ?: return@launch
             val current = _showDetails.value ?: return@launch
             showMutationsWriter.setStarred(targetShowId, !current.starred)
-            loadShowDetails()
         }
     }
-    
+
     fun toggleArchived() {
         viewModelScope.launch(Dispatchers.IO) {
             val targetShowId = showId ?: return@launch
             val current = _showDetails.value ?: return@launch
             showMutationsWriter.setArchived(targetShowId, !current.archived)
-            loadShowDetails()
         }
     }
     

@@ -116,8 +116,8 @@ fun ShowsListScreen(
                         show = show,
                         hazeState = hazeState,
                         onShowClick = onShowClick,
-                        onStarClick = remember { { id -> viewModel.toggleStarred(id, !show.starred) } },
-                        onArchiveClick = remember { { id -> viewModel.toggleArchived(id, !show.archived) } },
+                        onStarClick = { id -> viewModel.toggleStarred(id, !show.starred) },
+                        onArchiveClick = { id -> viewModel.toggleArchived(id, !show.archived) },
                         onWatchNextClick = remember { { episodeId: Int -> viewModel.markEpisodeWatched(episodeId, true) } }
                     )
                 }
@@ -260,7 +260,7 @@ fun ShowListItem(
                             modifier = Modifier.size(32.dp)
                         ) {
                             Icon(
-                                imageVector = if (show.archived) Icons.Filled.Archive else Icons.Filled.Unarchive,
+                                imageVector = if (show.archived) Icons.Filled.Unarchive else Icons.Filled.Archive,
                                 contentDescription = if (show.archived) {
                                     stringResource(R.string.menu_unarchive_show)
                                 } else {
