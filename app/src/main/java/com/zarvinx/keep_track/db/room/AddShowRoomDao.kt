@@ -2,6 +2,7 @@ package com.zarvinx.keep_track.db.room
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 
 /**
@@ -32,4 +33,7 @@ interface AddShowRoomDao {
 
     @Insert
     fun insertEpisode(episode: EpisodeEntity): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertSeasonNames(seasons: List<SeasonEntity>)
 }

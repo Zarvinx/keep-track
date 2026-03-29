@@ -77,6 +77,15 @@ class RefreshShowWriter(
             episodes.forEach { episode ->
                 refreshDao.insertEpisode(episode.toEpisodeInsertEntity(showId))
             }
+
+            val seasonEntities = show.seasonNames
+                ?.entries
+                ?.map { (seasonNumber, name) -> SeasonEntity(showId = showId, seasonNumber = seasonNumber, name = name) }
+                ?: emptyList()
+            refreshDao.deleteSeasonNamesForShow(showId)
+            if (seasonEntities.isNotEmpty()) {
+                refreshDao.upsertSeasonNames(seasonEntities)
+            }
         }
     }
 }

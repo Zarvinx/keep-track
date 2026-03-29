@@ -44,8 +44,8 @@ android {
     defaultConfig {
         minSdk = 23
         targetSdk = 34
-        versionCode 26
-        versionName "0.6.0"
+        versionCode 27
+        versionName "0.7.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "String", "TMDB_KEY", "\"1553d2e4fa2912fc0953305d4d3e7c44\""
         buildConfigField "String", "GIT_COMMIT_ID", "\"${getCommitId()}\""

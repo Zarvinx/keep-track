@@ -6,8 +6,8 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [EpisodeEntity::class, ShowEntity::class],
-    version = 14,
+    entities = [EpisodeEntity::class, ShowEntity::class, SeasonEntity::class],
+    version = 15,
     exportSchema = true
 )
 /**
@@ -65,6 +65,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     AppDatabaseFile.resolveDbName()
                 )
+                    .addMigrations(*AppDatabaseMigrations.ALL)
                     .build()
                     .also { instance = it }
             }

@@ -1,0 +1,230 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 15,
+    "identityHash": "b9d3e36094e7104a908b09c32967e6f0",
+    "entities": [
+      {
+        "tableName": "episodes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `tvdb_id` INTEGER, `tmdb_id` INTEGER, `imdb_id` TEXT, `show_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `language` TEXT, `overview` TEXT, `episode_number` INTEGER, `season_number` INTEGER, `first_aired` INTEGER, `watched` INTEGER)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tvdbId",
+            "columnName": "tvdb_id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "tmdbId",
+            "columnName": "tmdb_id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "imdbId",
+            "columnName": "imdb_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "showId",
+            "columnName": "show_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "language",
+            "columnName": "language",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "overview",
+            "columnName": "overview",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "episodeNumber",
+            "columnName": "episode_number",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "seasonNumber",
+            "columnName": "season_number",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "firstAired",
+            "columnName": "first_aired",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "watched",
+            "columnName": "watched",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_episodes_show_id_season_number_episode_number",
+            "unique": false,
+            "columnNames": [
+              "show_id",
+              "season_number",
+              "episode_number"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_episodes_show_id_season_number_episode_number` ON `${TABLE_NAME}` (`show_id`, `season_number`, `episode_number`)"
+          }
+        ]
+      },
+      {
+        "tableName": "shows",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER, `tvdb_id` INTEGER, `tmdb_id` INTEGER, `imdb_id` TEXT, `name` TEXT NOT NULL, `language` TEXT, `overview` TEXT, `first_aired` INTEGER, `starred` INTEGER, `archived` INTEGER, `banner_path` TEXT, `fanart_path` TEXT, `poster_path` TEXT, `notes` TEXT, `status` TEXT, PRIMARY KEY(`_id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "_id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "tvdbId",
+            "columnName": "tvdb_id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "tmdbId",
+            "columnName": "tmdb_id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "imdbId",
+            "columnName": "imdb_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "language",
+            "columnName": "language",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "overview",
+            "columnName": "overview",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "firstAired",
+            "columnName": "first_aired",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "starred",
+            "columnName": "starred",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "archived",
+            "columnName": "archived",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "bannerPath",
+            "columnName": "banner_path",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "fanartPath",
+            "columnName": "fanart_path",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "posterPath",
+            "columnName": "poster_path",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_shows_name",
+            "unique": false,
+            "columnNames": [
+              "name"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_shows_name` ON `${TABLE_NAME}` (`name`)"
+          }
+        ]
+      },
+      {
+        "tableName": "seasons",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`show_id` INTEGER NOT NULL, `season_number` INTEGER NOT NULL, `name` TEXT, PRIMARY KEY(`show_id`, `season_number`))",
+        "fields": [
+          {
+            "fieldPath": "showId",
+            "columnName": "show_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "seasonNumber",
+            "columnName": "season_number",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "show_id",
+            "season_number"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b9d3e36094e7104a908b09c32967e6f0')"
+    ]
+  }
+}

@@ -19,6 +19,7 @@ package com.zarvinx.keep_track.tvdb;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public class Show {
 	private int id;
@@ -34,6 +35,7 @@ public class Show {
 	private String posterPath;
 	private String status;
 	private List<Episode> episodes;
+	private Map<Integer, String> seasonNames;
 
 	public Show() {
 		name = "";
@@ -149,5 +151,13 @@ public class Show {
 
 	public void setEpisodes(List<Episode> episodes) {
 		this.episodes = episodes;
+	}
+
+	public Map<Integer, String> getSeasonNames() {
+		return seasonNames;
+	}
+
+	public void setSeasonNames(Map<Integer, String> seasonNames) {
+		this.seasonNames = seasonNames;
 	}
 }

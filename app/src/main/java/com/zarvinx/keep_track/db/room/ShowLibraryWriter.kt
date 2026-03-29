@@ -51,6 +51,14 @@ class ShowLibraryWriter(context: Context) {
                 episodes.forEach { episode ->
                     addShowDao.insertEpisode(episode.toEpisodeInsertEntity(showId))
                 }
+
+                val seasonEntities = show.seasonNames
+                    ?.entries
+                    ?.map { (seasonNumber, name) -> SeasonEntity(showId = showId, seasonNumber = seasonNumber, name = name) }
+                    ?: emptyList()
+                if (seasonEntities.isNotEmpty()) {
+                    addShowDao.insertSeasonNames(seasonEntities)
+                }
                 added = true
             }
         }

@@ -3,6 +3,7 @@ package com.zarvinx.keep_track.db.room
 import androidx.room.Dao
 import androidx.room.ColumnInfo
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 
@@ -115,4 +116,16 @@ interface RefreshShowRoomDao {
      */
     @Query("DELETE FROM episodes WHERE _id = :episodeId")
     fun deleteEpisodeById(episodeId: Int): Int
+
+    /**
+     * Upserts season name rows, replacing any existing entry for the same show/season pair.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun upsertSeasonNames(seasons: List<SeasonEntity>)
+
+    /**
+     * Removes all season name rows for a show before re-inserting fresh data.
+     */
+    @Query("DELETE FROM seasons WHERE show_id = :showId")
+    fun deleteSeasonNamesForShow(showId: Int)
 }
