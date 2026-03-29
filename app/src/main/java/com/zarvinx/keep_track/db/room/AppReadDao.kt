@@ -75,7 +75,8 @@ data class EpisodeCountRow(
 data class SeasonRow(
     val seasonNumber: Int?,
     val firstAired: Long?,
-    val watched: Int?
+    val watched: Int?,
+    val seasonName: String?
 )
 
 /**
@@ -143,9 +144,14 @@ interface AppReadDao {
     fun observeEpisodeCounts(): Flow<List<EpisodeCountRow>>
 
     /**
-     * Emits raw per-episode rows for deriving grouped season state.
+     * Emits raw per-episode rows for deriving grouped season state, with season name via LEFT JOIN.
      */
-    @Query("SELECT season_number AS seasonNumber, first_aired AS firstAired, watched AS watched FROM episodes WHERE show_id = :showId ORDER BY season_number ASC, episode_number ASC")
+    @Query(
+        "SELECT e.season_number AS seasonNumber, e.first_aired AS firstAired, e.watched AS watched, " +
+            "s.name AS seasonName " +
+            "FROM episodes e LEFT JOIN seasons s ON s.show_id = e.show_id AND s.season_number = e.season_number " +
+            "WHERE e.show_id = :showId ORDER BY e.season_number ASC, e.episode_number ASC"
+    )
     fun observeSeasonRows(showId: Int): Flow<List<SeasonRow>>
 
     /**

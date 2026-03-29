@@ -85,10 +85,16 @@ class SeasonsViewModel @Inject constructor(
                 }
             }
 
-            val name = if (seasonNumber == 0) {
+            val genericName = if (seasonNumber == 0) {
                 context.getString(R.string.season_name_specials)
             } else {
                 context.getString(R.string.season_name, seasonNumber)
+            }
+            val seasonTitle = seasonRows.firstOrNull()?.seasonName?.takeIf { it.isNotBlank() }
+            val name = if (seasonNumber != 0 && seasonTitle != null && seasonTitle != genericName) {
+                "$genericName - $seasonTitle"
+            } else {
+                genericName
             }
 
             Season(

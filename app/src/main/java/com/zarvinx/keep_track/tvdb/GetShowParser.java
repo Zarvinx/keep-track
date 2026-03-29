@@ -19,7 +19,11 @@ package com.zarvinx.keep_track.tvdb;
 
 import android.util.Log;
 
+import com.uwetrottmann.tmdb2.entities.TvSeason;
 import com.uwetrottmann.tmdb2.entities.TvShow;
+
+import java.util.HashMap;
+import java.util.Map;
 
 class GetShowParser {
 	private static final String TAG = "GetShowParser";
@@ -50,6 +54,15 @@ class GetShowParser {
             show.setBannerPath(series.backdrop_path);
             show.setPosterPath(series.poster_path);
             show.setStatus(series.status);
+            if (series.seasons != null) {
+                Map<Integer, String> seasonNames = new HashMap<>();
+                for (TvSeason season : series.seasons) {
+                    if (season.season_number != null && season.name != null && !season.name.isEmpty()) {
+                        seasonNames.put(season.season_number, season.name);
+                    }
+                }
+                show.setSeasonNames(seasonNames);
+            }
         } catch (Exception e) {
 	        Log.w(TAG, e);
             return null;
