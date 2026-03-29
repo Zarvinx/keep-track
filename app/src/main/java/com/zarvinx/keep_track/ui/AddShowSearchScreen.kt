@@ -82,9 +82,9 @@ fun AddShowSearchScreen(
                                     onShowClick(
                                         AddShowPreviewArgs(
                                             tmdbId = show.id,
-                                            name = show.name,
+                                            name = show.name.orEmpty(),
                                             language = show.language,
-                                            overview = show.overview,
+                                            overview = show.overview.orEmpty(),
                                             firstAiredMillis = show.firstAired?.time
                                         )
                                     )
@@ -129,9 +129,9 @@ fun ShowSearchResultItem(
     }
     
     val displayName = if (releaseYear != null) {
-        "${show.name} ($releaseYear)"
+        "${show.name.orEmpty()} ($releaseYear)"
     } else {
-        show.name
+        show.name.orEmpty()
     }
     
     Card(

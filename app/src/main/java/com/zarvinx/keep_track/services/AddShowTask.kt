@@ -28,11 +28,11 @@ class AddShowTask(
      */
     override fun call(): Void? {
         val tmdbClient = Client()
-        var show = tmdbClient.getShow(tmdbId, showLanguage, false)
+        val showCheck = tmdbClient.getShow(tmdbId, showLanguage, false)
 
-        if (!showLibraryWriter.isAlreadyAdded(show)) {
+        if (showCheck == null || !showLibraryWriter.isAlreadyAdded(showCheck)) {
             showMessage(context.getString(R.string.adding_show, showName))
-            show = tmdbClient.getShow(tmdbId, showLanguage, true)
+            val show = tmdbClient.getShow(tmdbId, showLanguage, true) ?: return null
             val added = showLibraryWriter.addShowIfMissing(show)
             if (added) {
                 showMessage(context.getString(R.string.show_added, showName))

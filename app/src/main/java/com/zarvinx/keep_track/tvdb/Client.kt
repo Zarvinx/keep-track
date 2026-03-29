@@ -103,13 +103,13 @@ class Client {
         throw IOException("Unreachable TMDB retry state")
     }
 
-    fun searchShows(query: String, language: String): List<Show> {
+    fun searchShows(query: String, language: String?): List<Show> {
         return try {
             val response = executeWithRetry {
                 tmdb.searchService().tv(query, null, language, null, false).execute()
             }
             val results = bodyOrNull(response)
-            if (results != null) SearchShowsParser().parse(results, language) else emptyList()
+            if (results != null) SearchShowsParser().parse(results, language ?: "") else emptyList()
         } catch (e: IOException) {
             Log.w(TAG, e)
             emptyList()
