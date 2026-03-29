@@ -36,8 +36,9 @@ class RefreshShowWriter(
             val tmdbMap = HashMap<Int, Episode>()
 
             episodes.forEach { episode ->
-                if (episode.tmdbId > 0) {
-                    tmdbMap[episode.tmdbId] = episode
+                val tmdbId = episode.tmdbId
+                if (tmdbId != null && tmdbId > 0) {
+                    tmdbMap[tmdbId] = episode
                 }
                 seasonPairMap.put(episode.seasonNumber, episode.episodeNumber, episode)
             }
