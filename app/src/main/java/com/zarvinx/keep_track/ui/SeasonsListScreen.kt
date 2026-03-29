@@ -32,9 +32,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -96,15 +95,13 @@ fun SeasonListItem(
                 .fillMaxWidth()
                 .padding(8.dp)
         ) {
-            // Season name
             Text(
                 text = season.name,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
-            
-            // Progress bar
+
             if (season.airedCount > 0) {
                 val countText = if (season.upcomingCount > 0) {
                     stringResource(R.string.watched_count, season.watchedCount, season.airedCount) +
@@ -134,47 +131,48 @@ fun SeasonProgressBar(
     label: String,
     hasProgress: Boolean
 ) {
-    val isLightTheme = MaterialTheme.colorScheme.background.luminance() > 0.5f
-    val textColor = if (!hasProgress) {
-        if (isLightTheme) Color(0xFF1A1A1A) else Color(0xFFF2F2F2)
-    } else if (MaterialTheme.colorScheme.primary.luminance() < 0.5f) {
-        Color(0xFFF2F2F2)
-    } else {
-        Color(0xFF1A1A1A)
-    }
-    val shadowColor = if (textColor.luminance() > 0.5f) {
-        Color.Black.copy(alpha = 0.75f)
-    } else {
-        Color.White.copy(alpha = 0.45f)
-    }
-    Box(modifier = Modifier.fillMaxWidth()) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(20.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(progress.coerceIn(0f, 1f))
-                    .fillMaxHeight()
-                    .background(MaterialTheme.colorScheme.primary)
+    val fillColor = MaterialTheme.colorScheme.primary
+    val trackColor = MaterialTheme.colorScheme.surfaceVariant
+    val clampedProgress = progress.coerceIn(0f, 1f)
+
+    val fillTextColor = if (fillColor.luminance() < 0.5f) Color(0xFFF2F2F2) else Color(0xFF1A1A1A)
+    val trackTextColor = if (trackColor.luminance() < 0.5f) Color(0xFFF2F2F2) else Color(0xFF1A1A1A)
+
+    val textStyle = MaterialTheme.typography.bodySmall
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(20.dp)
+            .clip(RoundedCornerShape(4.dp))
+    ) {
+        Box(modifier = Modifier.fillMaxWidth().fillMaxHeight().background(trackColor))
+        Box(modifier = Modifier.fillMaxWidth(clampedProgress).fillMaxHeight().background(fillColor))
+
+        if (clampedProgress < 1f) {
+            Text(
+                text = label,
+                style = textStyle,
+                color = trackTextColor,
+                modifier = Modifier.align(Alignment.CenterStart).padding(start = 8.dp)
             )
         }
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall.copy(
-                shadow = Shadow(
-                    color = shadowColor,
-                    offset = Offset(1f, 1f),
-                    blurRadius = 3f
+
+        if (clampedProgress > 0f) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(clampedProgress)
+                    .fillMaxHeight()
+                    .clipToBounds()
+            ) {
+                Text(
+                    text = label,
+                    style = textStyle,
+                    color = fillTextColor,
+                    softWrap = false,
+                    modifier = Modifier.align(Alignment.CenterStart).padding(start = 8.dp)
                 )
-            ),
-            color = textColor,
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .padding(start = 8.dp)
-        )
+            }
+        }
     }
 }
