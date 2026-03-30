@@ -22,7 +22,7 @@ jobs:
           java-version: '17'
           cache: 'gradle'
       - name: Verify Gradle
-        uses: gradle/actions/wrapper-validation@v5
+        uses: gradle/actions/wrapper-validation@v6
       - name: Run unit tests and assemble debug APK
         run: ./gradlew --no-daemon --stacktrace test assembleStandardDebug
       - name: Upload APK
