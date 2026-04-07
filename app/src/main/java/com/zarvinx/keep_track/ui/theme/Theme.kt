@@ -5,12 +5,16 @@ import android.graphics.Color as AndroidColor
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.LocalRippleConfiguration
+import androidx.compose.material3.RippleConfiguration
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +38,7 @@ private val LightColorScheme = lightColorScheme(
     tertiary = Color(0xFFF57C00)
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun KeepTrackTheme(
     content: @Composable () -> Unit
@@ -57,10 +62,13 @@ fun KeepTrackTheme(
     }
     val colorScheme = applyCustomAccentIfSelected(baseScheme, accentColorsMode)
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        content = content
-    )
+    MaterialTheme(colorScheme = colorScheme) {
+        CompositionLocalProvider(
+            LocalRippleConfiguration provides RippleConfiguration(color = colorScheme.primary)
+        ) {
+            content()
+        }
+    }
 }
 
 @Composable
@@ -149,6 +157,12 @@ private fun applyCustomAccentIfSelected(
         primary = customAccent,
         onPrimary = onAccent
     )
+}
+
+@Composable
+fun rememberDrawerContentColor(): Color {
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
+    return if (isLight) Color(0xFF1A1A1A) else Color.White
 }
 
 private fun parseCustomAccentColor(accentMode: String): Color? {
