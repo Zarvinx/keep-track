@@ -3,7 +3,7 @@ package com.zarvinx.keep_track
 import android.content.Context
 import android.util.Log
 import androidx.preference.PreferenceManager
-import com.bumptech.glide.Glide
+import coil.imageLoader
 import com.zarvinx.keep_track.db.room.AppDatabase
 import com.zarvinx.keep_track.db.room.EpisodeEntity
 import com.zarvinx.keep_track.db.room.ShowEntity
@@ -112,7 +112,7 @@ object JsonBackup {
         }
 
         Log.i(TAG, "Imported ${showsArray.length()} shows and ${episodesArray.length()} episodes.")
-        Glide.get(context).clearDiskCache()
+        context.imageLoader.diskCache?.clear()
     }
 
     private fun showToJson(show: ShowEntity): JSONObject {
