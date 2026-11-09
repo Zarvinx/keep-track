@@ -37,6 +37,13 @@ data class Show(
     val status: String?
 )
 
+data class ShowsListState(
+    val shows: List<Show> = emptyList(),
+    val isLoaded: Boolean = false,
+    val hasAnyShows: Boolean = false,
+    val searchQuery: String = ""
+)
+
 @HiltViewModel
 class ShowsViewModel @Inject constructor(
     private val appReadDao: AppReadDao,
@@ -45,8 +52,8 @@ class ShowsViewModel @Inject constructor(
     private val prefs: SharedPreferences
 ) : ViewModel() {
     
-    private val _shows = MutableStateFlow<List<Show>>(emptyList())
-    val shows: StateFlow<List<Show>> = _shows.asStateFlow()
+    private val _listState = MutableStateFlow(ShowsListState())
+    val listState: StateFlow<ShowsListState> = _listState.asStateFlow()
     
     private val _currentFilter = MutableStateFlow(0)
     val currentFilter: StateFlow<Int> = _currentFilter.asStateFlow()
@@ -81,10 +88,15 @@ class ShowsViewModel @Inject constructor(
                 _searchQuery
             ) { showRows, episodeRows, filter, searchQuery ->
                 withContext(Dispatchers.IO) {
-                    loadShows(showRows, episodeRows, filter, searchQuery)
+                    ShowsListState(
+                        shows = loadShows(showRows, episodeRows, filter, searchQuery),
+                        isLoaded = true,
+                        hasAnyShows = showRows.isNotEmpty(),
+                        searchQuery = searchQuery
+                    )
                 }
-            }.collect { showsList ->
-                _shows.value = showsList
+            }.collect { state ->
+                _listState.value = state
             }
         }
     }
@@ -196,7 +208,7 @@ class ShowsViewModel @Inject constructor(
             val watched = (row.watched ?: 0) > 0
             val firstAired = row.firstAired ?: 0L
 
-            val current = counts.getOrDefault(showId, EpisodeCounts(0, 0, 0))
+            val current = counts[showId] ?: EpisodeCounts(0, 0, 0)
 
             val isAired = firstAired > 0 && firstAired <= now
             val isUpcoming = firstAired > now
@@ -214,9 +226,11 @@ class ShowsViewModel @Inject constructor(
     fun toggleStarred(showId: Int, starred: Boolean) {
         viewModelScope.launch {
             // Optimistically update UI immediately
-            _shows.value = _shows.value.map { show ->
-                if (show.id == showId) show.copy(starred = starred) else show
-            }
+            _listState.value = _listState.value.copy(
+                shows = _listState.value.shows.map { show ->
+                    if (show.id == showId) show.copy(starred = starred) else show
+                }
+            )
             
             // Then update database in background
             withContext(Dispatchers.IO) {
@@ -228,9 +242,11 @@ class ShowsViewModel @Inject constructor(
     fun toggleArchived(showId: Int, archived: Boolean) {
         viewModelScope.launch {
             // Optimistically update UI immediately
-            _shows.value = _shows.value.map { show ->
-                if (show.id == showId) show.copy(archived = archived) else show
-            }
+            _listState.value = _listState.value.copy(
+                shows = _listState.value.shows.map { show ->
+                    if (show.id == showId) show.copy(archived = archived) else show
+                }
+            )
             
             // Then update database in background
             withContext(Dispatchers.IO) {

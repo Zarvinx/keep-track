@@ -4,7 +4,7 @@
   <string name="about_license">Keep Track is copylefted libre software licensed GPLv3+. Please file bugs, write code, translate or do anything else you can to help!</string>
   <string name="about_title">About</string>
   <string name="about_tmdb">This product uses the TMDB API but is not endorsed or certified by TMDB.</string>
-  <string name="about_website" translatable="false">https://github.com/zarvinx/episodes</string>
+  <string name="about_website" translatable="false">https://github.com/Zarvinx/keep-track</string>
   <string name="about_website_source" translatable="false">https://github.com/red-coracle/episodes</string>
   <string name="app_name" translatable="false">Keep Track</string>
   <string name="adding_show">Adding %s to library</string>
@@ -130,7 +130,12 @@
   <string name="pref_interface_category">Interface</string>
   <string name="version">Version %1$s (Commit %2$s)</string>
   <string name="no_search_results_found">No search results found</string>
-  <string name="empty_library_message">No shows in your library yet. Add one to get started.</string>
+  <string name="empty_library_title">What are you watching?</string>
+  <string name="empty_library_message">Tap + at the top to add your first show and start tracking episodes.</string>
+  <string name="empty_filter_title">Nothing in this view yet</string>
+  <string name="empty_filter_message">Try another filter, or tap + to add a show.</string>
+  <string name="empty_search_title">No shows found</string>
+  <string name="empty_search_message">Try a different search.</string>
   <string name="search_error_network">Could not reach TMDB. Check your connection and try again.</string>
   <string name="search_error_rate_limited">TMDB is rate limiting requests right now. Please try again in a moment.</string>
   <string name="search_error_server">TMDB is temporarily unavailable. Please try again later.</string>

@@ -56,6 +56,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -71,15 +72,13 @@ import com.zarvinx.keep_track.ui.theme.KeepTrackTheme
 import com.zarvinx.keep_track.ui.theme.drawerActionItemColors
 import com.zarvinx.keep_track.ui.theme.drawerItemColors
 import com.zarvinx.keep_track.ui.theme.rememberDrawerContentColor
-import com.zarvinx.keep_track.ui.theme.sunkenPill
+import com.zarvinx.keep_track.ui.theme.drawerSelectionHighlight
 import com.zarvinx.keep_track.ui.theme.defaultCustomBackgroundEnd
 import com.zarvinx.keep_track.ui.theme.defaultCustomBackgroundStart
 import com.zarvinx.keep_track.ui.theme.findBackgroundGradientOption
 import dagger.hilt.android.AndroidEntryPoint
 import dev.chrisbanes.haze.rememberHazeState
 import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.launch
 
 data class MainMenuItem(
@@ -147,6 +146,9 @@ fun MainScreen(
     val state = rememberMainScreenState(viewModel)
     val currentFilter by viewModel.currentFilter.collectAsState()
     val selectedGradient = rememberSelectedBackgroundGradient()
+    val emptyStateTextColor = if (
+        lerp(selectedGradient.startColor, selectedGradient.endColor, 0.5f).luminance() > 0.45f
+    ) Color(0xFF202124) else Color.White
     val drawerState = androidx.compose.material3.rememberDrawerState(
         initialValue = androidx.compose.material3.DrawerValue.Closed
     )
@@ -216,6 +218,7 @@ fun MainScreen(
             val drawerContentColor = rememberDrawerContentColor()
             val isLightTheme = androidx.compose.material3.MaterialTheme.colorScheme.background.luminance() > 0.5f
             val accentColor = androidx.compose.material3.MaterialTheme.colorScheme.primary
+            val drawerBackgroundColor = androidx.compose.material3.MaterialTheme.colorScheme.background
 
             androidx.compose.material3.ModalDrawerSheet(
                 modifier = Modifier.widthIn(max = 250.dp).offset(x = (-10).dp),
@@ -225,12 +228,12 @@ fun MainScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .hazeEffect(
-                            state = hazeState,
-                            style = HazeMaterials.thick(
-                                containerColor = if (isLightTheme) Color(0xFFF2F2F7) else Color(0xFF0D0817)
+                        .background(
+                            Brush.linearGradient(
+                                colors = listOf(selectedGradient.startColor, selectedGradient.endColor)
                             )
-                        ),
+                        )
+                        .background(drawerBackgroundColor.copy(alpha = 0.9f)),
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column {
@@ -258,9 +261,10 @@ fun MainScreen(
                                 modifier = Modifier
                                     .padding(start = 20.dp, end = 10.dp, top = 3.dp, bottom = 3.dp)
                                     .height(42.dp)
-                                    .sunkenPill(
+                                    .drawerSelectionHighlight(
                                         selected = currentFilter == item.filterValue,
-                                        accentColor = accentColor
+                                        accentColor = accentColor,
+                                        isLightTheme = isLightTheme
                                     )
                             )
                         }
@@ -343,6 +347,7 @@ fun MainScreen(
                         viewModel = viewModel,
                         hazeState = hazeState,
                         contentPadding = paddingValues,
+                        emptyStateTextColor = emptyStateTextColor,
                         onShowClick = onShowSelected
                     )
                 }

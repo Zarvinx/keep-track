@@ -58,6 +58,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -72,9 +74,11 @@ fun ShowsListScreen(
     viewModel: ShowsViewModel = hiltViewModel(),
     hazeState: HazeState,
     contentPadding: androidx.compose.foundation.layout.PaddingValues = androidx.compose.foundation.layout.PaddingValues(),
+    emptyStateTextColor: Color,
     onShowClick: (Int) -> Unit
 ) {
-    val shows by viewModel.shows.collectAsState()
+    val screenState by viewModel.listState.collectAsState()
+    val shows = screenState.shows
     val listState = rememberLazyGridState()
     var previousShowCount by remember { mutableStateOf(shows.size) }
     
@@ -89,16 +93,46 @@ fun ShowsListScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        if (shows.isEmpty()) {
+        if (!screenState.isLoaded) {
+            return@Box
+        } else if (shows.isEmpty()) {
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(contentPadding),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = stringResource(R.string.empty_library_message),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White
-                )
+                val titleRes = when {
+                    screenState.searchQuery.isNotBlank() -> R.string.empty_search_title
+                    screenState.hasAnyShows -> R.string.empty_filter_title
+                    else -> R.string.empty_library_title
+                }
+                val messageRes = when {
+                    screenState.searchQuery.isNotBlank() -> R.string.empty_search_message
+                    screenState.hasAnyShows -> R.string.empty_filter_message
+                    else -> R.string.empty_library_message
+                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = stringResource(titleRes),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = emptyStateTextColor,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = stringResource(messageRes),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = emptyStateTextColor.copy(alpha = 0.9f),
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         } else {
             LazyVerticalGrid(

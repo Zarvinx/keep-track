@@ -35,21 +35,21 @@ class RefreshAllShowsTask : Callable<Void?> {
             notificationBuilder
                 .setContentText(context.getString(R.string.refresh_complete_none))
                 .setProgress(0, 0, false)
-            notificationManager.notify(0, notificationBuilder.build())
+            postNotification(notificationManager, notificationBuilder)
             return null
         }
 
         var current = 0
         var successCount = 0
         notificationBuilder.setProgress(total, current, false)
-        notificationManager.notify(0, notificationBuilder.build())
+        postNotification(notificationManager, notificationBuilder)
 
         for (show in shows) {
             val showId = show.id
             val showName = show.name
             notificationBuilder.setContentText(showName)
             notificationBuilder.setProgress(total, current, false)
-            notificationManager.notify(0, notificationBuilder.build())
+            postNotification(notificationManager, notificationBuilder)
             val refreshed = refreshShow(showId, logFailures = false)
             if (refreshed) {
                 successCount += 1
@@ -74,8 +74,20 @@ class RefreshAllShowsTask : Callable<Void?> {
                 }
             )
             .setProgress(0, 0, false)
-        notificationManager.notify(0, notificationBuilder.build())
+        postNotification(notificationManager, notificationBuilder)
 
         return null
+    }
+
+    private fun postNotification(
+        manager: NotificationManagerCompat,
+        builder: NotificationCompat.Builder
+    ) {
+        if (!manager.areNotificationsEnabled()) return
+        try {
+            manager.notify(0, builder.build())
+        } catch (_: SecurityException) {
+            // The user can revoke notification access while a refresh is running.
+        }
     }
 }

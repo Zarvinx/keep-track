@@ -54,7 +54,7 @@
     <string name="pref_auto_refresh_period_title">Интервал</string>
     <string name="menu_unarchive_show">Премахни показването от архива</string>
     <string name="menu_archive_show">Архивно шоу</string>
-    <string name="about_license">Епизодите са софтуер за GPLv3+. Моля, пиши bugs, писане на код, превеждайте или направете всичко друго, което можете да направите, за да помогнете!</string>
+    <string name="about_license">Keep Track е свободен софтуер под лиценз GPLv3+. Моля, съобщавайте за грешки, допринасяйте с код или преводи и помагайте с каквото можете!</string>
     <string name="about_description">Следете кои епизоди сте гледали от любимите си предавания</string>
     <string name="menu_back_up">Архивиране на библиотека</string>
     <string name="adding_show">Добавяне %s към библиотеката</string>

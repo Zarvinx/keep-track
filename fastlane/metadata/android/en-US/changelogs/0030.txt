@@ -1,0 +1,4 @@
+- Refined the navigation drawer and first-run guidance
+- Fixed star and archive controls updating inconsistently
+- Improved episode progress readability
+- Updated Android compatibility and dependencies
