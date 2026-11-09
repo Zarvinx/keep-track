@@ -144,7 +144,7 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
 
     // DocumentFile for Storage Access Framework
-    implementation 'androidx.documentfile:documentfile:1.0.1'
+    implementation 'androidx.documentfile:documentfile:1.1.0'
 
     // Room
     implementation 'androidx.room:room-runtime:2.8.4'
