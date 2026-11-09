@@ -1,0 +1,3 @@
+- Replaced the sidebar with easier-to-reach bottom controls
+- Moved About into Settings
+- Improved library search and kept more shows visible on screen
