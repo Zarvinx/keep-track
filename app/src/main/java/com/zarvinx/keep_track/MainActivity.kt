@@ -18,47 +18,71 @@
 
 package com.zarvinx.keep_track
 
-import android.content.SharedPreferences
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.preference.PreferenceManager
@@ -69,23 +93,12 @@ import com.zarvinx.keep_track.ui.ShowsListScreen
 import com.zarvinx.keep_track.ui.ShowsViewModel
 import com.zarvinx.keep_track.ui.theme.BackgroundGradientOption
 import com.zarvinx.keep_track.ui.theme.KeepTrackTheme
-import com.zarvinx.keep_track.ui.theme.drawerActionItemColors
-import com.zarvinx.keep_track.ui.theme.drawerItemColors
-import com.zarvinx.keep_track.ui.theme.rememberDrawerContentColor
-import com.zarvinx.keep_track.ui.theme.drawerSelectionHighlight
 import com.zarvinx.keep_track.ui.theme.defaultCustomBackgroundEnd
 import com.zarvinx.keep_track.ui.theme.defaultCustomBackgroundStart
 import com.zarvinx.keep_track.ui.theme.findBackgroundGradientOption
 import dagger.hilt.android.AndroidEntryPoint
-import dev.chrisbanes.haze.rememberHazeState
 import dev.chrisbanes.haze.hazeSource
-import kotlinx.coroutines.launch
-
-data class MainMenuItem(
-    val labelResId: Int,
-    val closeDrawerBeforeAction: Boolean = true,
-    val action: () -> Unit
-)
+import dev.chrisbanes.haze.rememberHazeState
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -128,13 +141,12 @@ fun refreshAllShows() {
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     viewModel: ShowsViewModel,
     onShowSelected: (Int) -> Unit,
     onSettings: () -> Unit,
-    onAbout: () -> Unit,
     onRefreshAll: () -> Unit,
     onAddShow: () -> Unit
 ) {
@@ -142,18 +154,15 @@ fun MainScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusRequester = remember { FocusRequester() }
-    val scope = rememberCoroutineScope()
     val state = rememberMainScreenState(viewModel)
     val currentFilter by viewModel.currentFilter.collectAsState()
     val selectedGradient = rememberSelectedBackgroundGradient()
     val emptyStateTextColor = if (
         lerp(selectedGradient.startColor, selectedGradient.endColor, 0.5f).luminance() > 0.45f
     ) Color(0xFF202124) else Color.White
-    val drawerState = androidx.compose.material3.rememberDrawerState(
-        initialValue = androidx.compose.material3.DrawerValue.Closed
-    )
+    var showFilters by remember { mutableStateOf(false) }
 
-    val filterMenuItems = androidx.compose.runtime.remember {
+    val filterMenuItems = remember {
         listOf(
             FilterMenuItem(R.string.menu_filter_uncompleted, ShowsViewModel.SHOWS_FILTER_WATCHING),
             FilterMenuItem(R.string.menu_filter_starred, ShowsViewModel.SHOWS_FILTER_STARRED),
@@ -162,30 +171,10 @@ fun MainScreen(
             FilterMenuItem(R.string.menu_filter_all, ShowsViewModel.SHOWS_FILTER_ALL)
         )
     }
-
-    val mainMenuItems = androidx.compose.runtime.remember(onRefreshAll, onSettings, onAbout) {
-        listOf(
-            MainMenuItem(
-                labelResId = R.string.menu_refresh_all_shows,
-                action = onRefreshAll
-            ),
-            MainMenuItem(
-                labelResId = R.string.menu_settings,
-                closeDrawerBeforeAction = false,
-                action = onSettings
-            ),
-            MainMenuItem(
-                labelResId = R.string.menu_about,
-                closeDrawerBeforeAction = false,
-                action = onAbout
-            )
-        )
-    }
-
-    fun applyFilter(filter: Int) {
-        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-        prefs.edit().putInt(ShowsViewModel.KEY_PREF_SHOWS_FILTER, filter).apply()
-    }
+    val currentFilterLabel = stringResource(
+        filterMenuItems.firstOrNull { it.filterValue == currentFilter }?.labelResId
+            ?: R.string.menu_filter_uncompleted
+    )
 
     LaunchedEffect(state.isSearching) {
         if (state.isSearching) {
@@ -205,156 +194,209 @@ fun MainScreen(
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     val hazeState = rememberHazeState()
-
-    androidx.compose.material3.ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            val drawerContentColor = rememberDrawerContentColor()
-            val isLightTheme = androidx.compose.material3.MaterialTheme.colorScheme.background.luminance() > 0.5f
-            val accentColor = androidx.compose.material3.MaterialTheme.colorScheme.primary
-            val drawerBackgroundColor = androidx.compose.material3.MaterialTheme.colorScheme.background
-
-            androidx.compose.material3.ModalDrawerSheet(
-                modifier = Modifier.widthIn(max = 250.dp).offset(x = (-10).dp),
-                drawerContainerColor = Color.Transparent,
-                drawerContentColor = drawerContentColor
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.linearGradient(
-                                colors = listOf(selectedGradient.startColor, selectedGradient.endColor)
-                            )
-                        )
-                        .background(drawerBackgroundColor.copy(alpha = 0.9f)),
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        androidx.compose.material3.Text(
-                            text = context.getString(R.string.menu_filter_shows_list),
-                            style = androidx.compose.material3.MaterialTheme.typography.titleMedium,
-                            color = drawerContentColor,
-                            modifier = Modifier.padding(start = 26.dp, end = 16.dp, top = 14.dp, bottom = 14.dp)
-                        )
-                        filterMenuItems.forEach { item ->
-                            androidx.compose.material3.NavigationDrawerItem(
-                                label = {
-                                    androidx.compose.material3.Text(
-                                        text = context.getString(item.labelResId),
-                                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
-                                    )
-                                },
-                                selected = currentFilter == item.filterValue,
-                                onClick = {
-                                    applyFilter(item.filterValue)
-                                    scope.launch { drawerState.close() }
-                                },
-                                shape = RoundedCornerShape(10.dp),
-                                colors = drawerItemColors(drawerContentColor),
-                                modifier = Modifier
-                                    .padding(start = 20.dp, end = 10.dp, top = 3.dp, bottom = 3.dp)
-                                    .height(42.dp)
-                                    .drawerSelectionHighlight(
-                                        selected = currentFilter == item.filterValue,
-                                        accentColor = accentColor,
-                                        isLightTheme = isLightTheme
-                                    )
-                            )
-                        }
-                    }
-
-                    Column {
-                        androidx.compose.material3.Divider(
-                            color = drawerContentColor.copy(alpha = 0.15f),
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-                        )
-
-                        mainMenuItems.forEach { item ->
-                            androidx.compose.material3.NavigationDrawerItem(
-                                label = {
-                                    androidx.compose.material3.Text(
-                                        text = context.getString(item.labelResId),
-                                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
-                                    )
-                                },
-                                selected = false,
-                                colors = drawerActionItemColors(drawerContentColor),
-                                onClick = {
-                                    if (item.closeDrawerBeforeAction) {
-                                        scope.launch {
-                                            drawerState.close()
-                                            item.action()
-                                        }
-                                    } else {
-                                        item.action()
-                                    }
-                                },
-                                shape = RoundedCornerShape(10.dp),
-                                modifier = Modifier
-                                    .padding(horizontal = 10.dp, vertical = 3.dp)
-                                    .height(42.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-                }
-            }
-        }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Brush.linearGradient(listOf(
+                selectedGradient.startColor,
+                selectedGradient.endColor
+            )))
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(selectedGradient.startColor, selectedGradient.endColor),
-                        start = androidx.compose.ui.geometry.Offset(0f, 0f),
-                        end = androidx.compose.ui.geometry.Offset(
-                            Float.POSITIVE_INFINITY,
-                            Float.POSITIVE_INFINITY
-                        )
-                    )
-                )
-        ) {
-            androidx.compose.material3.Scaffold(
-                containerColor = Color.Transparent,
-                topBar = {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                if (state.isSearching) {
                     MainTopBar(
                         state = state,
                         focusRequester = focusRequester,
-                        keyboardController = keyboardController,
-                        hazeState = hazeState,
-                        onAddShow = onAddShow,
-                        onOpenFiltersDrawer = {
-                            scope.launch { drawerState.open() }
-                        }
+                        keyboardController = keyboardController
                     )
                 }
-            ) { paddingValues ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .hazeSource(state = hazeState)
-                ) {
-                    ShowsListScreen(
-                        viewModel = viewModel,
-                        hazeState = hazeState,
-                        contentPadding = paddingValues,
-                        emptyStateTextColor = emptyStateTextColor,
-                        onShowClick = onShowSelected
-                    )
-                }
+            },
+            bottomBar = {
+                MainBottomBar(
+                    currentFilterLabel = currentFilterLabel,
+                    isSearching = state.isSearching,
+                    onFilters = { showFilters = true },
+                    onRefresh = onRefreshAll,
+                    onSearch = {
+                        if (state.isSearching) state.closeSearch(keyboardController)
+                        else state.startSearch()
+                    },
+                    onAdd = onAddShow,
+                    onSettings = onSettings
+                )
+            }
+        ) { paddingValues ->
+            Box(modifier = Modifier.fillMaxSize().hazeSource(state = hazeState)) {
+                ShowsListScreen(
+                    viewModel = viewModel,
+                    hazeState = hazeState,
+                    contentPadding = paddingValues,
+                    emptyStateTextColor = emptyStateTextColor,
+                    onShowClick = onShowSelected
+                )
             }
         }
     }
 
+    if (showFilters) {
+        ModalBottomSheet(onDismissRequest = { showFilters = false }) {
+            Text(
+                text = stringResource(R.string.menu_filter_shows_list),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 12.dp)
+            )
+            filterMenuItems.forEach { item ->
+                val selected = currentFilter == item.filterValue
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            PreferenceManager.getDefaultSharedPreferences(context)
+                                .edit()
+                                .putInt(ShowsViewModel.KEY_PREF_SHOWS_FILTER, item.filterValue)
+                                .apply()
+                            showFilters = false
+                        }
+                        .height(56.dp)
+                        .padding(horizontal = 24.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val icon = when (item.filterValue) {
+                        ShowsViewModel.SHOWS_FILTER_WATCHING -> Icons.Default.PlayArrow
+                        ShowsViewModel.SHOWS_FILTER_STARRED -> Icons.Default.Star
+                        ShowsViewModel.SHOWS_FILTER_ARCHIVED -> Icons.Default.Archive
+                        ShowsViewModel.SHOWS_FILTER_UPCOMING -> Icons.Default.DateRange
+                        else -> Icons.Default.List
+                    }
+                    Icon(icon, contentDescription = null, tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        text = stringResource(item.labelResId),
+                        modifier = Modifier.weight(1f).padding(start = 20.dp),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    if (selected) Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                }
+            }
+            androidx.compose.foundation.layout.Spacer(Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+private fun MainBottomBar(
+    currentFilterLabel: String,
+    isSearching: Boolean,
+    onFilters: () -> Unit,
+    onRefresh: () -> Unit,
+    onSearch: () -> Unit,
+    onAdd: () -> Unit,
+    onSettings: () -> Unit
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    Surface(
+        color = colorScheme.surface,
+        shadowElevation = 8.dp
+    ) {
+        Column {
+            HorizontalDivider(color = colorScheme.onSurface.copy(alpha = 0.08f))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(72.dp)
+                    .padding(start = 4.dp, end = 4.dp, bottom = 10.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BottomAction(
+                    icon = Icons.Default.FilterList,
+                    label = currentFilterLabel,
+                    accessibilityLabel = stringResource(R.string.menu_filter_shows_list) + ": " + currentFilterLabel,
+                    onClick = onFilters,
+                    selected = true,
+                    modifier = Modifier.weight(1f)
+                )
+                BottomAction(
+                    icon = Icons.Default.Refresh,
+                    label = stringResource(R.string.bottom_refresh),
+                    onClick = onRefresh,
+                    modifier = Modifier.weight(1f)
+                )
+                BottomAction(
+                    icon = Icons.Default.Search,
+                    label = stringResource(R.string.bottom_search),
+                    onClick = onSearch,
+                    selected = isSearching,
+                    modifier = Modifier.weight(1f)
+                )
+                BottomAction(
+                    icon = Icons.Default.Add,
+                    label = stringResource(R.string.bottom_add),
+                    onClick = onAdd,
+                    emphasized = true,
+                    modifier = Modifier.weight(1f)
+                )
+                BottomAction(
+                    icon = Icons.Default.Settings,
+                    label = stringResource(R.string.menu_settings),
+                    onClick = onSettings,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun BottomAction(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    selected: Boolean = false,
+    emphasized: Boolean = false,
+    accessibilityLabel: String = label
+) {
+    val colors = MaterialTheme.colorScheme
+    Column(
+        modifier = modifier
+            .semantics { contentDescription = accessibilityLabel }
+            .clickable(onClick = onClick)
+            .height(58.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .size(if (emphasized) 34.dp else 28.dp)
+                .background(if (emphasized) colors.primary else Color.Transparent, RoundedCornerShape(10.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = when {
+                    emphasized -> colors.onPrimary
+                    selected -> colors.primary
+                    else -> colors.onSurfaceVariant
+                },
+                modifier = Modifier.size(23.dp)
+            )
+        }
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = if (selected) colors.primary else colors.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
 }
 
 @Composable

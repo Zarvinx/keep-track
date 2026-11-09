@@ -42,6 +42,9 @@
   <string name="menu_back_up">Back up library</string>
   <string name="menu_delete_show">Delete show</string>
   <string name="menu_filter_shows_list">Filter shows</string>
+  <string name="bottom_refresh">Refresh</string>
+  <string name="bottom_search">Search</string>
+  <string name="bottom_add">Add</string>
   <string name="menu_filter_all">All</string>
   <string name="menu_filter_starred">Starred</string>
   <string name="menu_filter_archived">Archived</string>

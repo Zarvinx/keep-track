@@ -15,7 +15,6 @@ class MainScreenState(
     private val onSearchQueryChanged: (String) -> Unit
 ) {
     var isSearching by mutableStateOf(false)
-    var showActionOverlay by mutableStateOf(false)
     var searchQuery by mutableStateOf("")
 
     fun updateSearch(query: String) {
@@ -24,7 +23,6 @@ class MainScreenState(
     }
 
     fun startSearch() {
-        showActionOverlay = true
         isSearching = true
     }
 

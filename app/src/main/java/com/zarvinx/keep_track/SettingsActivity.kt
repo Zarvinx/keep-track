@@ -96,7 +96,8 @@ private object SettingsRefreshScheduler {
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
-    onBackupSettings: () -> Unit
+    onBackupSettings: () -> Unit,
+    onAbout: () -> Unit
 ) {
     val context = LocalContext.current
     val prefs = remember { PreferenceManager.getDefaultSharedPreferences(context) }
@@ -231,6 +232,13 @@ fun SettingsScreen(
                 title = stringResource(R.string.pref_backup_restore_title),
                 summary = stringResource(R.string.pref_backup_restore_summary),
                 onClick = onBackupSettings
+            )
+
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            SettingsListItem(
+                title = stringResource(R.string.menu_about),
+                summary = stringResource(R.string.about_description),
+                onClick = onAbout
             )
         }
     }

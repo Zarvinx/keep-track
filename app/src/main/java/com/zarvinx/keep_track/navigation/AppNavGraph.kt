@@ -61,9 +61,6 @@ fun AppNavGraph() {
                 onSettings = {
                     navController.navigate(AppDestination.Settings.route)
                 },
-                onAbout = {
-                    navController.navigate(AppDestination.About.route)
-                },
                 onRefreshAll = {
                     refreshAllShows()
                 },
@@ -76,7 +73,8 @@ fun AppNavGraph() {
         composable(route = AppDestination.Settings.route) {
             SettingsScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onBackupSettings = { navController.navigate(AppDestination.BackupSettings.route) }
+                onBackupSettings = { navController.navigate(AppDestination.BackupSettings.route) },
+                onAbout = { navController.navigate(AppDestination.About.route) }
             )
         }
 
