@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: read
-  security-events: read
+  vulnerability-alerts: read
   issues: write
 
 jobs:
