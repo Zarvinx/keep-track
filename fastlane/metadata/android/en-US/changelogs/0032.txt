@@ -1,0 +1,2 @@
+- Fixed bottom controls overlapping three-button navigation
+- Tightened bottom-bar spacing with gesture navigation
