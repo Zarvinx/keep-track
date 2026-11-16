@@ -147,9 +147,9 @@ dependencies {
     implementation 'androidx.documentfile:documentfile:1.1.0'
 
     // Room
-    implementation 'androidx.room:room-runtime:2.8.4'
-    implementation 'androidx.room:room-ktx:2.8.4'
-    ksp 'androidx.room:room-compiler:2.8.4'
+    implementation 'androidx.room:room-runtime:2.8.5'
+    implementation 'androidx.room:room-ktx:2.8.5'
+    ksp 'androidx.room:room-compiler:2.8.5'
 
     // Hilt
     implementation 'com.google.dagger:hilt-android:2.60.1'
@@ -164,5 +164,5 @@ dependencies {
     androidTestImplementation 'androidx.test:runner:1.7.0'
     androidTestImplementation 'androidx.test:rules:1.7.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
-    androidTestImplementation 'androidx.room:room-testing:2.8.4'
+    androidTestImplementation 'androidx.room:room-testing:2.8.5'
 }
